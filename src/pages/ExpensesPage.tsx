@@ -54,6 +54,7 @@ export const ExpensesPage = () => {
   const { expenses, addExpense } = useDataStore();
   const { user } = useAuthStore();
   const [searchQuery, setSearchQuery] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('all');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   
@@ -68,10 +69,11 @@ export const ExpensesPage = () => {
 
   const filteredExpenses = useMemo(() => {
     return expenses.filter(exp => 
-      exp.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      exp.category.toLowerCase().includes(searchQuery.toLowerCase())
+      (categoryFilter === 'all' || exp.category === categoryFilter) &&
+      (exp.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      exp.category.toLowerCase().includes(searchQuery.toLowerCase()))
     ).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  }, [expenses, searchQuery]);
+  }, [expenses, searchQuery, categoryFilter]);
 
   const chartData = useMemo(() => {
     const categoryTotals: Record<string, number> = {};
@@ -226,16 +228,32 @@ export const ExpensesPage = () => {
         )}
 
         {/* Search */}
-        <TextField
-          fullWidth
-          placeholder="بحث في المصروفات..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          InputProps={{
-            startAdornment: <InputAdornment position="start"><Search /></InputAdornment>,
-          }}
-          sx={{ mb: 2, '& .MuiOutlinedInput-root': { borderRadius: '14px', bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', '& fieldset': { border: 'none' } } }}
-        />
+        {/* Search and Filter */}
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mb: 2 }}>
+          <TextField
+            fullWidth
+            placeholder="بحث في المصروفات..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            InputProps={{
+              startAdornment: <InputAdornment position="start"><Search /></InputAdornment>,
+            }}
+            sx={{ '& .MuiOutlinedInput-root': { borderRadius: '14px', bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', '& fieldset': { border: 'none' } } }}
+          />
+          <FormControl sx={{ minWidth: { xs: '100%', sm: 200 } }}>
+            <Select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              displayEmpty
+              sx={{ borderRadius: '14px', bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', '& .MuiOutlinedInput-notchedOutline': { border: 'none' } }}
+            >
+              <MenuItem value="all">كل التصنيفات</MenuItem>
+              {Object.entries(expenseCategories).map(([key, label]) => (
+                <MenuItem key={key} value={key}>{label}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Stack>
 
         {/* Expenses List */}
         <Stack spacing={1.5}>

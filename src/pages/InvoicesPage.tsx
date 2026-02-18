@@ -62,15 +62,23 @@ export const InvoicesPage = () => {
               <Typography fontWeight={800} sx={{ fontSize: '1.2rem' }}>الفواتير</Typography>
             </Stack>
             <Button
+              variant="contained"
               startIcon={<Add />}
               onClick={() => navigate('/invoices/new')}
               sx={{
-                bgcolor: 'rgba(200,192,176,0.9)', color: '#2a3a2a',
-                fontWeight: 700, borderRadius: 2, px: 2, fontSize: '0.8rem',
-                '&:hover': { bgcolor: '#c8c0b0' },
+                bgcolor: '#c8c0b0',
+                color: '#2a3a2a',
+                fontWeight: 800,
+                borderRadius: 2.5,
+                px: 3,
+                py: 1,
+                fontSize: '0.9rem',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                '&:hover': { bgcolor: '#e6dec8', transform: 'translateY(-2px)' },
+                transition: 'all 0.2s',
               }}
             >
-              جديدة
+              إنشاء فاتورة
             </Button>
           </Stack>
 
@@ -81,7 +89,7 @@ export const InvoicesPage = () => {
               { label: 'المحصل', value: formatCurrency(stats.paid) },
               { label: 'المستحق', value: formatCurrency(stats.pending) },
             ].map((stat, i) => (
-              <Grid item xs={4} key={i}>
+              <Grid size={{ xs: 4 }} key={i}>
                 <Paper sx={{ p: 1.2, borderRadius: 2, bgcolor: 'rgba(255,255,255,0.08)', boxShadow: 'none' }}>
                   <Typography sx={{ color: 'rgba(255,255,255,0.55)', fontSize: '0.6rem', mb: 0.3 }}>{stat.label}</Typography>
                   <Typography fontWeight={800} color="white" sx={{ fontSize: '0.78rem' }}>{stat.value}</Typography>

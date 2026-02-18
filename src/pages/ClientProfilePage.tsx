@@ -8,12 +8,12 @@ import {
 } from '@mui/material';
 import {
   ArrowBack, Payment, Business, Person, Phone, Add, TrendingDown,
-  TrendingUp, Edit, Delete, CreditCard, Search, ChevronLeft, PersonAdd, Share,
+  TrendingUp, Edit, Delete, CreditCard, PersonAdd, Save, Share, Close, PostAdd, ChevronLeft, Search
 } from '@mui/icons-material';
 import { useDataStore } from '../store/useDataStore';
 import { useAuthStore } from '../store/useAuthStore';
 import { useForm, Controller } from 'react-hook-form';
-import { formatCurrency, formatDate } from '../utils/formatters';
+import { formatCurrency, formatDate, getExpenseCategoryLabel, expenseCategories } from '../utils/formatters';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import dayjs from 'dayjs';
@@ -202,6 +202,7 @@ table td{padding:7px 10px;border-bottom:1px solid #eee;text-align:right}table tr
   };
 
   const menuItems = [
+    { title: 'فاتورة جديدة', icon: PostAdd, color: '#e6a817', bgColor: 'rgba(230,168,23,0.08)', borderColor: 'rgba(230,168,23,0.12)', onClick: () => navigate(`/invoices/new?clientId=${clientId}`) },
     { title: 'المصروفات', icon: TrendingDown, color: '#d64545', bgColor: 'rgba(214,69,69,0.08)', borderColor: 'rgba(214,69,69,0.12)', onClick: () => setExpensesListOpen(true) },
     { title: 'المدفوعات', icon: Payment, color: '#0d9668', bgColor: 'rgba(13,150,104,0.08)', borderColor: 'rgba(13,150,104,0.12)', onClick: () => setPaymentsListOpen(true) },
     { title: 'الديون', icon: CreditCard, color: '#c9a54e', bgColor: 'rgba(201,165,78,0.08)', borderColor: 'rgba(201,165,78,0.12)', onClick: () => setDebtsListOpen(true) },
@@ -276,7 +277,7 @@ table td{padding:7px 10px;border-bottom:1px solid #eee;text-align:right}table tr
   };
 
   const getPayMethodLabel = (m: string) => ({ cash: 'نقدي', bank_transfer: 'تحويل بنكي', check: 'شيك', credit_card: 'بطاقة', mobile_payment: 'محفظة' }[m] || m);
-  const getCategoryLabel = (c: string) => ({ materials: 'مواد', labor: 'عمالة', transport: 'نقل', equipment: 'معدات', subcontractors: 'مقاولين', other: 'أخرى' }[c] || c);
+  const getCategoryLabel = getExpenseCategoryLabel;
 
   const headerGradient = theme.palette.mode === 'light' ? 'linear-gradient(160deg, #364036 0%, #4a5d4a 100%)' : 'linear-gradient(160deg, #2a3a2a 0%, #364036 100%)';
   const pageBg = theme.palette.mode === 'dark' ? 'linear-gradient(180deg, #1a1f1a 0%, #151a15 100%)' : 'linear-gradient(180deg, #f5f3ef 0%, #ede9e3 100%)';
@@ -307,6 +308,46 @@ table td{padding:7px 10px;border-bottom:1px solid #eee;text-align:right}table tr
             </IconButton>
           </Stack>
 
+          {/* Financial Alerts */}
+          {(summary.totalExpenses > summary.totalPaid || summary.remaining < 0) && (
+            <Stack spacing={1.5} sx={{ mt: 3, mb: 1 }}>
+              {summary.totalExpenses > summary.totalPaid && (
+                <Alert 
+                  severity="error" 
+                  variant="filled"
+                  icon={<TrendingDown fontSize="inherit" />}
+                  sx={{ 
+                    borderRadius: 2.5, 
+                    fontWeight: 800, 
+                    boxShadow: '0 4px 12px rgba(214, 69, 69, 0.25)',
+                    bgcolor: '#d64545',
+                    alignItems: 'center'
+                  }}
+                >
+                  تنبيه دقيق: إجمالي المصروفات تجاوز قيمة المدفوعات!
+                </Alert>
+              )}
+              
+              {summary.remaining < 0 && (
+                <Alert 
+                  severity="warning" 
+                  variant="filled"
+                  sx={{ 
+                    borderRadius: 2.5, 
+                    fontWeight: 700, 
+                    boxShadow: '0 4px 12px rgba(230, 168, 23, 0.25)',
+                    bgcolor: '#e6a817',
+                    color: '#2a3a2a',
+                    alignItems: 'center',
+                    '& .MuiAlert-icon': { color: '#2a3a2a' }
+                  }}
+                >
+                  تنبيه: الرصيد الحالي بالسالب (يوجد عجز مالي بقيمة {formatCurrency(Math.abs(summary.remaining))})
+                </Alert>
+              )}
+            </Stack>
+          )}
+
           {/* Financial Summary - Professional Design */}
           <Box sx={{ mt: 2 }}>
             {/* Main Balance Card */}
@@ -333,7 +374,7 @@ table td{padding:7px 10px;border-bottom:1px solid #eee;text-align:right}table tr
                 { label: 'الديون', value: formatCurrency(summary.totalDebts), sub: `${clientDebts.length} دين`, gradient: 'linear-gradient(135deg, rgba(201,165,78,0.3) 0%, rgba(201,165,78,0.1) 100%)', border: 'rgba(201,165,78,0.4)' },
                 { label: 'المتبقي', value: formatCurrency(summary.remaining), sub: summary.remaining >= 0 ? 'رصيد' : 'عجز', gradient: summary.remaining >= 0 ? 'linear-gradient(135deg, rgba(13,150,104,0.3) 0%, rgba(13,150,104,0.1) 100%)' : 'linear-gradient(135deg, rgba(214,69,69,0.35) 0%, rgba(214,69,69,0.15) 100%)', border: summary.remaining >= 0 ? 'rgba(13,150,104,0.4)' : 'rgba(214,69,69,0.5)' },
               ].map((c, i) => (
-                <Grid item xs={6} key={i}>
+                <Grid size={{ xs: 6 }} key={i}>
                   <Card sx={{ borderRadius: 2.5, background: c.gradient, backdropFilter: 'blur(20px)', color: 'white', border: `1px solid ${c.border}`, height: '100%' }}>
                     <CardContent sx={{ p: '12px 14px !important' }}>
                       <Typography variant="caption" sx={{ opacity: 0.85, display: 'block', fontSize: '0.65rem', fontWeight: 600, mb: 0.5 }}>{c.label}</Typography>
@@ -515,7 +556,7 @@ table td{padding:7px 10px;border-bottom:1px solid #eee;text-align:right}table tr
             <Stack spacing={3}>
               <Controller name="description" control={expCtrl} render={({ field }) => <TextField {...field} fullWidth label="الوصف" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2.5, bgcolor: 'background.paper' } }} />} />
               <Controller name="amount" control={expCtrl} render={({ field }) => <TextField {...field} fullWidth label="المبلغ" type="number" InputProps={{ endAdornment: <InputAdornment position="end">د.ل</InputAdornment> }} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2.5, bgcolor: 'background.paper' } }} />} />
-              <Controller name="category" control={expCtrl} render={({ field }) => <FormControl fullWidth><InputLabel>التصنيف</InputLabel><Select {...field} label="التصنيف" sx={{ borderRadius: 2.5, bgcolor: 'background.paper' }}><MenuItem value="materials">مواد</MenuItem><MenuItem value="labor">عمالة</MenuItem><MenuItem value="transport">نقل</MenuItem><MenuItem value="equipment">معدات</MenuItem><MenuItem value="subcontractors">مقاولين</MenuItem><MenuItem value="other">أخرى</MenuItem></Select></FormControl>} />
+              <Controller name="category" control={expCtrl} render={({ field }) => <FormControl fullWidth><InputLabel>التصنيف</InputLabel><Select {...field} label="التصنيف" sx={{ borderRadius: 2.5, bgcolor: 'background.paper' }}>{Object.entries(expenseCategories).map(([key, label]) => <MenuItem key={key} value={key}>{label}</MenuItem>)}</Select></FormControl>} />
               <Controller name="invoiceNumber" control={expCtrl} render={({ field }) => <TextField {...field} fullWidth label="رقم الفاتورة (اختياري)" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2.5, bgcolor: 'background.paper' } }} />} />
               <Controller name="workerId" control={expCtrl} render={({ field }) => <FormControl fullWidth><InputLabel>العامل (اختياري)</InputLabel><Select {...field} label="العامل (اختياري)" sx={{ borderRadius: 2.5, bgcolor: 'background.paper' }}><MenuItem value=""><em>لا يوجد</em></MenuItem>{workers.filter(w=>w.clientId===clientId).map(w=><MenuItem key={w.id} value={w.id}>{w.name}</MenuItem>)}</Select></FormControl>} />
               <Controller name="date" control={expCtrl} render={({ field }) => <TextField {...field} fullWidth label="التاريخ" type="date" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2.5, bgcolor: 'background.paper' } }} />} />

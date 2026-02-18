@@ -51,19 +51,45 @@ export const getStatusLabel = (status: string): string => {
 };
 
 export const expenseCategories: Record<string, string> = {
-  materials: 'مواد',
-  labor: 'عمالة',
-  transport: 'نقل ومواصلات',
-  equipment: 'معدات',
-  subcontractors: 'مقاولين باطن',
-  hospitality: 'ضيافة',
-  rent: 'إيجار',
-  maintenance: 'صيانة',
-  marketing: 'تسويق',
-  utilities: 'فواتير (كهرباء/نت)',
-  government_fees: 'رسوم حكومية',
-  office_supplies: 'قرطاسية ومكتبية',
-  other: 'أخرى',
+  // --- التحضيرات والهيكل ---
+  permits: 'تراخيص ورسوم حكومية',
+  site_prep: 'تجهيز الموقع والمكاتب',
+  surveying: 'أعمال مساحة وتخطيط',
+  excavation: 'أعمال حفر وردم',
+  concrete: 'خرسانة (جاهزة/مسلحة)',
+  rebar: 'حديد تسليح',
+  masonry: 'أعمال مباني (طوب/بلوك)',
+  insulation: 'أعمال عزل (مائي/حراري)',
+
+  // --- التشطيبات والديكور ---
+  plaster: 'أعمال لياسة (محارة)',
+  plumbing: 'تأسيس وتشطيب سباكة',
+  electrical: 'تأسيس وتشطيب كهرباء',
+  hvac: 'تكييف وتهوية (HVAC)',
+  flooring: 'أرضيات (سيراميك/رخام)',
+  painting: 'دهانات وديكورات',
+  gypsum: 'جبس مبرد / أسقف معلقة',
+  woodwork: 'أعمال نجارة (أبواب/ديكور)',
+  aluminum_glass: 'ألومنيوم وواجهات زجاجية',
+  iron_work: 'أعمال حديد ولحام',
+
+  // --- الموارد والمعدات ---
+  materials: 'توفير مواد خام متنوعة',
+  labor: 'أجور عمالة ومصنعية',
+  subcontractors: 'مستخلصات مقاولين باطن',
+  equipment: 'إيجار معدات وسقالات',
+  tools: 'شراء عدد وأدوات صغيرة',
+  transport: 'نقل وتشوين',
+  disposal: 'نقل مخلفات (ردم)',
+  fuel: 'وقود وزيوت',
+
+  // --- إدارية وعامة ---
+  consulting: 'استشارات وإشراف هندسي',
+  hospitality: 'ضيافة وإعاشة موقع',
+  rent: 'إيجار سكن/مقر',
+  utilities: 'فواتير (كهرباء/مياه/نت)',
+  maintenance: 'صيانة معدات',
+  other: 'مصروفات أخرى',
 };
 
 export const getExpenseCategoryLabel = (category: string): string => {
