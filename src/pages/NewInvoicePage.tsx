@@ -309,6 +309,7 @@ export const NewInvoicePage = () => {
                         type="number" 
                         value={item.quantity}
                         onChange={(e) => handleItemChange(item.id, 'quantity', Number(e.target.value))}
+                        onWheel={(e) => (e.target as HTMLElement).blur()}
                         variant="filled"
                         InputProps={{ disableUnderline: true, inputProps: { min: 1 } }}
                         sx={{ '& .MuiFilledInput-root': { borderRadius: 3, bgcolor: 'rgba(0,0,0,0.03)' } }}
@@ -321,6 +322,7 @@ export const NewInvoicePage = () => {
                         type="number" 
                         value={item.unitPrice}
                         onChange={(e) => handleItemChange(item.id, 'unitPrice', Number(e.target.value))}
+                        onWheel={(e) => (e.target as HTMLElement).blur()}
                         variant="filled"
                         InputProps={{ disableUnderline: true }}
                         sx={{ '& .MuiFilledInput-root': { borderRadius: 3, bgcolor: 'rgba(0,0,0,0.03)' } }}
@@ -360,6 +362,7 @@ export const NewInvoicePage = () => {
                   type="number" 
                   value={taxRate}
                   onChange={(e) => setTaxRate(Number(e.target.value))}
+                  onWheel={(e) => (e.target as HTMLElement).blur()}
                   variant="filled"
                   InputProps={{ 
                     disableUnderline: true,

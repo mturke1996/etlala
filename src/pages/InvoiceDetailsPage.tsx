@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useReactToPrint } from 'react-to-print';
 import {
   Box, Button, Container, Stack, Typography, IconButton,
   Chip, Menu, MenuItem,  CircularProgress,
@@ -22,9 +23,10 @@ export const InvoiceDetailsPage = () => {
 
   const componentRef = useRef<HTMLDivElement>(null);
   
-  const handlePrint = () => {
-    window.print();
-  };
+  const handlePrint = useReactToPrint({
+    content: () => componentRef.current,
+    documentTitle: `FATURA-${invoice?.invoiceNumber || ''}`,
+  });
 
   if (!invoice || !client) {
     return <Box p={4} textAlign="center"><CircularProgress /></Box>;
