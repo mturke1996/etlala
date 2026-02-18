@@ -172,7 +172,7 @@ export const ExpensesPage = () => {
 
           {/* Stats in header */}
           <Grid container spacing={1.5}>
-            <Grid size={{ xs: 12 }}>
+            <Grid item xs={12}>
               <Paper sx={{ p: 2, borderRadius: 2.5, bgcolor: 'rgba(255,255,255,0.1)', boxShadow: 'none', border: '1px solid rgba(255,255,255,0.08)' }}>
                 <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', display: 'block' }}>إجمالي المصروفات</Typography>
                 <Typography variant="body1" fontWeight={800} color="white">
@@ -180,13 +180,13 @@ export const ExpensesPage = () => {
                 </Typography>
               </Paper>
             </Grid>
-            <Grid size={{ xs: 6 }}>
+            <Grid item xs={6}>
               <Paper sx={{ p: 1.5, borderRadius: 2.5, bgcolor: 'rgba(255,255,255,0.1)', boxShadow: 'none', border: '1px solid rgba(255,255,255,0.08)' }}>
                 <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', display: 'block' }}>عدد السجلات</Typography>
                 <Typography variant="body1" fontWeight={800} color="white">{expenses.length}</Typography>
               </Paper>
             </Grid>
-            <Grid size={{ xs: 6 }}>
+            <Grid item xs={6}>
               <Paper sx={{ p: 1.5, borderRadius: 2.5, bgcolor: 'rgba(255,255,255,0.1)', boxShadow: 'none', border: '1px solid rgba(255,255,255,0.08)' }}>
                 <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', display: 'block' }}>الفئات</Typography>
                 <Typography variant="body1" fontWeight={800} color="white">{chartData.length}</Typography>

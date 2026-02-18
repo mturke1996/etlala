@@ -68,9 +68,9 @@ export const ClientProfilePage = () => {
   const client = clients.find((c) => c.id === clientId);
 
   // Forms
-  const { control: clientControl, handleSubmit: handleClientSubmit, reset: resetClient } = useForm({
+  const { control: clientControl, handleSubmit: handleClientSubmit, reset: resetClient } = useForm<z.infer<typeof clientSchema>>({
     resolver: zodResolver(clientSchema),
-    defaultValues: { name: '', email: '', phone: '', address: '', type: 'individual' as const },
+    defaultValues: { name: '', email: '', phone: '', address: '', type: 'individual' },
   });
 
   const { control: payCtrl, handleSubmit: handlePaySubmit, reset: resetPay, setValue: setPayVal } = useForm({
@@ -333,7 +333,7 @@ table td{padding:7px 10px;border-bottom:1px solid #eee;text-align:right}table tr
                 { label: 'الديون', value: formatCurrency(summary.totalDebts), sub: `${clientDebts.length} دين`, gradient: 'linear-gradient(135deg, rgba(201,165,78,0.3) 0%, rgba(201,165,78,0.1) 100%)', border: 'rgba(201,165,78,0.4)' },
                 { label: 'المتبقي', value: formatCurrency(summary.remaining), sub: summary.remaining >= 0 ? 'رصيد' : 'عجز', gradient: summary.remaining >= 0 ? 'linear-gradient(135deg, rgba(13,150,104,0.3) 0%, rgba(13,150,104,0.1) 100%)' : 'linear-gradient(135deg, rgba(214,69,69,0.35) 0%, rgba(214,69,69,0.15) 100%)', border: summary.remaining >= 0 ? 'rgba(13,150,104,0.4)' : 'rgba(214,69,69,0.5)' },
               ].map((c, i) => (
-                <Grid size={6} key={i}>
+                <Grid item xs={6} key={i}>
                   <Card sx={{ borderRadius: 2.5, background: c.gradient, backdropFilter: 'blur(20px)', color: 'white', border: `1px solid ${c.border}`, height: '100%' }}>
                     <CardContent sx={{ p: '12px 14px !important' }}>
                       <Typography variant="caption" sx={{ opacity: 0.85, display: 'block', fontSize: '0.65rem', fontWeight: 600, mb: 0.5 }}>{c.label}</Typography>

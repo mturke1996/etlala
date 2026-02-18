@@ -172,14 +172,14 @@ export const NewInvoicePage = () => {
             />
 
             <Grid container spacing={1.5}>
-              <Grid size={{ xs: 6 }}>
+              <Grid item xs={6}>
                 <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="ar">
                   <DatePicker label="الإصدار" value={issueDate} onChange={(val) => setIssueDate(val)}
                     slotProps={{ textField: { fullWidth: true, size: 'small', sx: { '& .MuiOutlinedInput-root': { borderRadius: 2 } } } }}
                   />
                 </LocalizationProvider>
               </Grid>
-              <Grid size={{ xs: 6 }}>
+              <Grid item xs={6}>
                 <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="ar">
                   <DatePicker label="الاستحقاق" value={dueDate} onChange={(val) => setDueDate(val)}
                     slotProps={{ textField: { fullWidth: true, size: 'small', sx: { '& .MuiOutlinedInput-root': { borderRadius: 2 } } } }}
@@ -217,19 +217,19 @@ export const NewInvoicePage = () => {
                   sx={{ mb: 1.5, '& .MuiOutlinedInput-root': { borderRadius: 2, bgcolor: 'white' } }}
                 />
                 <Grid container spacing={1}>
-                  <Grid size={{ xs: 4 }}>
+                  <Grid item xs={4}>
                     <TextField fullWidth size="small" label="الكمية" type="number" value={item.quantity}
                       onChange={(e) => handleItemChange(item.id, 'quantity', Number(e.target.value))}
                       sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2, bgcolor: 'white' } }}
                     />
                   </Grid>
-                  <Grid size={{ xs: 4 }}>
+                  <Grid item xs={4}>
                     <TextField fullWidth size="small" label="السعر" type="number" value={item.unitPrice}
                       onChange={(e) => handleItemChange(item.id, 'unitPrice', Number(e.target.value))}
                       sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2, bgcolor: 'white' } }}
                     />
                   </Grid>
-                  <Grid size={{ xs: 4 }}>
+                  <Grid item xs={4}>
                     <Box sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: '#364036', borderRadius: 2, color: 'white' }}>
                       <Typography fontWeight={800} sx={{ fontSize: '0.85rem' }}>{Math.round(item.total)} د.ل</Typography>
                     </Box>

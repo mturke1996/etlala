@@ -118,11 +118,12 @@ export const ClientsPage = () => {
     } else {
       const newClient: Client = {
         ...data,
+        name: data.name!,
         email: data.email || '',
         id: crypto.randomUUID(),
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-      };
+      } as Client;
       addClient(newClient);
     }
     handleCloseDialog();

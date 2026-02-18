@@ -87,7 +87,7 @@ export const PaymentsPage = () => {
 
           {/* Stats */}
           <Grid container spacing={1.5} mb={2}>
-            <Grid size={{ xs: 6 }}>
+            <Grid item xs={6}>
               <Paper sx={{ p: 2, borderRadius: 2.5, bgcolor: 'rgba(255,255,255,0.1)', boxShadow: 'none', border: '1px solid rgba(255,255,255,0.08)' }}>
                 <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', display: 'block' }}>إجمالي المحصل</Typography>
                 <Typography variant="body1" fontWeight={800} color="white">
@@ -95,7 +95,7 @@ export const PaymentsPage = () => {
                 </Typography>
               </Paper>
             </Grid>
-            <Grid size={{ xs: 6 }}>
+            <Grid item xs={6}>
               <Paper sx={{ p: 2, borderRadius: 2.5, bgcolor: 'rgba(255,255,255,0.1)', boxShadow: 'none', border: '1px solid rgba(255,255,255,0.08)' }}>
                 <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', display: 'block' }}>عدد العمليات</Typography>
                 <Typography variant="body1" fontWeight={800} color="white">{payments.length}</Typography>

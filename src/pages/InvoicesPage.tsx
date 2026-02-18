@@ -81,7 +81,7 @@ export const InvoicesPage = () => {
               { label: 'المحصل', value: formatCurrency(stats.paid) },
               { label: 'المستحق', value: formatCurrency(stats.pending) },
             ].map((stat, i) => (
-              <Grid size={{ xs: 4 }} key={i}>
+              <Grid item xs={4} key={i}>
                 <Paper sx={{ p: 1.2, borderRadius: 2, bgcolor: 'rgba(255,255,255,0.08)', boxShadow: 'none' }}>
                   <Typography sx={{ color: 'rgba(255,255,255,0.55)', fontSize: '0.6rem', mb: 0.3 }}>{stat.label}</Typography>
                   <Typography fontWeight={800} color="white" sx={{ fontSize: '0.78rem' }}>{stat.value}</Typography>
