@@ -243,7 +243,7 @@ export const ExpensesPage = () => {
             <Card key={exp.id} sx={{ borderRadius: '14px', boxShadow: 'none', border: '1px solid', borderColor: 'divider' }}>
               <CardContent sx={{ py: 2, '&:last-child': { pb: 2 } }}>
                 <Grid container alignItems="center" spacing={2}>
-                  <Grid size={{ xs: 12, sm: 4 }}>
+                  <Grid item xs={12} sm={4}>
                     <Stack direction="row" spacing={2} alignItems="center">
                       <Avatar sx={{ bgcolor: alpha(theme.palette.error.main, 0.08), color: 'error.main', borderRadius: '10px', width: 40, height: 40 }}>
                         <Category fontSize="small" />
@@ -254,16 +254,16 @@ export const ExpensesPage = () => {
                       </Box>
                     </Stack>
                   </Grid>
-                  <Grid size={{ xs: 6, sm: 3 }}>
+                  <Grid item xs={6} sm={3}>
                     <Stack direction="row" spacing={0.5} alignItems="center" color="text.secondary">
                       <CalendarToday sx={{ fontSize: 14 }} />
                       <Typography variant="body2">{formatDate(exp.date)}</Typography>
                     </Stack>
                   </Grid>
-                  <Grid size={{ xs: 6, sm: 3 }}>
+                  <Grid item xs={6} sm={3}>
                     <Typography variant="body2" color="text.secondary">{exp.createdBy || '-'}</Typography>
                   </Grid>
-                  <Grid size={{ xs: 12, sm: 2 }} textAlign="right">
+                  <Grid item xs={12} sm={2} textAlign="right">
                     <Typography fontWeight={700} color="error.main">{formatCurrency(exp.amount)}</Typography>
                   </Grid>
                 </Grid>
