@@ -1,0 +1,129 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=Tajawal:wght@300;400;500;700;800;900&display=swap');
+
+/* ═══════════════════════════════════════════════════════════
+   ETLALA Design System - Olive Green & Cream Brand
+   ═══════════════════════════════════════════════════════════ */
+
+:root {
+  --etlala-green: #4a5d4a;
+  --etlala-green-light: #6b7f6b;
+  --etlala-green-dark: #364036;
+  --etlala-cream: #c8c0b0;
+  --etlala-cream-light: #f5f3ef;
+  --etlala-taupe: #8b7e6a;
+  --etlala-bg: #f5f3ef;
+  --etlala-paper: #ffffff;
+  --etlala-text: #2d3a2d;
+  --etlala-text-secondary: #6b7b6b;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: 'Tajawal', 'Cairo', system-ui, -apple-system, sans-serif !important;
+  background-color: var(--etlala-bg);
+  color: var(--etlala-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* Force Tajawal font everywhere */
+h1, h2, h3, h4, h5, h6,
+p, span, div,
+input, button, textarea, select {
+  font-family: 'Tajawal', 'Cairo', sans-serif !important;
+}
+
+.font-en {
+  font-family: 'Outfit', sans-serif !important;
+}
+
+/* Fix RTL button icon spacing - icons stuck to text */
+.MuiButton-startIcon {
+  margin-left: 8px !important;
+  margin-right: -2px !important;
+}
+.MuiButton-endIcon {
+  margin-right: 8px !important;
+  margin-left: -2px !important;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--etlala-cream);
+  border-radius: 20px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--etlala-taupe);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.6s ease-out forwards;
+}
+
+/* Print Styles - Only show the invoice */
+@media print {
+  body {
+    background: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .no-print,
+  .MuiBottomNavigation-root {
+    display: none !important;
+  }
+
+  @page {
+    margin: 0;
+    size: A4;
+  }
+}
+
+/* Mobile Enhancements */
+@media (max-width: 600px) {
+  body {
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Prevent layout shifts */
+  * {
+    -webkit-text-size-adjust: 100%;
+  }
+}
