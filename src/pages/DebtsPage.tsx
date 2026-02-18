@@ -8,7 +8,6 @@ import {
   TextField,
   InputAdornment,
   Container,
-  Grid,
   Stack,
   useTheme,
   Dialog,
@@ -20,6 +19,7 @@ import {
   Paper,
   alpha,
   IconButton,
+  Grid,
 } from '@mui/material';
 import {
   Add,
@@ -189,7 +189,7 @@ export const DebtsPage = () => {
         {/* Debts Grid */}
         <Grid container spacing={2}>
           {filteredDebts.length === 0 ? (
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Box textAlign="center" py={8} bgcolor="background.paper" borderRadius="20px" border="1px solid" borderColor="divider">
                 <AccountBalanceWallet sx={{ fontSize: 56, color: 'text.secondary', opacity: 0.15, mb: 2 }} />
                 <Typography variant="h6" color="text.secondary">لا توجد ديون مسجلة</Typography>
@@ -197,7 +197,7 @@ export const DebtsPage = () => {
             </Grid>
           ) : (
             filteredDebts.map((debt) => (
-              <Grid item xs={12} md={6} lg={4} key={debt.id}>
+              <Grid size={{ xs: 12, md: 6, lg: 4 }} key={debt.id}>
                 <Card sx={{ borderRadius: '18px', border: '1px solid', borderColor: 'divider', boxShadow: 'none', height: '100%' }}>
                   <CardContent sx={{ p: 3 }}>
                     <Stack spacing={2}>

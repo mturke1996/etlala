@@ -8,7 +8,6 @@ import {
   TextField,
   InputAdornment,
   Container,
-  Grid,
   Stack,
   useTheme,
   Dialog,
@@ -20,6 +19,7 @@ import {
   Paper,
   alpha,
   IconButton,
+  Grid,
 } from '@mui/material';
 import {
   Add,
@@ -174,7 +174,7 @@ export const ExpensesPage = () => {
 
           {/* Stats in header */}
           <Grid container spacing={1.5}>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Paper sx={{ p: 2, borderRadius: 2.5, bgcolor: 'rgba(255,255,255,0.1)', boxShadow: 'none', border: '1px solid rgba(255,255,255,0.08)' }}>
                 <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', display: 'block' }}>إجمالي المصروفات</Typography>
                 <Typography variant="body1" fontWeight={800} color="white">
@@ -182,13 +182,13 @@ export const ExpensesPage = () => {
                 </Typography>
               </Paper>
             </Grid>
-            <Grid item xs={6}>
+            <Grid size={{ xs: 6 }}>
               <Paper sx={{ p: 1.5, borderRadius: 2.5, bgcolor: 'rgba(255,255,255,0.1)', boxShadow: 'none', border: '1px solid rgba(255,255,255,0.08)' }}>
                 <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', display: 'block' }}>عدد السجلات</Typography>
                 <Typography variant="body1" fontWeight={800} color="white">{expenses.length}</Typography>
               </Paper>
             </Grid>
-            <Grid item xs={6}>
+            <Grid size={{ xs: 6 }}>
               <Paper sx={{ p: 1.5, borderRadius: 2.5, bgcolor: 'rgba(255,255,255,0.1)', boxShadow: 'none', border: '1px solid rgba(255,255,255,0.08)' }}>
                 <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', display: 'block' }}>الفئات</Typography>
                 <Typography variant="body1" fontWeight={800} color="white">{chartData.length}</Typography>
@@ -261,7 +261,7 @@ export const ExpensesPage = () => {
             <Card key={exp.id} sx={{ borderRadius: '14px', boxShadow: 'none', border: '1px solid', borderColor: 'divider' }}>
               <CardContent sx={{ py: 2, '&:last-child': { pb: 2 } }}>
                 <Grid container alignItems="center" spacing={2}>
-                  <Grid item xs={12} sm={4}>
+                  <Grid size={{ xs: 12, sm: 4 }}>
                     <Stack direction="row" spacing={2} alignItems="center">
                       <Avatar sx={{ bgcolor: alpha(theme.palette.error.main, 0.08), color: 'error.main', borderRadius: '10px', width: 40, height: 40 }}>
                         <Category fontSize="small" />
@@ -272,16 +272,16 @@ export const ExpensesPage = () => {
                       </Box>
                     </Stack>
                   </Grid>
-                  <Grid item xs={6} sm={3}>
+                  <Grid size={{ xs: 6, sm: 3 }}>
                     <Stack direction="row" spacing={0.5} alignItems="center" color="text.secondary">
                       <CalendarToday sx={{ fontSize: 14 }} />
                       <Typography variant="body2">{formatDate(exp.date)}</Typography>
                     </Stack>
                   </Grid>
-                  <Grid item xs={6} sm={3}>
+                  <Grid size={{ xs: 6, sm: 3 }}>
                     <Typography variant="body2" color="text.secondary">{exp.createdBy || '-'}</Typography>
                   </Grid>
-                  <Grid item xs={12} sm={2} textAlign="right">
+                  <Grid size={{ xs: 12, sm: 2 }} textAlign="right">
                     <Typography fontWeight={700} color="error.main">{formatCurrency(exp.amount)}</Typography>
                   </Grid>
                 </Grid>
