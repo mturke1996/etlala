@@ -4,7 +4,7 @@ import {
   Box, Button, Card, CardContent, Typography, Chip, IconButton,
   Dialog, DialogTitle, DialogContent, DialogActions, TextField, Container,
   Avatar, Stack, FormControl, InputLabel, Select, MenuItem, Divider,
-  useTheme, Snackbar, InputAdornment, Alert, Grid,
+  useTheme, Snackbar, InputAdornment, Alert, Grid as MuiGrid,
 } from '@mui/material';
 import {
   ArrowBack, Payment, Business, Person, Phone, Add, TrendingDown,
@@ -18,6 +18,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import dayjs from 'dayjs';
 import 'dayjs/locale/ar';
+
+const Grid = MuiGrid as any;
 import type { Payment as PaymentType, Expense, StandaloneDebt, Worker } from '../types';
 import { COMPANY_INFO } from '../constants/companyInfo';
 

@@ -2,11 +2,13 @@ import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box, Button, Typography, TextField, InputAdornment, Chip,
-  IconButton, Stack, Container, useTheme, Paper, alpha, Grid,
+  IconButton, Stack, Container, useTheme, Paper, alpha, Grid as MuiGrid,
 } from '@mui/material';
 import { Add, Search, Description, ArrowBack } from '@mui/icons-material';
 import { useDataStore } from '../store/useDataStore';
 import { formatCurrency, formatDate, getStatusLabel } from '../utils/formatters';
+
+const Grid = MuiGrid as any;
 
 export const InvoicesPage = () => {
   const navigate = useNavigate();

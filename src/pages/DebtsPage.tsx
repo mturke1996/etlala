@@ -19,7 +19,7 @@ import {
   Paper,
   alpha,
   IconButton,
-  Grid,
+  Grid as MuiGrid,
 } from '@mui/material';
 import {
   Add,
@@ -39,6 +39,8 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
 import 'dayjs/locale/ar';
+
+const Grid = MuiGrid as any;
 
 export const DebtsPage = () => {
   const theme = useTheme();

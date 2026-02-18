@@ -14,7 +14,7 @@ import {
   Paper,
   alpha,
   IconButton,
-  Grid,
+  Grid as MuiGrid,
 } from '@mui/material';
 import {
   Search,
@@ -28,6 +28,8 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useDataStore } from '../store/useDataStore';
 import { formatCurrency, formatDate } from '../utils/formatters';
+
+const Grid = MuiGrid as any;
 
 export const PaymentsPage = () => {
   const theme = useTheme();

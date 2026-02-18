@@ -21,7 +21,7 @@ import {
   InputAdornment,
   Divider,
   Chip,
-  Grid,
+  Grid as MuiGrid,
 } from '@mui/material';
 import {
   Add,
@@ -36,6 +36,8 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs, { Dayjs } from 'dayjs';
 import 'dayjs/locale/ar';
+
+const Grid = MuiGrid as any;
 
 import { useDataStore } from '../store/useDataStore';
 import { useAuthStore } from '../store/useAuthStore';
