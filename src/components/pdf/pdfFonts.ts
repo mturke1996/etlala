@@ -1,38 +1,22 @@
+// @ts-nocheck
 /**
- * PDF Font Registration
- * =====================
- * Registers Arabic Cairo font for @react-pdf/renderer
- * Uses static font files from Google Fonts GitHub repository (stable URLs)
+ * PDF Arabic Font Registration - v4 compatible
+ * Uses locally served Cairo TTF from public/fonts/
+ * Workaround for @react-pdf/renderer v4 BiDi bug with Arabic
  */
-
 import { Font } from '@react-pdf/renderer';
 
-// Register Cairo Arabic font - static TTF files (stable URLs)
-const CAIRO_BASE = 'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/cairo/static';
+const CAIRO_TTF = `${window.location.origin}/fonts/Cairo-Regular.ttf`;
 
 Font.register({
   family: 'Cairo',
   fonts: [
-    {
-      src: `${CAIRO_BASE}/Cairo-Regular.ttf`,
-      fontWeight: 400,
-    },
-    {
-      src: `${CAIRO_BASE}/Cairo-SemiBold.ttf`,
-      fontWeight: 600,
-    },
-    {
-      src: `${CAIRO_BASE}/Cairo-Bold.ttf`,
-      fontWeight: 700,
-    },
-    {
-      src: `${CAIRO_BASE}/Cairo-ExtraBold.ttf`,
-      fontWeight: 800,
-    },
+    { src: CAIRO_TTF, fontWeight: 400 },
+    { src: CAIRO_TTF, fontWeight: 700 },
   ],
 });
 
-// Disable hyphenation for Arabic text
-Font.registerHyphenationCallback((word: string) => [word]);
+// Disable hyphenation for Arabic
+Font.registerHyphenationCallback((word) => [word]);
 
 export const PDF_FONT_FAMILY = 'Cairo';

@@ -5,7 +5,7 @@ import {
   Box, Button, Card, CardContent, Typography, Chip, IconButton,
   Dialog, DialogTitle, DialogContent, DialogActions, TextField, Container,
   Avatar, Stack, FormControl, InputLabel, Select, MenuItem, Divider,
-  useTheme, Snackbar, InputAdornment, Alert, Grid as MuiGrid,
+  useTheme, Snackbar, InputAdornment, Alert, Grid as MuiGrid, CircularProgress,
 } from '@mui/material';
 import {
   ArrowBack, Payment, Business, Person, Phone, Add, TrendingDown,
@@ -19,6 +19,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import dayjs from 'dayjs';
 import 'dayjs/locale/ar';
+import React from 'react';
+import { downloadPdf } from '../utils/pdfService';
+import { ExpensesPDF, PaymentsPDF, WorkersPDF, FullReportPDF } from '../components/pdf/ClientReportsPDF';
+import toast from 'react-hot-toast';
 
 const Grid = MuiGrid as any;
 import type { Payment as PaymentType, Expense, StandaloneDebt, Worker } from '../types';
@@ -142,67 +146,68 @@ export const ClientProfilePage = () => {
   }, [clientExpenses, clientDebts, clientPayments, clientWorkers, client]);
 
   const msg = (m: string) => setSnackbar({ open: true, message: m });
+  const [pdfLoading, setPdfLoading] = useState(false);
 
-  // === PDF Helper ===
-  const pdfStyles = `@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap');
-*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Tajawal',sans-serif;background:#fff;color:#1a1a1a;padding:24px;font-size:12px;direction:rtl}
-.header{display:flex;justify-content:space-between;align-items:center;padding:10px 0 14px;margin-bottom:6px}
-.header-right h1{font-size:22px;font-weight:900;color:#364036;margin:0 0 4px 0;letter-spacing:0.5px}
-.header-right p{margin:0;font-size:11px;color:#555;line-height:1.6}
-.header-left img{height:150px;width:300px;object-fit:contain}
-.header-line{border:none;border-top:3px solid #364036;margin-bottom:14px}
-.client-info{background:#f8f6f2;border-radius:8px;padding:12px 16px;margin-bottom:16px;border:1px solid #e8e4de;display:flex;justify-content:space-between;align-items:center}
-.client-info h2{font-size:15px;color:#364036;margin-bottom:2px}.client-info span{color:#888;font-size:11px}
-.summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px}
-.summary-card{background:#f8f6f2;border-radius:8px;padding:10px;text-align:center;border:1px solid #e8e4de}
-.summary-card .label{font-size:9px;color:#888;margin-bottom:3px}.summary-card .value{font-size:13px;font-weight:800;color:#364036}
-.section{margin-bottom:20px;page-break-inside:avoid}.section h3{font-size:13px;font-weight:800;color:#364036;border-bottom:2px solid #e8e4de;padding-bottom:6px;margin-bottom:8px}
-table{width:100%;border-collapse:collapse;font-size:11px}table th{background:#364036;color:white;padding:8px 10px;text-align:right;font-weight:700;white-space:nowrap}
-table td{padding:7px 10px;border-bottom:1px solid #eee;text-align:right}table tr:nth-child(even){background:#fafaf8}
-.total-row{background:#f0ede7!important;font-weight:800}.total-row td{border-top:2px solid #364036}
-.footer{text-align:center;margin-top:24px;padding-top:12px;border-top:2px solid #e8e4de;color:#999;font-size:10px}
-.amount{font-weight:700}.neg{color:#d64545}.pos{color:#0d9668}
-@media print{body{padding:12px}@page{size:A4;margin:8mm}}
-@media(max-width:600px){.summary-grid{grid-template-columns:repeat(2,1fr)}table{font-size:9px}table th,table td{padding:4px 5px}.header-right h1{font-size:16px}.header-left img{height:50px}}`;
-
-  const pdfHeader = `<div class="header"><div class="header-right"><h1>${COMPANY_INFO.fullName}</h1><p>${COMPANY_INFO.address}<br/>${COMPANY_INFO.phone}</p></div><div class="header-left"><img src="/logo.jpeg" alt="Etlala"/></div></div><hr class="header-line"/>`;
-  const pdfClientInfo = `<div class="client-info"><div><h2>${client?.name || ''}</h2><span>${client?.phone || ''} | ${client?.address || ''}</span></div><div style="text-align:left;font-size:10px;color:#888">${formatDate(new Date().toISOString())}</div></div>`;
-  const pdfFooter = `<div class="footer">تم إنشاء هذا التقرير بواسطة نظام إطلالة | ${formatDate(new Date().toISOString())}</div>`;
-
-  const openPrintWindow = (title: string, body: string) => {
-    const w = window.open('', '_blank');
-    if (!w) { msg('يرجى السماح بالنوافذ المنبثقة'); return; }
-    w.document.write(`<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title><style>${pdfStyles}</style></head><body>${pdfHeader}${pdfClientInfo}${body}${pdfFooter}<script>window.onload=function(){window.print()}<\/script></body></html>`);
-    w.document.close();
+  // === PDF Helpers (using @react-pdf/renderer) ===
+  const withPdfLoading = async (fn: () => Promise<void>) => {
+    setPdfLoading(true);
+    try {
+      await fn();
+    } catch (e) {
+      console.error('PDF error:', e);
+      toast.error('فشل في إنشاء PDF');
+    } finally {
+      setPdfLoading(false);
+    }
   };
+  const handleGeneratePDF = () => withPdfLoading(() =>
+    downloadPdf(
+      React.createElement(FullReportPDF, {
+        client,
+        expenses: clientExpenses,
+        payments: clientPayments,
+        debts: clientDebts,
+        workers: clientWorkers,
+        summary,
+      }),
+      `تقرير-${client?.name}`
+    )
+  );
 
-  const handleGeneratePDF = () => {
-    let body = `<div class="summary-grid">
-<div class="summary-card"><div class="label">إجمالي المدفوعات</div><div class="value">${formatCurrency(summary.totalPaid)}</div></div>
-<div class="summary-card"><div class="label">الربح (${summary.profitPercentage}%)</div><div class="value">${formatCurrency(summary.profit)}</div></div>
-<div class="summary-card"><div class="label">المصروفات + الديون</div><div class="value">${formatCurrency(summary.totalObligations)}</div></div>
-<div class="summary-card"><div class="label">المتبقي</div><div class="value ${summary.remaining >= 0 ? 'pos' : 'neg'}">${formatCurrency(summary.remaining)}</div></div></div>`;
-    if (clientExpenses.length > 0) body += `<div class="section"><h3>المصروفات (${clientExpenses.length})</h3><table><thead><tr><th>#</th><th>الوصف</th><th>التصنيف</th><th>التاريخ</th><th>المبلغ</th></tr></thead><tbody>${clientExpenses.map((e,i) => `<tr><td>${i+1}</td><td>${e.description}</td><td>${getCategoryLabel(e.category)}</td><td>${formatDate(e.date)}</td><td class="amount">${formatCurrency(e.amount)}</td></tr>`).join('')}<tr class="total-row"><td colspan="4">الإجمالي</td><td class="amount">${formatCurrency(summary.totalExpenses)}</td></tr></tbody></table></div>`;
-    if (clientPayments.length > 0) body += `<div class="section"><h3>المدفوعات (${clientPayments.length})</h3><table><thead><tr><th>#</th><th>المبلغ</th><th>الطريقة</th><th>التاريخ</th><th>ملاحظات</th></tr></thead><tbody>${clientPayments.map((p,i) => `<tr><td>${i+1}</td><td class="amount">${formatCurrency(p.amount)}</td><td>${getPayMethodLabel(p.paymentMethod)}</td><td>${formatDate(p.paymentDate)}</td><td>${p.notes||'-'}</td></tr>`).join('')}<tr class="total-row"><td colspan="4">الإجمالي</td><td class="amount">${formatCurrency(summary.totalPaid)}</td></tr></tbody></table></div>`;
-    if (clientDebts.length > 0) body += `<div class="section"><h3>الديون (${clientDebts.length})</h3><table><thead><tr><th>#</th><th>الطرف</th><th>الوصف</th><th>المبلغ</th><th>المدفوع</th><th>المتبقي</th></tr></thead><tbody>${clientDebts.map((d,i) => `<tr><td>${i+1}</td><td>${d.partyName}</td><td>${d.description}</td><td class="amount">${formatCurrency(d.amount)}</td><td class="amount pos">${formatCurrency(d.paidAmount)}</td><td class="amount neg">${formatCurrency(d.remainingAmount)}</td></tr>`).join('')}<tr class="total-row"><td colspan="3">الإجمالي</td><td class="amount">${formatCurrency(clientDebts.reduce((s,d)=>s+d.amount,0))}</td><td class="amount">${formatCurrency(clientDebts.reduce((s,d)=>s+d.paidAmount,0))}</td><td class="amount">${formatCurrency(summary.totalDebts)}</td></tr></tbody></table></div>`;
-    if (clientWorkers.length > 0) body += `<div class="section"><h3>العمال (${clientWorkers.length})</h3><table><thead><tr><th>#</th><th>الاسم</th><th>نوع العمل</th><th>الاتفاق</th><th>المدفوع</th><th>المتبقي</th></tr></thead><tbody>${clientWorkers.map((w,i) => `<tr><td>${i+1}</td><td>${w.name}</td><td>${w.jobType||'-'}</td><td class="amount">${formatCurrency(w.totalAmount)}</td><td class="amount pos">${formatCurrency(w.paidAmount)}</td><td class="amount neg">${formatCurrency(w.remainingAmount)}</td></tr>`).join('')}<tr class="total-row"><td colspan="3">الإجمالي</td><td class="amount">${formatCurrency(summary.totalWorkersAgreed)}</td><td class="amount">${formatCurrency(summary.totalWorkersPaid)}</td><td class="amount">${formatCurrency(summary.totalWorkersDue)}</td></tr></tbody></table></div>`;
-    openPrintWindow(`تقرير ${client?.name}`, body);
-  };
+  const handleShareExpenses = () => withPdfLoading(() =>
+    downloadPdf(
+      React.createElement(ExpensesPDF, {
+        client,
+        expenses: clientExpenses,
+        total: summary.totalExpenses,
+      }),
+      `مصروفات-${client?.name}`
+    )
+  );
 
-  const handleShareExpenses = () => {
-    const body = `<div class="section"><h3>كشف المصروفات (${clientExpenses.length})</h3><table><thead><tr><th>#</th><th>الوصف</th><th>التصنيف</th><th>التاريخ</th><th>رقم الفاتورة</th><th>المبلغ</th></tr></thead><tbody>${clientExpenses.map((e,i) => `<tr><td>${i+1}</td><td>${e.description}</td><td>${getCategoryLabel(e.category)}</td><td>${formatDate(e.date)}</td><td>${e.invoiceNumber||'-'}</td><td class="amount">${formatCurrency(e.amount)}</td></tr>`).join('')}<tr class="total-row"><td colspan="5">الإجمالي</td><td class="amount">${formatCurrency(summary.totalExpenses)}</td></tr></tbody></table></div>`;
-    openPrintWindow(`مصروفات ${client?.name}`, body);
-  };
+  const handleSharePayments = () => withPdfLoading(() =>
+    downloadPdf(
+      React.createElement(PaymentsPDF, {
+        client,
+        payments: clientPayments,
+        total: summary.totalPaid,
+      }),
+      `مدفوعات-${client?.name}`
+    )
+  );
 
-  const handleSharePayments = () => {
-    const body = `<div class="section"><h3>كشف المدفوعات (${clientPayments.length})</h3><table><thead><tr><th>#</th><th>المبلغ</th><th>طريقة الدفع</th><th>التاريخ</th><th>بواسطة</th><th>ملاحظات</th></tr></thead><tbody>${clientPayments.map((p,i) => `<tr><td>${i+1}</td><td class="amount">${formatCurrency(p.amount)}</td><td>${getPayMethodLabel(p.paymentMethod)}</td><td>${formatDate(p.paymentDate)}</td><td>${p.createdBy||'-'}</td><td>${p.notes||'-'}</td></tr>`).join('')}<tr class="total-row"><td colspan="5">الإجمالي</td><td class="amount">${formatCurrency(summary.totalPaid)}</td></tr></tbody></table></div>`;
-    openPrintWindow(`مدفوعات ${client?.name}`, body);
-  };
-
-  const handleShareWorkers = () => {
-    const body = `<div class="section"><h3>كشف العمال (${clientWorkers.length})</h3><table><thead><tr><th>#</th><th>الاسم</th><th>نوع العمل</th><th>الاتفاق</th><th>المدفوع</th><th>المتبقي</th></tr></thead><tbody>${clientWorkers.map((w,i) => `<tr><td>${i+1}</td><td>${w.name}</td><td>${w.jobType||'-'}</td><td class="amount">${formatCurrency(w.totalAmount)}</td><td class="amount pos">${formatCurrency(w.paidAmount)}</td><td class="amount neg">${formatCurrency(w.remainingAmount)}</td></tr>`).join('')}<tr class="total-row"><td colspan="3">الإجمالي</td><td class="amount">${formatCurrency(summary.totalWorkersAgreed)}</td><td class="amount">${formatCurrency(summary.totalWorkersPaid)}</td><td class="amount">${formatCurrency(summary.totalWorkersDue)}</td></tr></tbody></table></div>`;
-    openPrintWindow(`عمال ${client?.name}`, body);
-  };
+  const handleShareWorkers = () => withPdfLoading(() =>
+    downloadPdf(
+      React.createElement(WorkersPDF, {
+        client,
+        workers: clientWorkers,
+        totalAgreed: summary.totalWorkersAgreed,
+        totalPaid: summary.totalWorkersPaid,
+        totalDue: summary.totalWorkersDue,
+      }),
+      `عمال-${client?.name}`
+    )
+  );
 
   const menuItems = [
     { title: 'فاتورة جديدة', icon: PostAdd, color: '#e6a817', bgColor: 'rgba(230,168,23,0.08)', borderColor: 'rgba(230,168,23,0.12)', onClick: () => navigate(`/invoices/new?clientId=${clientId}`) },
