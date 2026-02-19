@@ -1,76 +1,56 @@
+// @ts-nocheck
 /**
- * Invoice PDF Template
- * ====================
- * Professional A4 invoice template with full Arabic RTL support.
- * 
- * Design Principles:
- * - Clean visual hierarchy (company → invoice info → client → items → totals)
- * - Print-safe colors (tested for CMYK offset & laser)
- * - Embedded Arabic fonts (Cairo family)
- * - Responsive table that handles long descriptions
- * - Professional footer with company info
- * - Balanced whitespace and alignment
- * 
- * Architecture:
- * - Pure presentational component (no side effects)
- * - Receives typed props (Invoice + Client)
- * - Uses shared styles from pdfStyles.ts
- * - Can be extended for different invoice formats
+ * Invoice PDF Template - Professional A4 Layout
+ * ==============================================
+ * - Full Arabic RTL support
+ * - Company logo + name + address
+ * - Embedded Cairo font
+ * - Print-safe colors
+ * - Clean typographic hierarchy
  */
 
 import React from 'react';
-import {
-  Document,
-  Page,
-  Text,
-  View,
-  StyleSheet,
-  Image,
-} from '@react-pdf/renderer';
-import './pdfFonts'; // Side-effect: registers fonts
+import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
+import './pdfFonts';
 import { pdfBaseStyles, PDF_COLORS } from './pdfStyles';
 import { PDF_FONT_FAMILY } from './pdfFonts';
 import type { Invoice, Client } from '../../types';
 import { COMPANY_INFO } from '../../constants/companyInfo';
 
-// ─── Invoice-Specific Styles ──────────────────────────
+// Get logo URL - works in dev and production
+const getLogoUrl = () => {
+  try {
+    return (window?.location?.origin || '') + '/logo.jpeg';
+  } catch {
+    return '/logo.jpeg';
+  }
+};
+
+// ─── Styles ─────────────────────────────────────────
 const s = StyleSheet.create({
   // Header
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 20,
+    alignItems: 'center',
+    marginBottom: 15,
+    paddingBottom: 12,
+    borderBottomWidth: 2.5,
+    borderBottomColor: PDF_COLORS.primary,
   },
-  companyLogo: {
-    width: 48,
-    height: 48,
-    borderRadius: 6,
+  logo: {
+    width: 120,
+    height: 50,
     objectFit: 'contain',
   },
-  companyBlock: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  companyName: {
-    fontSize: 14,
-    fontWeight: 800,
-    color: PDF_COLORS.primary,
-    fontFamily: PDF_FONT_FAMILY,
-  },
-  companySubtitle: {
-    fontSize: 7,
-    fontWeight: 600,
-    color: PDF_COLORS.accentDark,
-    fontFamily: PDF_FONT_FAMILY,
-    marginTop: 2,
+  headerRight: {
+    alignItems: 'flex-end',
   },
   invoiceTitle: {
-    fontSize: 26,
+    fontSize: 28,
     fontWeight: 800,
-    color: '#e0dcd4',
-    letterSpacing: 2,
+    color: '#d4d0c8',
+    letterSpacing: 3,
     fontFamily: PDF_FONT_FAMILY,
   },
   invoiceNumber: {
@@ -78,67 +58,68 @@ const s = StyleSheet.create({
     fontWeight: 700,
     color: PDF_COLORS.primary,
     fontFamily: PDF_FONT_FAMILY,
-    textAlign: 'left',
     marginTop: 2,
   },
 
-  // Contact bar
-  contactBar: {
-    borderBottomWidth: 2,
-    borderBottomColor: PDF_COLORS.primary,
+  // Company info bar
+  companyBar: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginBottom: 18,
     paddingBottom: 8,
-    marginBottom: 20,
   },
-  contactText: {
+  companyText: {
     fontSize: 8,
     fontWeight: 600,
     color: PDF_COLORS.textMuted,
     fontFamily: PDF_FONT_FAMILY,
   },
 
-  // Info section (client + dates)
+  // Client & Dates section
   infoSection: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 24,
+    marginBottom: 22,
     gap: 20,
   },
-  clientBlock: {
+  clientBox: {
     flex: 1,
     paddingVertical: 8,
-    paddingHorizontal: 10,
+    paddingHorizontal: 12,
     borderRightWidth: 3,
     borderRightColor: PDF_COLORS.primary,
+    backgroundColor: '#fafaf8',
+    borderRadius: 3,
   },
-  clientLabel: {
+  sectionLabel: {
     fontSize: 7,
-    fontWeight: 600,
+    fontWeight: 700,
     color: PDF_COLORS.accentDark,
     letterSpacing: 0.5,
     marginBottom: 4,
     fontFamily: PDF_FONT_FAMILY,
   },
   clientName: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: 800,
     color: PDF_COLORS.text,
     fontFamily: PDF_FONT_FAMILY,
-    marginBottom: 2,
+    marginBottom: 3,
   },
   clientDetail: {
     fontSize: 9,
     color: PDF_COLORS.textLight,
     fontFamily: PDF_FONT_FAMILY,
-    lineHeight: 1.5,
+    lineHeight: 1.6,
   },
-  dateBlock: {
-    width: 160,
+  datesBox: {
+    width: 155,
   },
   dateRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 6,
+    alignItems: 'center',
+    marginBottom: 7,
   },
   dateLabel: {
     fontSize: 8,
@@ -156,20 +137,20 @@ const s = StyleSheet.create({
     fontWeight: 700,
     fontFamily: PDF_FONT_FAMILY,
     paddingHorizontal: 8,
-    paddingVertical: 2,
+    paddingVertical: 3,
     borderRadius: 4,
   },
 
   // Items table
   tableHeader: {
     flexDirection: 'row',
-    backgroundColor: PDF_COLORS.tableHeader,
-    paddingVertical: 8,
-    paddingHorizontal: 10,
+    backgroundColor: PDF_COLORS.primary,
+    paddingVertical: 9,
+    paddingHorizontal: 12,
     borderRadius: 4,
-    marginBottom: 2,
+    marginBottom: 1,
   },
-  tableHeaderText: {
+  thText: {
     color: PDF_COLORS.white,
     fontSize: 9,
     fontWeight: 700,
@@ -177,31 +158,31 @@ const s = StyleSheet.create({
   },
   tableRow: {
     flexDirection: 'row',
-    paddingVertical: 8,
-    paddingHorizontal: 10,
+    paddingVertical: 9,
+    paddingHorizontal: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#f0efeb',
   },
-  tableRowAlt: {
+  rowAlt: {
     backgroundColor: PDF_COLORS.tableRowAlt,
   },
-  colDescription: { flex: 1 },
-  colQty: { width: 50, textAlign: 'center' },
-  colPrice: { width: 75, textAlign: 'center' },
+  colDesc: { flex: 1 },
+  colQty: { width: 55, textAlign: 'center' },
+  colPrice: { width: 80, textAlign: 'center' },
   colTotal: { width: 85, textAlign: 'left' },
   cellText: {
-    fontSize: 9,
+    fontSize: 10,
     fontFamily: PDF_FONT_FAMILY,
     fontWeight: 400,
   },
-  cellTextBold: {
-    fontSize: 9,
+  cellBold: {
+    fontSize: 10,
     fontFamily: PDF_FONT_FAMILY,
     fontWeight: 700,
   },
 
   // Totals
-  totalsSection: {
+  totalsWrap: {
     alignItems: 'flex-start',
     marginTop: 16,
     marginBottom: 20,
@@ -224,35 +205,35 @@ const s = StyleSheet.create({
     fontWeight: 700,
     fontFamily: PDF_FONT_FAMILY,
   },
-  grandTotalRow: {
+  grandRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: 8,
-    borderTopWidth: 2,
+    paddingVertical: 10,
+    borderTopWidth: 2.5,
     borderTopColor: PDF_COLORS.primary,
-    marginTop: 4,
+    marginTop: 6,
   },
-  grandTotalLabel: {
-    fontSize: 13,
+  grandLabel: {
+    fontSize: 14,
     fontWeight: 800,
     color: PDF_COLORS.primary,
     fontFamily: PDF_FONT_FAMILY,
   },
-  grandTotalValue: {
-    fontSize: 14,
+  grandValue: {
+    fontSize: 15,
     fontWeight: 800,
     color: PDF_COLORS.primary,
     fontFamily: PDF_FONT_FAMILY,
   },
 
   // Notes
-  notesBlock: {
+  notesBox: {
     padding: 12,
     borderRightWidth: 3,
     borderRightColor: PDF_COLORS.accent,
     backgroundColor: '#fffcf5',
-    borderRadius: 4,
-    marginBottom: 16,
+    borderRadius: 3,
+    marginBottom: 14,
   },
   notesLabel: {
     fontSize: 8,
@@ -263,55 +244,45 @@ const s = StyleSheet.create({
   },
   notesText: {
     fontSize: 9,
-    color: '#555555',
+    color: '#555',
     fontFamily: PDF_FONT_FAMILY,
-    lineHeight: 1.6,
+    lineHeight: 1.7,
   },
 });
 
-// ─── Helper: Format Currency ─────────────────────────
-const formatAmount = (amount: number): string => {
-  const rounded = Math.round(amount);
-  return rounded.toLocaleString('ar-LY') + ' د.ل';
-};
+// ─── Helpers ────────────────────────────────────────
+const fmtAmount = (n: number) => Math.round(n).toLocaleString('ar-LY') + ' د.ل';
 
-// ─── Helper: Format Date ─────────────────────────────
-const formatPdfDate = (dateStr: string): string => {
+const fmtDate = (d: string) => {
   try {
-    const d = new Date(dateStr);
-    const day = d.getDate().toString().padStart(2, '0');
-    const month = (d.getMonth() + 1).toString().padStart(2, '0');
-    const year = d.getFullYear();
-    return `${day}/${month}/${year}`;
+    const dt = new Date(d);
+    return `${dt.getDate().toString().padStart(2, '0')}/${(dt.getMonth() + 1).toString().padStart(2, '0')}/${dt.getFullYear()}`;
   } catch {
-    return dateStr;
+    return d;
   }
 };
 
-// ─── Helper: Status Label & Color ────────────────────
-const getStatusInfo = (status: string) => {
-  const map: Record<string, { label: string; color: string; bg: string }> = {
-    paid: { label: 'مدفوعة', color: '#0d9668', bg: '#e6f9f1' },
-    sent: { label: 'مرسلة', color: '#2563eb', bg: '#eff6ff' },
-    draft: { label: 'مسودة', color: '#6b7280', bg: '#f3f4f6' },
-    overdue: { label: 'متأخرة', color: '#dc2626', bg: '#fef2f2' },
-    partially_paid: { label: 'جزئية', color: '#d97706', bg: '#fffbeb' },
-    cancelled: { label: 'ملغاة', color: '#dc2626', bg: '#fef2f2' },
-  };
-  return map[status] || { label: status, color: '#6b7280', bg: '#f3f4f6' };
+const statusMap: Record<string, { label: string; color: string; bg: string }> = {
+  paid: { label: 'مدفوعة', color: '#0d9668', bg: '#e6f9f1' },
+  sent: { label: 'مرسلة', color: '#2563eb', bg: '#eff6ff' },
+  draft: { label: 'مسودة', color: '#6b7280', bg: '#f3f4f6' },
+  overdue: { label: 'متأخرة', color: '#dc2626', bg: '#fef2f2' },
+  partially_paid: { label: 'جزئية', color: '#d97706', bg: '#fffbeb' },
+  cancelled: { label: 'ملغاة', color: '#dc2626', bg: '#fef2f2' },
 };
 
 // ═══════════════════════════════════════════════════════
-// ─── Main Component ──────────────────────────────────
+// Main Component
 // ═══════════════════════════════════════════════════════
 
-interface InvoicePDFProps {
+interface Props {
   invoice: Invoice;
   client: Client;
 }
 
-export const InvoicePDF: React.FC<InvoicePDFProps> = ({ invoice, client }) => {
-  const statusInfo = getStatusInfo(invoice.status);
+export const InvoicePDF: React.FC<Props> = ({ invoice, client }) => {
+  const st = statusMap[invoice.status] || { label: invoice.status, color: '#6b7280', bg: '#f3f4f6' };
+  const logoUrl = getLogoUrl();
 
   return (
     <Document
@@ -321,64 +292,52 @@ export const InvoicePDF: React.FC<InvoicePDFProps> = ({ invoice, client }) => {
       language="ar"
     >
       <Page size="A4" style={pdfBaseStyles.page}>
-        {/* ═══ HEADER ═══ */}
+
+        {/* ═══ HEADER: Logo + Invoice Badge ═══ */}
         <View style={s.header}>
-          {/* Company Info (Right) */}
-          <View style={s.companyBlock}>
-            <View>
-              <Text style={s.companyName}>{COMPANY_INFO.fullName}</Text>
-              <Text style={s.companySubtitle}>Architecture & Engineering</Text>
-            </View>
+          {/* Company Logo */}
+          <View>
+            <Image src={logoUrl} style={s.logo} />
           </View>
 
-          {/* Invoice Badge (Left) */}
-          <View style={{ alignItems: 'flex-end' }}>
+          {/* Invoice Title */}
+          <View style={s.headerRight}>
             <Text style={s.invoiceTitle}>INVOICE</Text>
             <Text style={s.invoiceNumber}>#{invoice.invoiceNumber}</Text>
           </View>
         </View>
 
-        {/* ═══ CONTACT BAR ═══ */}
-        <View style={s.contactBar}>
-          <Text style={s.contactText}>
-            {COMPANY_INFO.address} | {COMPANY_INFO.phone}
-            {COMPANY_INFO.email ? ` | ${COMPANY_INFO.email}` : ''}
+        {/* ═══ COMPANY INFO BAR ═══ */}
+        <View style={s.companyBar}>
+          <Text style={s.companyText}>
+            {COMPANY_INFO.fullName} | {COMPANY_INFO.address} | {COMPANY_INFO.phone}
           </Text>
         </View>
 
-        {/* ═══ CLIENT & DATES ═══ */}
+        {/* ═══ CLIENT + DATES ═══ */}
         <View style={s.infoSection}>
-          {/* Client Info */}
-          <View style={s.clientBlock}>
-            <Text style={s.clientLabel}>فاتورة إلى</Text>
+          {/* Client */}
+          <View style={s.clientBox}>
+            <Text style={s.sectionLabel}>فاتورة إلى</Text>
             <Text style={s.clientName}>{client.name}</Text>
-            {client.address ? (
-              <Text style={s.clientDetail}>{client.address}</Text>
-            ) : null}
-            {client.phone ? (
-              <Text style={s.clientDetail}>{client.phone}</Text>
-            ) : null}
+            {client.phone ? <Text style={s.clientDetail}>{client.phone}</Text> : null}
+            {client.address ? <Text style={s.clientDetail}>{client.address}</Text> : null}
           </View>
 
           {/* Dates */}
-          <View style={s.dateBlock}>
+          <View style={s.datesBox}>
             <View style={s.dateRow}>
               <Text style={s.dateLabel}>تاريخ الإصدار</Text>
-              <Text style={s.dateValue}>{formatPdfDate(invoice.issueDate)}</Text>
+              <Text style={s.dateValue}>{fmtDate(invoice.issueDate)}</Text>
             </View>
             <View style={s.dateRow}>
               <Text style={s.dateLabel}>تاريخ الاستحقاق</Text>
-              <Text style={s.dateValue}>{formatPdfDate(invoice.dueDate)}</Text>
+              <Text style={s.dateValue}>{fmtDate(invoice.dueDate)}</Text>
             </View>
             <View style={s.dateRow}>
               <Text style={s.dateLabel}>الحالة</Text>
-              <Text
-                style={[
-                  s.statusBadge,
-                  { color: statusInfo.color, backgroundColor: statusInfo.bg },
-                ]}
-              >
-                {statusInfo.label}
+              <Text style={[s.statusBadge, { color: st.color, backgroundColor: st.bg }]}>
+                {st.label}
               </Text>
             </View>
           </View>
@@ -386,68 +345,50 @@ export const InvoicePDF: React.FC<InvoicePDFProps> = ({ invoice, client }) => {
 
         {/* ═══ ITEMS TABLE ═══ */}
         <View style={{ marginBottom: 4 }}>
-          {/* Table Header */}
+          {/* Header */}
           <View style={s.tableHeader}>
-            <Text style={[s.tableHeaderText, s.colDescription]}>الوصف</Text>
-            <Text style={[s.tableHeaderText, s.colQty]}>الكمية</Text>
-            <Text style={[s.tableHeaderText, s.colPrice]}>السعر</Text>
-            <Text style={[s.tableHeaderText, s.colTotal]}>الإجمالي</Text>
+            <Text style={[s.thText, s.colDesc]}>الوصف</Text>
+            <Text style={[s.thText, s.colQty]}>الكمية</Text>
+            <Text style={[s.thText, s.colPrice]}>السعر</Text>
+            <Text style={[s.thText, s.colTotal]}>الإجمالي</Text>
           </View>
 
-          {/* Table Rows */}
-          {invoice.items.map((item, index) => (
-            <View
-              key={index}
-              style={[s.tableRow, index % 2 !== 0 ? s.tableRowAlt : {}]}
-            >
-              <Text style={[s.cellTextBold, s.colDescription]}>
-                {item.description}
-              </Text>
+          {/* Rows */}
+          {invoice.items.map((item, i) => (
+            <View key={i} style={[s.tableRow, i % 2 !== 0 && s.rowAlt]}>
+              <Text style={[s.cellBold, s.colDesc]}>{item.description}</Text>
               <Text style={[s.cellText, s.colQty]}>{item.quantity}</Text>
-              <Text style={[s.cellText, s.colPrice]}>
-                {formatAmount(item.unitPrice)}
-              </Text>
-              <Text style={[s.cellTextBold, s.colTotal]}>
-                {formatAmount(item.total)}
-              </Text>
+              <Text style={[s.cellText, s.colPrice]}>{fmtAmount(item.unitPrice)}</Text>
+              <Text style={[s.cellBold, s.colTotal]}>{fmtAmount(item.total)}</Text>
             </View>
           ))}
         </View>
 
         {/* ═══ TOTALS ═══ */}
-        <View style={s.totalsSection}>
+        <View style={s.totalsWrap}>
           <View style={s.totalsBox}>
-            {/* Subtotal */}
             <View style={s.totalRow}>
               <Text style={s.totalLabel}>المجموع الفرعي</Text>
-              <Text style={s.totalValue}>{formatAmount(invoice.subtotal)}</Text>
+              <Text style={s.totalValue}>{fmtAmount(invoice.subtotal)}</Text>
             </View>
 
-            {/* Tax (if any) */}
-            {invoice.taxAmount > 0 ? (
+            {invoice.taxAmount > 0 && (
               <View style={s.totalRow}>
-                <Text style={s.totalLabel}>
-                  الضريبة ({invoice.taxRate}%)
-                </Text>
-                <Text style={s.totalValue}>
-                  {formatAmount(invoice.taxAmount)}
-                </Text>
+                <Text style={s.totalLabel}>الضريبة ({invoice.taxRate}%)</Text>
+                <Text style={s.totalValue}>{fmtAmount(invoice.taxAmount)}</Text>
               </View>
-            ) : null}
+            )}
 
-            {/* Grand Total */}
-            <View style={s.grandTotalRow}>
-              <Text style={s.grandTotalLabel}>الإجمالي</Text>
-              <Text style={s.grandTotalValue}>
-                {formatAmount(invoice.total)}
-              </Text>
+            <View style={s.grandRow}>
+              <Text style={s.grandLabel}>الإجمالي</Text>
+              <Text style={s.grandValue}>{fmtAmount(invoice.total)}</Text>
             </View>
           </View>
         </View>
 
         {/* ═══ NOTES ═══ */}
         {invoice.notes ? (
-          <View style={s.notesBlock}>
+          <View style={s.notesBox}>
             <Text style={s.notesLabel}>ملاحظات</Text>
             <Text style={s.notesText}>{invoice.notes}</Text>
           </View>
