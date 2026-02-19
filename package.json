@@ -17,6 +17,7 @@
     "@mui/icons-material": "^7.3.8",
     "@mui/material": "^7.3.8",
     "@mui/x-date-pickers": "^6.19.0",
+    "@react-pdf/renderer": "^4.3.2",
     "@tanstack/react-query": "^5.17.19",
     "dayjs": "^1.11.10",
     "firebase": "^10.7.2",
