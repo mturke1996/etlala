@@ -8,20 +8,18 @@ import { COMPANY_INFO } from '../../constants/companyInfo';
 import { expenseCategories } from '../../utils/formatters';
 
 const C = {
-  primary: '#364036',
-  secondary: '#4a5d4a',
-  accent: '#c8c0b0',
-  accentDark: '#8b7e6a',
+  primary: '#4a5d4a',
+  accent: '#8b7e6a',
   text: '#1a1f1a',
   muted: '#6b7f6b',
-  light: '#888888',
-  white: '#ffffff',
+  light: '#888',
+  white: '#fff',
   border: '#e8e5de',
   rowAlt: '#fafaf8',
   success: '#0d9668',
   warning: '#c9a54e',
   danger: '#d64545',
-  headerBg: '#364036',
+  headerBg: '#4a5d4a',
   lightBg: '#f8f7f4',
 };
 
@@ -31,91 +29,108 @@ const s = StyleSheet.create({
     fontSize: 9,
     color: C.text,
     backgroundColor: C.white,
-    paddingTop: 28,
+    paddingTop: 32,
     paddingBottom: 52,
-    paddingHorizontal: 32,
+    paddingHorizontal: 38,
   },
   
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20, paddingBottom: 16, borderBottomWidth: 2, borderBottomColor: C.primary },
-  logo: { width: 170, height: 85, objectFit: 'contain' },
-  headerRight: { alignItems: 'flex-end', justifyContent: 'center' },
-  companyName: { fontSize: 16, fontWeight: 'bold', color: C.secondary, textAlign: 'right', marginBottom: 2 },
-  companyDetail: { fontSize: 11, color: C.light, textAlign: 'right', marginTop: 2 },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 },
   
-  reportTitleBox: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  reportTitle: { fontSize: 20, fontWeight: 'bold', color: C.primary },
-  reportSubtitle: { fontSize: 12, fontWeight: 'bold', color: C.muted },
+  headerTitleBox: { textAlign: 'left', alignItems: 'flex-start' },
+  reportTitle: { fontSize: 24, fontWeight: 'bold', color: '#e0dcd4', letterSpacing: 1, marginBottom: 2 },
+  reportSubtitle: { fontSize: 11, fontWeight: 'bold', color: C.primary },
+  
+  headerCompanyBox: { flexDirection: 'row', alignItems: 'center' },
+  companyTextBox: { justifyContent: 'center', alignItems: 'flex-end', marginRight: 12 },
+  companyName: { fontSize: 13, fontWeight: 'bold', color: C.primary, marginBottom: 2 },
+  companySub: { fontSize: 9, fontWeight: 'bold', color: C.accent },
+  logo: { width: 50, height: 50, objectFit: 'contain', borderRadius: 8 },
 
-  infoBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, paddingVertical: 8, paddingHorizontal: 12, backgroundColor: C.lightBg, borderRadius: 4, borderRightWidth: 3, borderRightColor: C.primary },
-  clientName: { fontSize: 13, fontWeight: 'bold', color: C.primary, textAlign: 'right' },
-  clientSub: { fontSize: 8, color: C.muted, marginTop: 2, textAlign: 'right' },
-  dateText: { fontSize: 8, color: C.light, textAlign: 'left' },
+  contactLine: { borderBottomWidth: 2, borderBottomColor: C.primary, paddingBottom: 6, marginBottom: 20, alignItems: 'flex-end' },
+  contactText: { fontSize: 9, fontWeight: 'bold', color: C.muted },
 
-  summaryRow: { flexDirection: 'row', gap: 8, marginBottom: 14 },
+  infoRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 },
+  
+  datesBox: { width: '40%' },
+  dateRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
+  dateLabel: { fontSize: 9, color: '#999' },
+  dateValue: { fontSize: 9, fontWeight: 'bold', color: C.text },
+
+  clientBox: { paddingVertical: 4, paddingRight: 10, borderRightWidth: 2, borderRightColor: C.primary, width: '50%', alignItems: 'flex-end' },
+  sectionLabel: { fontSize: 7.5, fontWeight: 'bold', color: C.accent, marginBottom: 2 },
+  clientName: { fontSize: 13, fontWeight: 'bold', color: '#2d3a2d', marginBottom: 2 },
+  clientSub: { fontSize: 9, color: '#888', marginTop: 2 },
+
+  summaryRow: { flexDirection: 'row', gap: 12, marginBottom: 20 },
   summaryCard: {
-    flex: 1, padding: 9,
-    backgroundColor: C.lightBg,
-    borderRadius: 4,
-    borderTopWidth: 2.5,
-    borderTopColor: C.primary,
+    flex: 1, paddingVertical: 14, paddingHorizontal: 10,
+    backgroundColor: '#fafaf8',
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#e8e5de',
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  summaryLabel: { fontSize: 7, color: C.muted, marginBottom: 3 },
-  summaryValue: { fontSize: 13, fontWeight: 'bold', color: C.primary },
+  summaryLabel: { fontSize: 8.5, color: '#6b7f6b', marginBottom: 6, fontWeight: 'bold' },
+  summaryValueCont: { flexDirection: 'row', alignItems: 'center' },
+  summaryValue: { fontSize: 13, fontWeight: 'bold', color: C.primary, textAlign: 'left' },
+  summaryCurrency: { fontSize: 9, color: '#888', fontWeight: 'bold', textAlign: 'left' },
 
   sectionTitle: {
     fontSize: 11, fontWeight: 'bold', color: C.primary,
-    marginBottom: 5, marginTop: 12,
+    marginBottom: 5, marginTop: 16,
     paddingBottom: 5,
     borderBottomWidth: 1.5, borderBottomColor: C.border,
     textAlign: 'right',
   },
 
-  tableHead: { flexDirection: 'row', backgroundColor: C.headerBg, paddingVertical: 7, paddingHorizontal: 9, borderRadius: 3, marginBottom: 1 },
-  th: { color: C.white, fontSize: 8, fontWeight: 'bold', textAlign: 'right' },
-  tableRow: { flexDirection: 'row', paddingVertical: 7, paddingHorizontal: 9, borderBottomWidth: 1, borderBottomColor: '#f0efeb' },
+  tableHead: { flexDirection: 'row', backgroundColor: C.headerBg, paddingVertical: 8, paddingHorizontal: 10, borderRadius: 3, marginBottom: 2 },
+  th: { color: C.white, fontSize: 9.5, fontWeight: 'bold', textAlign: 'right' },
+  tableRow: { flexDirection: 'row', paddingVertical: 8, paddingHorizontal: 10, borderBottomWidth: 1, borderBottomColor: '#f0efeb' },
   rowEven: { backgroundColor: C.rowAlt },
-  totalRow: { flexDirection: 'row', paddingVertical: 8, paddingHorizontal: 9, backgroundColor: '#f0ede7', borderTopWidth: 1.5, borderTopColor: C.primary, marginTop: 1, borderRadius: 2 },
+  totalRow: { flexDirection: 'row', paddingVertical: 8, paddingHorizontal: 10, backgroundColor: '#f0ede7', borderTopWidth: 1.5, borderTopColor: C.primary, marginTop: 1, borderRadius: 2 },
   
-  td: { fontSize: 8, color: C.text, textAlign: 'right' },
-  tdBold: { fontSize: 8, fontWeight: 'bold', color: C.text, textAlign: 'right' },
-  tdPos: { fontSize: 8, fontWeight: 'bold', color: C.success, textAlign: 'right' },
-  tdNeg: { fontSize: 8, fontWeight: 'bold', color: C.danger, textAlign: 'right' },
-
-  cNum: { width: '5%', textAlign: 'center' },
+  td: { fontSize: 9, color: C.text, textAlign: 'right' },
+  tdBold: { fontSize: 9, fontWeight: 'bold', color: C.text, textAlign: 'right' },
+  tdPos: { fontSize: 9, fontWeight: 'bold', color: C.success, textAlign: 'right' },
+  tdNeg: { fontSize: 9, fontWeight: 'bold', color: C.danger, textAlign: 'right' },
   
-  cDesc2: { width: '30%', textAlign: 'right', paddingRight: 4 },
+  cDesc2: { flex: 1, textAlign: 'right', paddingRight: 4 },
   cNote2: { width: '20%', textAlign: 'right', paddingRight: 4 },
-  cCat: { width: '15%', textAlign: 'left' },
-  cDate: { width: '15%', textAlign: 'left' },
-  cAmt: { width: '15%', textAlign: 'left' },
+  cCat: { width: '15%', textAlign: 'right', paddingRight: 4 },
+  cDate: { width: '15%', textAlign: 'center' },
+  cAmt: { width: 70, textAlign: 'left', paddingLeft: 4, direction: 'rtl' },
 
   cPayNote: { width: '25%', textAlign: 'right' },
-  cPayBy: { width: '15%', textAlign: 'right' },
-  cMethod: { width: '20%', textAlign: 'left' },
-  cPayAmt: { width: '20%', textAlign: 'left' },
+  cPayBy: { width: '20%', textAlign: 'right' },
+  cMethod: { width: '20%', textAlign: 'right' },
+  cPayAmt: { width: 70, textAlign: 'left', paddingLeft: 4, direction: 'rtl' },
 
-  cParty: { width: '15%', textAlign: 'right' },
-  cDebtDesc: { width: '20%', textAlign: 'right' },
-  cMoneyCol: { width: '20%', textAlign: 'left' },
+  cParty: { width: '20%', textAlign: 'right' },
+  cDebtDesc: { flex: 1, textAlign: 'right' },
+  cMoneyCol: { width: 60, textAlign: 'left', direction: 'rtl' },
 
   cName: { width: '20%', textAlign: 'right' },
-  cJob: { width: '15%', textAlign: 'right' },
-  cStatus: { width: '10%', textAlign: 'left' },
+  cJob: { flex: 1, textAlign: 'right' },
+  cStatus: { width: 50, textAlign: 'center' },
   
-  footer: {
-    position: 'absolute',
-    bottom: 16, left: 32, right: 32,
-    textAlign: 'center',
-    borderTopWidth: 1, borderTopColor: C.border,
-    paddingTop: 7,
-  },
-  footerText: { fontSize: 7, color: C.light },
+  footer: { position: 'absolute', bottom: 16, left: 38, right: 38, textAlign: 'center', borderTopWidth: 1, borderTopColor: '#eee', paddingTop: 8 },
+  footerTitle: { fontSize: 10, fontWeight: 'bold', color: C.primary, marginBottom: 3 },
+  footerText: { fontSize: 8, color: '#888' },
 });
 
-// Helpers
-const fmtNum = (n: number) => Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-const fmt = (n: number) => fmtNum(n) + ' د.ل';
+// UI Components
+const CurrencyValue = ({ val, color = C.primary }: { val: number, color?: string }) => (
+  <View style={s.summaryValueCont}>
+    <Text style={[s.summaryValue, { color }]}>{fmt(val)}</Text>
+    <Text style={[s.summaryCurrency, { color }]}> د.ل</Text>
+  </View>
+);
+const fmtNum = (n: number) => {
+  const rounded = Math.round(n);
+  return new Intl.NumberFormat('en-US').format(rounded);
+};
+const fmt = (n: number) => fmtNum(n);
 const fmtDate = (d: string) => {
   try {
     const dt = new Date(d);
@@ -132,37 +147,51 @@ const getPayLabel = (m: string) => ({
   mobile_payment: 'دفع الكتروني',
 }[m] || m);
 
-const PDFHeader = () => (
-  <View style={s.header}>
-    <Image src={`${window.location.origin}/logo.jpeg`} style={s.logo} />
-    <View style={s.headerRight}>
-      <Text style={s.companyName}>{COMPANY_INFO.fullName}</Text>
-      <Text style={s.companyDetail}>{COMPANY_INFO.address}</Text>
-      <Text style={s.companyDetail}>{COMPANY_INFO.phone}</Text>
+const PDFHeader = ({ title, subtitle }: { title: string; subtitle?: string }) => {
+  const logoUrl = `${window.location.origin}/logo-icon.jpg`;
+  return (
+    <View wrap={false}>
+      <View style={s.header}>
+        <View style={s.headerTitleBox}>
+          <Text style={s.reportTitle}>{title}</Text>
+          <Text style={s.reportSubtitle}>{subtitle}</Text>
+        </View>
+        <View style={s.headerCompanyBox}>
+          <View style={s.companyTextBox}>
+            <Text style={s.companyName}>{COMPANY_INFO.fullName}</Text>
+            <Text style={s.companySub}>Architecture & Engineering</Text>
+          </View>
+          <Image src={logoUrl} style={s.logo} />
+        </View>
+      </View>
+      <View style={s.contactLine}>
+        <Text style={s.contactText}>{COMPANY_INFO.address} | {COMPANY_INFO.phone}</Text>
+      </View>
     </View>
-  </View>
-);
-
-const TitleBar = ({ title, subtitle }: { title: string; subtitle?: string }) => (
-  <View style={s.reportTitleBox}>
-    {subtitle ? <Text style={s.reportSubtitle}>{subtitle}</Text> : <Text></Text>}
-    <Text style={s.reportTitle}>{title}</Text>
-  </View>
-)
+  );
+};
 
 const InfoBar = ({ client }: { client: Client }) => (
-  <View style={s.infoBar}>
-    <Text style={s.dateText}>{today()}</Text>
-    <View>
+  <View style={s.infoRow}>
+    <View style={s.datesBox}>
+      <View style={s.dateRow}>
+        <Text style={s.dateValue}>{today()}</Text>
+        <Text style={s.dateLabel}>تاريخ التقرير</Text>
+      </View>
+    </View>
+    <View style={s.clientBox}>
+      <Text style={s.sectionLabel}>تقرير لعميل</Text>
       <Text style={s.clientName}>{client.name}</Text>
-      <Text style={s.clientSub}>{client.phone}{client.address ? ` | ${client.address}` : ''}</Text>
+      {client.address && <Text style={s.clientSub}>{client.address}</Text>}
+      {client.phone && <Text style={s.clientSub}>{client.phone}</Text>}
     </View>
   </View>
 );
 
 const PDFFooter = () => (
   <View style={s.footer} fixed>
-    <Text style={s.footerText}>{COMPANY_INFO.fullName} | {COMPANY_INFO.address} | {COMPANY_INFO.phone}</Text>
+    <Text style={s.footerTitle}>{COMPANY_INFO.fullName}</Text>
+    <Text style={s.footerText}>{COMPANY_INFO.address} | {COMPANY_INFO.phone}</Text>
   </View>
 );
 
@@ -174,42 +203,39 @@ interface ExpensesPDFProps { client: Client; expenses: Expense[]; total: number;
 export const ExpensesPDF: React.FC<ExpensesPDFProps> = ({ client, expenses, total }) => (
   <Document title={`مصروفات-${client.name}`} language="ar">
     <Page size="A4" style={s.page}>
-      <PDFHeader />
-      <TitleBar title="كشف المصروفات" subtitle={`عدد السجلات: ${expenses.length}`} />
+      <PDFHeader title="EXPENSES" subtitle="كشف المصروفات" />
       <InfoBar client={client} />
 
       <View style={s.summaryRow}>
-        <View style={[s.summaryCard, { borderTopColor: C.danger }]}>
-          <Text style={s.summaryLabel}>اجمالي المصروفات</Text>
-          <Text style={[s.summaryValue, { color: C.danger }]}>{fmt(total)}</Text>
-        </View>
         <View style={s.summaryCard}>
-          <Text style={s.summaryLabel}>عدد المصروفات</Text>
+          <Text style={s.summaryLabel}>عدد السجلات</Text>
           <Text style={s.summaryValue}>{expenses.length}</Text>
+        </View>
+        <View style={[s.summaryCard, { borderTopWidth: 3, borderTopColor: C.danger, backgroundColor: '#fffcfc' }]}>
+          <Text style={s.summaryLabel}>إجمالي المصروفات</Text>
+          <CurrencyValue val={total} color={C.danger} />
         </View>
       </View>
 
       <View style={s.tableHead}>
-        <Text style={[s.th, s.cNum, { textAlign: 'center' }]}>#</Text>
-        <Text style={[s.th, s.cDesc2]}>الوصف</Text>
-        <Text style={[s.th, s.cNote2]}>الملاحظات</Text>
+        <Text style={[s.th, s.cAmt]}>المبلغ</Text>
         <Text style={[s.th, s.cDate]}>التاريخ</Text>
         <Text style={[s.th, s.cCat]}>التصنيف</Text>
-        <Text style={[s.th, s.cAmt, { textAlign: 'left' }]}>المبلغ</Text>
+        <Text style={[s.th, s.cNote2]}>الملاحظات</Text>
+        <Text style={[s.th, s.cDesc2]}>الوصف</Text>
       </View>
       {expenses.map((e, i) => (
         <View key={i} style={[s.tableRow, i % 2 !== 0 && s.rowEven]}>
-          <Text style={[s.td, s.cNum, { textAlign: 'center' }]}>{i + 1}</Text>
-          <Text style={[s.tdBold, s.cDesc2]}>{e.description}</Text>
-          <Text style={[s.td, s.cNote2]}>{e.notes || '-'}</Text>
+          <Text style={[s.tdBold, s.cAmt]}>{fmt(e.amount)} د.ل</Text>
           <Text style={[s.td, s.cDate]}>{fmtDate(e.date)}</Text>
           <Text style={[s.td, s.cCat]}>{getCatLabel(e.category)}</Text>
-          <Text style={[s.tdBold, s.cAmt, { textAlign: 'left' }]}>{fmt(e.amount)}</Text>
+          <Text style={[s.td, s.cNote2]}>{e.notes || '-'}</Text>
+          <Text style={[s.tdBold, s.cDesc2]}>{e.description}</Text>
         </View>
       ))}
       <View style={s.totalRow}>
+        <Text style={[s.tdBold, s.cAmt]}>{fmt(total)} د.ل</Text>
         <Text style={[s.tdBold, { flex: 1, textAlign: 'right' }]}>الاجمالي</Text>
-        <Text style={[s.tdBold, s.cAmt, { textAlign: 'left' }]}>{fmt(total)}</Text>
       </View>
 
       <PDFFooter />
@@ -225,42 +251,39 @@ interface PaymentsPDFProps { client: Client; payments: Payment[]; total: number;
 export const PaymentsPDF: React.FC<PaymentsPDFProps> = ({ client, payments, total }) => (
   <Document title={`مدفوعات-${client.name}`} language="ar">
     <Page size="A4" style={s.page}>
-      <PDFHeader />
-      <TitleBar title="كشف المدفوعات" subtitle={`عدد الدفعات: ${payments.length}`} />
+      <PDFHeader title="PAYMENTS" subtitle="كشف المدفوعات" />
       <InfoBar client={client} />
 
       <View style={s.summaryRow}>
-        <View style={[s.summaryCard, { borderTopColor: C.success }]}>
-          <Text style={s.summaryLabel}>اجمالي المدفوعات</Text>
-          <Text style={[s.summaryValue, { color: C.success }]}>{fmt(total)}</Text>
-        </View>
         <View style={s.summaryCard}>
           <Text style={s.summaryLabel}>عدد الدفعات</Text>
           <Text style={s.summaryValue}>{payments.length}</Text>
         </View>
+        <View style={[s.summaryCard, { borderTopWidth: 3, borderTopColor: C.success, backgroundColor: '#f5fbf8' }]}>
+          <Text style={s.summaryLabel}>إجمالي المدفوعات</Text>
+          <CurrencyValue val={total} color={C.success} />
+        </View>
       </View>
 
       <View style={s.tableHead}>
-        <Text style={[s.th, s.cNum, { textAlign: 'center' }]}>#</Text>
-        <Text style={[s.th, s.cPayNote]}>ملاحظات</Text>
-        <Text style={[s.th, s.cPayBy]}>بواسطة</Text>
+        <Text style={[s.th, s.cPayAmt]}>المبلغ</Text>
         <Text style={[s.th, s.cDate]}>التاريخ</Text>
         <Text style={[s.th, s.cMethod]}>طريقة الدفع</Text>
-        <Text style={[s.th, s.cPayAmt, { textAlign: 'left' }]}>المبلغ</Text>
+        <Text style={[s.th, s.cPayBy]}>بواسطة</Text>
+        <Text style={[s.th, s.cPayNote]}>ملاحظات</Text>
       </View>
       {payments.map((p, i) => (
         <View key={i} style={[s.tableRow, i % 2 !== 0 && s.rowEven]}>
-          <Text style={[s.td, s.cNum, { textAlign: 'center' }]}>{i + 1}</Text>
-          <Text style={[s.td, s.cPayNote]}>{p.notes || '-'}</Text>
-          <Text style={[s.td, s.cPayBy]}>{p.createdBy || '-'}</Text>
+          <Text style={[s.tdBold, s.cPayAmt, { color: C.success }]}>{fmt(p.amount)} د.ل</Text>
           <Text style={[s.td, s.cDate]}>{fmtDate(p.paymentDate)}</Text>
           <Text style={[s.td, s.cMethod]}>{getPayLabel(p.paymentMethod)}</Text>
-          <Text style={[s.tdBold, s.cPayAmt, { textAlign: 'left', color: C.success }]}>{fmt(p.amount)}</Text>
+          <Text style={[s.td, s.cPayBy]}>{p.createdBy || '-'}</Text>
+          <Text style={[s.td, s.cPayNote]}>{p.notes || '-'}</Text>
         </View>
       ))}
       <View style={s.totalRow}>
+        <Text style={[s.tdBold, s.cPayAmt]}>{fmt(total)} د.ل</Text>
         <Text style={[s.tdBold, { flex: 1, textAlign: 'right' }]}>الاجمالي</Text>
-        <Text style={[s.tdBold, s.cPayAmt, { textAlign: 'left' }]}>{fmt(total)}</Text>
       </View>
 
       <PDFFooter />
@@ -279,51 +302,47 @@ interface WorkersPDFProps {
 export const WorkersPDF: React.FC<WorkersPDFProps> = ({ client, workers, totalAgreed, totalPaid, totalDue }) => (
   <Document title={`عمال-${client.name}`} language="ar">
     <Page size="A4" style={s.page}>
-      <PDFHeader />
-      <TitleBar title="كشف العمال والمقاولين" subtitle={`مجموع العمال: ${workers.length}`} />
+      <PDFHeader title="WORKERS" subtitle="كشف العمال والمقاولين" />
       <InfoBar client={client} />
 
       <View style={s.summaryRow}>
-        <View style={[s.summaryCard, { borderTopColor: C.danger }]}>
-          <Text style={s.summaryLabel}>المتبقي لهم</Text>
-          <Text style={[s.summaryValue, { color: C.danger }]}>{fmt(totalDue)}</Text>
-        </View>
-        <View style={[s.summaryCard, { borderTopColor: C.success }]}>
-          <Text style={s.summaryLabel}>المدفوع مسبقاً</Text>
-          <Text style={[s.summaryValue, { color: C.success }]}>{fmt(totalPaid)}</Text>
-        </View>
         <View style={s.summaryCard}>
           <Text style={s.summaryLabel}>إجمالي الإتفاقيات</Text>
-          <Text style={s.summaryValue}>{fmt(totalAgreed)}</Text>
+          <CurrencyValue val={totalAgreed} />
+        </View>
+        <View style={[s.summaryCard, { borderTopWidth: 3, borderTopColor: C.success, backgroundColor: '#f5fbf8' }]}>
+          <Text style={s.summaryLabel}>المدفوع مسبقاً</Text>
+          <CurrencyValue val={totalPaid} color={C.success} />
+        </View>
+        <View style={[s.summaryCard, { borderTopWidth: 3, borderTopColor: C.danger, backgroundColor: '#fffcfc' }]}>
+          <Text style={s.summaryLabel}>المتبقي لهم</Text>
+          <CurrencyValue val={totalDue} color={C.danger} />
         </View>
       </View>
 
       <View style={s.tableHead}>
-        <Text style={[s.th, s.cNum, { textAlign: 'center' }]}>#</Text>
-        <Text style={[s.th, s.cName]}>اسم العامل</Text>
-        <Text style={[s.th, s.cJob]}>طبيعة العمل</Text>
-        <Text style={[s.th, s.cMoneyCol, { textAlign: 'left' }]}>الإتفاق</Text>
-        <Text style={[s.th, s.cMoneyCol, { textAlign: 'left' }]}>المدفوع</Text>
-        <Text style={[s.th, s.cMoneyCol, { textAlign: 'left' }]}>المتبقي</Text>
+        <Text style={[s.th, s.cMoneyCol]}>المتبقي</Text>
+        <Text style={[s.th, s.cMoneyCol]}>المدفوع</Text>
+        <Text style={[s.th, s.cMoneyCol]}>الإتفاق</Text>
         <Text style={[s.th, s.cStatus]}>الحالة</Text>
+        <Text style={[s.th, s.cJob]}>طبيعة العمل</Text>
+        <Text style={[s.th, s.cName]}>اسم العامل</Text>
       </View>
       {workers.map((w, i) => (
         <View key={i} style={[s.tableRow, i % 2 !== 0 && s.rowEven]}>
-          <Text style={[s.td, s.cNum, { textAlign: 'center' }]}>{i + 1}</Text>
-          <Text style={[s.tdBold, s.cName]}>{w.name}</Text>
-          <Text style={[s.td, s.cJob]}>{w.jobType || 'تم التعيين'}</Text>
-          <Text style={[s.tdBold, s.cMoneyCol, { textAlign: 'left' }]}>{fmt(w.totalAmount)}</Text>
-          <Text style={[s.tdPos, s.cMoneyCol, { textAlign: 'left' }]}>{fmt(w.paidAmount)}</Text>
-          <Text style={[s.tdNeg, s.cMoneyCol, { textAlign: 'left' }]}>{fmt(w.remainingAmount)}</Text>
+          <Text style={[s.tdNeg, s.cMoneyCol]}>{fmt(w.remainingAmount)} د.ل</Text>
+          <Text style={[s.tdPos, s.cMoneyCol]}>{fmt(w.paidAmount)} د.ل</Text>
+          <Text style={[s.tdBold, s.cMoneyCol]}>{fmt(w.totalAmount)} د.ل</Text>
           <Text style={[s.td, s.cStatus]}>{w.status === 'completed' ? 'تصفية' : 'مستمر'}</Text>
+          <Text style={[s.td, s.cJob]}>{w.jobType || 'تم التعيين'}</Text>
+          <Text style={[s.tdBold, s.cName]}>{w.name}</Text>
         </View>
       ))}
       <View style={s.totalRow}>
+        <Text style={[s.tdBold, s.cMoneyCol, { color: C.danger }]}>{fmt(totalDue)} د.ل</Text>
+        <Text style={[s.tdBold, s.cMoneyCol, { color: C.success }]}>{fmt(totalPaid)} د.ل</Text>
+        <Text style={[s.tdBold, s.cMoneyCol]}>{fmt(totalAgreed)} د.ل</Text>
         <Text style={[s.tdBold, { flex: 1, textAlign: 'right' }]}>اجمالي العمال</Text>
-        <Text style={[s.tdBold, s.cMoneyCol, { textAlign: 'left' }]}>{fmt(totalAgreed)}</Text>
-        <Text style={[s.tdBold, s.cMoneyCol, { textAlign: 'left', color: C.success }]}>{fmt(totalPaid)}</Text>
-        <Text style={[s.tdBold, s.cMoneyCol, { textAlign: 'left', color: C.danger }]}>{fmt(totalDue)}</Text>
-        <Text style={[s.td, s.cStatus]}></Text>
       </View>
 
       <PDFFooter />
@@ -352,144 +371,134 @@ export const FullReportPDF: React.FC<FullReportPDFProps> = ({
 }) => (
   <Document title={`تقرير-${client.name}`} language="ar">
     <Page size="A4" style={s.page}>
-      <PDFHeader />
-      <TitleBar title="التقرير الشامل" subtitle="ملخص حساب العميل" />
+      <PDFHeader title="FULL REPORT" subtitle="التقرير الشامل" />
       <InfoBar client={client} />
 
       <View style={s.summaryRow}>
-        <View style={[s.summaryCard, { borderTopColor: summary.remaining >= 0 ? C.success : C.danger }]}>
-          <Text style={s.summaryLabel}>المتبقي</Text>
-          <Text style={[s.summaryValue, { color: summary.remaining >= 0 ? C.success : C.danger }]}>{fmt(summary.remaining)}</Text>
-        </View>
-        <View style={[s.summaryCard, { borderTopColor: C.danger }]}>
-          <Text style={s.summaryLabel}>مصروفات + ديون</Text>
-          <Text style={[s.summaryValue, { color: C.danger }]}>{fmt(summary.totalObligations)}</Text>
-        </View>
-        <View style={[s.summaryCard, { borderTopColor: C.warning }]}>
-          <Text style={s.summaryLabel}>الربح ({summary.profitPercentage}%)</Text>
-          <Text style={[s.summaryValue, { color: C.warning }]}>{fmt(summary.profit)}</Text>
-        </View>
-        <View style={[s.summaryCard, { borderTopColor: C.success }]}>
+        <View style={[s.summaryCard, { borderTopWidth: 3, borderTopColor: C.success, backgroundColor: '#f5fbf8' }]}>
           <Text style={s.summaryLabel}>إجمالي المدفوعات</Text>
-          <Text style={[s.summaryValue, { color: C.success }]}>{fmt(summary.totalPaid)}</Text>
+          <CurrencyValue val={summary.totalPaid} color={C.success} />
+        </View>
+        <View style={[s.summaryCard, { borderTopWidth: 3, borderTopColor: C.warning, backgroundColor: '#fdfbfa' }]}>
+          <Text style={s.summaryLabel}>الربح ({summary.profitPercentage}%)</Text>
+          <CurrencyValue val={summary.profit} color={C.warning} />
+        </View>
+        <View style={[s.summaryCard, { borderTopWidth: 3, borderTopColor: C.danger, backgroundColor: '#fffcfc' }]}>
+          <Text style={s.summaryLabel}>مصروفات + ديون</Text>
+          <CurrencyValue val={summary.totalObligations} color={C.danger} />
+        </View>
+        <View style={[s.summaryCard, { borderTopWidth: 3, borderTopColor: summary.remaining >= 0 ? C.success : C.danger, backgroundColor: summary.remaining >= 0 ? '#f5fbf8' : '#fffcfc' }]}>
+          <Text style={s.summaryLabel}>المتبقي</Text>
+          <CurrencyValue val={summary.remaining} color={summary.remaining >= 0 ? C.success : C.danger} />
         </View>
       </View>
 
       {expenses.length > 0 && (
-        <View wrap={false} style={{ marginBottom: 10 }}>
+        <View wrap={false} style={{ marginBottom: 16 }}>
           <Text style={s.sectionTitle}>المصروفات ({expenses.length})</Text>
           <View style={s.tableHead}>
-            <Text style={[s.th, s.cNum, { textAlign: 'center' }]}>#</Text>
-            <Text style={[s.th, s.cDesc2]}>الوصف</Text>
-            <Text style={[s.th, s.cNote2]}>الملاحظات</Text>
+            <Text style={[s.th, s.cAmt]}>المبلغ</Text>
             <Text style={[s.th, s.cDate]}>التاريخ</Text>
             <Text style={[s.th, s.cCat]}>التصنيف</Text>
-            <Text style={[s.th, s.cAmt, { textAlign: 'left' }]}>المبلغ</Text>
+            <Text style={[s.th, s.cNote2]}>الملاحظات</Text>
+            <Text style={[s.th, s.cDesc2]}>الوصف</Text>
           </View>
           {expenses.map((e, i) => (
             <View key={i} style={[s.tableRow, i % 2 !== 0 && s.rowEven]}>
-              <Text style={[s.td, s.cNum, { textAlign: 'center' }]}>{i + 1}</Text>
-              <Text style={[s.tdBold, s.cDesc2]}>{e.description}</Text>
-              <Text style={[s.td, s.cNote2]}>{e.notes || '-'}</Text>
+              <Text style={[s.tdBold, s.cAmt, { color: C.danger }]}>{fmt(e.amount)} د.ل</Text>
               <Text style={[s.td, s.cDate]}>{fmtDate(e.date)}</Text>
               <Text style={[s.td, s.cCat]}>{getCatLabel(e.category)}</Text>
-              <Text style={[s.tdBold, s.cAmt, { textAlign: 'left', color: C.danger }]}>{fmt(e.amount)}</Text>
+              <Text style={[s.td, s.cNote2]}>{e.notes || '-'}</Text>
+              <Text style={[s.tdBold, s.cDesc2]}>{e.description}</Text>
             </View>
           ))}
           <View style={s.totalRow}>
+            <Text style={[s.tdBold, s.cAmt]}>{fmt(summary.totalExpenses)} د.ل</Text>
             <Text style={[s.tdBold, { flex: 1, textAlign: 'right' }]}>اجمالي المصروفات</Text>
-            <Text style={[s.tdBold, s.cAmt, { textAlign: 'left' }]}>{fmt(summary.totalExpenses)}</Text>
           </View>
         </View>
       )}
 
       {payments.length > 0 && (
-        <View wrap={false} style={{ marginBottom: 10 }}>
+        <View wrap={false} style={{ marginBottom: 16 }}>
           <Text style={s.sectionTitle}>المدفوعات ({payments.length})</Text>
           <View style={s.tableHead}>
-            <Text style={[s.th, s.cNum, { textAlign: 'center' }]}>#</Text>
-            <Text style={[s.th, s.cPayNote]}>ملاحظات</Text>
-            <Text style={[s.th, s.cPayBy]}>بواسطة</Text>
+            <Text style={[s.th, s.cPayAmt]}>المبلغ</Text>
             <Text style={[s.th, s.cDate]}>التاريخ</Text>
             <Text style={[s.th, s.cMethod]}>طريقة الدفع</Text>
-            <Text style={[s.th, s.cPayAmt, { textAlign: 'left' }]}>المبلغ</Text>
+            <Text style={[s.th, s.cPayBy]}>بواسطة</Text>
+            <Text style={[s.th, s.cPayNote]}>ملاحظات</Text>
           </View>
           {payments.map((p, i) => (
             <View key={i} style={[s.tableRow, i % 2 !== 0 && s.rowEven]}>
-              <Text style={[s.td, s.cNum, { textAlign: 'center' }]}>{i + 1}</Text>
-              <Text style={[s.td, s.cPayNote]}>{p.notes || '-'}</Text>
-              <Text style={[s.td, s.cPayBy]}>{p.createdBy || '-'}</Text>
+              <Text style={[s.tdBold, s.cPayAmt, { color: C.success }]}>{fmt(p.amount)} د.ل</Text>
               <Text style={[s.td, s.cDate]}>{fmtDate(p.paymentDate)}</Text>
               <Text style={[s.td, s.cMethod]}>{getPayLabel(p.paymentMethod)}</Text>
-              <Text style={[s.tdBold, s.cPayAmt, { textAlign: 'left', color: C.success }]}>{fmt(p.amount)}</Text>
+              <Text style={[s.td, s.cPayBy]}>{p.createdBy || '-'}</Text>
+              <Text style={[s.td, s.cPayNote]}>{p.notes || '-'}</Text>
             </View>
           ))}
           <View style={s.totalRow}>
-            <Text style={[s.tdBold, { flex: 1, textAlign: 'right' }]}>اجمالي المدفوعات</Text>
-            <Text style={[s.tdBold, s.cPayAmt, { textAlign: 'left' }]}>{fmt(summary.totalPaid)}</Text>
+             <Text style={[s.tdBold, s.cPayAmt]}>{fmt(summary.totalPaid)} د.ل</Text>
+             <Text style={[s.tdBold, { flex: 1, textAlign: 'right' }]}>اجمالي المدفوعات</Text>
           </View>
         </View>
       )}
 
       {debts.length > 0 && (
-        <View wrap={false} style={{ marginBottom: 10 }}>
+        <View wrap={false} style={{ marginBottom: 16 }}>
           <Text style={s.sectionTitle}>الديون ({debts.length})</Text>
           <View style={s.tableHead}>
-            <Text style={[s.th, s.cNum, { textAlign: 'center' }]}>#</Text>
-            <Text style={[s.th, s.cParty]}>الطرف</Text>
-            <Text style={[s.th, s.cDebtDesc]}>الوصف</Text>
-            <Text style={[s.th, s.cMoneyCol]}>المبلغ</Text>
-            <Text style={[s.th, s.cMoneyCol]}>مدفوع</Text>
             <Text style={[s.th, s.cMoneyCol]}>متبقي</Text>
+            <Text style={[s.th, s.cMoneyCol]}>مدفوع</Text>
+            <Text style={[s.th, s.cMoneyCol]}>المبلغ</Text>
+            <Text style={[s.th, s.cDebtDesc]}>الوصف</Text>
+            <Text style={[s.th, s.cParty]}>الطرف</Text>
           </View>
           {debts.map((d, i) => (
             <View key={i} style={[s.tableRow, i % 2 !== 0 && s.rowEven]}>
-              <Text style={[s.td, s.cNum, { textAlign: 'center' }]}>{i + 1}</Text>
-              <Text style={[s.tdBold, s.cParty]}>{d.partyName}</Text>
-              <Text style={[s.td, s.cDebtDesc]}>{d.description}</Text>
-              <Text style={[s.tdBold, s.cMoneyCol]}>{fmt(d.amount)} د.ل</Text>
-              <Text style={[s.tdPos, s.cMoneyCol]}>{fmt(d.paidAmount)} د.ل</Text>
               <Text style={[s.tdNeg, s.cMoneyCol]}>{fmt(d.remainingAmount)} د.ل</Text>
+              <Text style={[s.tdPos, s.cMoneyCol]}>{fmt(d.paidAmount)} د.ل</Text>
+              <Text style={[s.tdBold, s.cMoneyCol]}>{fmt(d.amount)} د.ل</Text>
+              <Text style={[s.td, s.cDebtDesc]}>{d.description}</Text>
+              <Text style={[s.tdBold, s.cParty]}>{d.partyName}</Text>
             </View>
           ))}
           <View style={s.totalRow}>
-            <Text style={[s.tdBold, { flex: 1, textAlign: 'right' }]}>اجمالي الديون</Text>
+            <Text style={[s.td, s.cMoneyCol]}></Text>
+            <Text style={[s.td, s.cMoneyCol]}></Text>
             <Text style={[s.tdBold, s.cMoneyCol]}>{fmt(summary.totalDebts)} د.ل</Text>
-            <Text style={[s.td, s.cMoneyCol]}></Text>
-            <Text style={[s.td, s.cMoneyCol]}></Text>
+            <Text style={[s.tdBold, { flex: 1, textAlign: 'right' }]}>اجمالي الديون</Text>
           </View>
         </View>
       )}
 
       {workers.length > 0 && (
-        <View wrap={false} style={{ marginBottom: 10 }}>
+        <View wrap={false} style={{ marginBottom: 16 }}>
           <Text style={s.sectionTitle}>العمال والمقاولين ({workers.length})</Text>
           <View style={s.tableHead}>
-            <Text style={[s.th, s.cNum, { textAlign: 'center' }]}>#</Text>
-            <Text style={[s.th, s.cName]}>اسم العامل</Text>
-            <Text style={[s.th, s.cJob]}>طبيعة العمل</Text>
-            <Text style={[s.th, s.cMoneyCol]}>الإتفاق</Text>
-            <Text style={[s.th, s.cMoneyCol]}>المدفوع</Text>
             <Text style={[s.th, s.cMoneyCol]}>المتبقي</Text>
+            <Text style={[s.th, s.cMoneyCol]}>المدفوع</Text>
+            <Text style={[s.th, s.cMoneyCol]}>الإتفاق</Text>
             <Text style={[s.th, s.cStatus]}>الحالة</Text>
+            <Text style={[s.th, s.cJob]}>طبيعة العمل</Text>
+            <Text style={[s.th, s.cName]}>اسم العامل</Text>
           </View>
           {workers.map((w, i) => (
             <View key={i} style={[s.tableRow, i % 2 !== 0 && s.rowEven]}>
-              <Text style={[s.td, s.cNum, { textAlign: 'center' }]}>{i + 1}</Text>
-              <Text style={[s.tdBold, s.cName]}>{w.name}</Text>
-              <Text style={[s.td, s.cJob]}>{w.jobType || 'تم التعيين'}</Text>
-              <Text style={[s.tdBold, s.cMoneyCol]}>{fmt(w.totalAmount)} د.ل</Text>
-              <Text style={[s.tdPos, s.cMoneyCol]}>{fmt(w.paidAmount)} د.ل</Text>
               <Text style={[s.tdNeg, s.cMoneyCol]}>{fmt(w.remainingAmount)} د.ل</Text>
+              <Text style={[s.tdPos, s.cMoneyCol]}>{fmt(w.paidAmount)} د.ل</Text>
+              <Text style={[s.tdBold, s.cMoneyCol]}>{fmt(w.totalAmount)} د.ل</Text>
               <Text style={[s.td, s.cStatus]}>{w.status === 'completed' ? 'تصفية' : 'مستمر'}</Text>
+              <Text style={[s.td, s.cJob]}>{w.jobType || 'تم التعيين'}</Text>
+              <Text style={[s.tdBold, s.cName]}>{w.name}</Text>
             </View>
           ))}
           <View style={s.totalRow}>
-            <Text style={[s.tdBold, { flex: 1, textAlign: 'right' }]}>اجمالي العمال</Text>
-            <Text style={[s.tdBold, s.cMoneyCol]}>{fmt(summary.totalWorkersAgreed)} د.ل</Text>
-            <Text style={[s.tdBold, s.cMoneyCol, { color: C.success }]}>{fmt(summary.totalWorkersPaid)} د.ل</Text>
             <Text style={[s.tdBold, s.cMoneyCol, { color: C.danger }]}>{fmt(summary.totalWorkersDue)} د.ل</Text>
-            <Text style={[s.td, s.cStatus]}></Text>
+            <Text style={[s.tdBold, s.cMoneyCol, { color: C.success }]}>{fmt(summary.totalWorkersPaid)} د.ل</Text>
+            <Text style={[s.tdBold, s.cMoneyCol]}>{fmt(summary.totalWorkersAgreed)} د.ل</Text>
+            <Text style={[s.tdBold, { flex: 1, textAlign: 'right' }]}>اجمالي العمال</Text>
           </View>
         </View>
       )}
