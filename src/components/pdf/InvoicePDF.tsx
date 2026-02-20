@@ -16,47 +16,57 @@ const C = {
 
 const s = StyleSheet.create({
   page: { fontFamily: PDF_FONT_FAMILY, fontSize: 10, color: C.text, backgroundColor: C.white, paddingVertical: 32, paddingHorizontal: 38 },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, paddingBottom: 12, borderBottomWidth: 2, borderBottomColor: C.primary },
-  logo: { width: 150, height: 60, objectFit: 'contain' },
-  headerRight: { alignItems: 'flex-end' },
-  invoiceLabel: { fontSize: 22, fontWeight: 'bold', color: '#cac6be' },
-  invoiceNum: { fontSize: 12, fontWeight: 'bold', color: C.primary, marginTop: 3 },
-  companyBar: { alignItems: 'flex-end', marginBottom: 14, paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: '#f0efeb' },
-  companyName: { fontSize: 11, fontWeight: 'bold', color: C.primary },
-  companyDetail: { fontSize: 8, color: C.light, marginTop: 2 },
-  infoRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 18, gap: 16 },
-  clientBox: { flex: 1, padding: 10, backgroundColor: C.lightBg, borderRightWidth: 3, borderRightColor: C.primary, borderRadius: 3 },
-  sectionLabel: { fontSize: 7, fontWeight: 'bold', color: C.accent, marginBottom: 5 },
-  clientName: { fontSize: 13, fontWeight: 'bold', color: C.text, marginBottom: 3 },
-  clientSub: { fontSize: 8.5, color: C.light },
-  datesBox: { width: 150 },
-  dateRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 5, borderBottomWidth: 1, borderBottomColor: '#f0efeb' },
-  dateLabel: { fontSize: 8, color: C.light },
-  dateValue: { fontSize: 8.5, fontWeight: 'bold', color: C.text },
-  statusBadge: { fontSize: 8, fontWeight: 'bold', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 3 },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20, paddingBottom: 16, borderBottomWidth: 2, borderBottomColor: C.primary },
+  logo: { width: 170, height: 85, objectFit: 'contain' },
+  headerRight: { alignItems: 'flex-end', justifyContent: 'center' },
+  companyName: { fontSize: 16, fontWeight: 'bold', color: C.primary, textAlign: 'right', marginBottom: 2 },
+  companyDetail: { fontSize: 11, color: C.light, textAlign: 'right', marginTop: 2 },
+  
+  invoiceMeta: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16 },
+  invoiceLabel: { fontSize: 20, fontWeight: 'bold', color: '#cac6be' },
+  invoiceNum: { fontSize: 14, fontWeight: 'bold', color: C.primary },
+  
+  infoRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20, gap: 16 },
+  clientBox: { flex: 1, padding: 10, backgroundColor: C.lightBg, borderRightWidth: 3, borderRightColor: C.primary, borderRadius: 3, alignItems: 'flex-end' },
+  sectionLabel: { fontSize: 8, fontWeight: 'bold', color: C.accent, marginBottom: 5, textAlign: 'right' },
+  clientName: { fontSize: 13, fontWeight: 'bold', color: C.text, marginBottom: 3, textAlign: 'right' },
+  clientSub: { fontSize: 9, color: C.light, textAlign: 'right' },
+  
+  datesBox: { width: 160 },
+  dateRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: '#f0efeb' },
+  dateLabel: { fontSize: 9, color: C.light, textAlign: 'right' },
+  dateValue: { fontSize: 9.5, fontWeight: 'bold', color: C.text, textAlign: 'left' },
+  statusBadge: { fontSize: 9, fontWeight: 'bold', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 3 },
+  
   tableHead: { flexDirection: 'row', backgroundColor: C.headerBg, paddingVertical: 8, paddingHorizontal: 10, borderRadius: 3, marginBottom: 1 },
-  th: { color: C.white, fontSize: 8.5, fontWeight: 'bold' },
+  th: { color: C.white, fontSize: 9, fontWeight: 'bold', textAlign: 'right' },
   tableRow: { flexDirection: 'row', paddingVertical: 8, paddingHorizontal: 10, borderBottomWidth: 1, borderBottomColor: '#f0efeb' },
   rowEven: { backgroundColor: C.rowAlt },
-  cDesc: { flex: 1 },
-  cNum: { width: 50, textAlign: 'center' },
-  cPrice: { width: 85, textAlign: 'center' },
-  cTotal: { width: 90 },
-  td: { fontSize: 9, color: C.text },
+  
+  // Exact Percentages
+  cTotal: { width: '20%', textAlign: 'left', paddingLeft: 4 },
+  cPrice: { width: '20%', textAlign: 'center' },
+  cNum: { width: '15%', textAlign: 'center' },
+  cDesc: { width: '45%', textAlign: 'right', paddingRight: 4 },
+  
+  td: { fontSize: 9.5, color: C.text },
   tdBold: { fontSize: 9.5, fontWeight: 'bold', color: C.text },
+  
   totals: { alignItems: 'flex-start', marginTop: 14 },
   totalsBox: { width: 200 },
   totalRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 5, borderBottomWidth: 1, borderBottomColor: '#f0efeb' },
-  totalLabel: { fontSize: 9, color: C.muted },
-  totalVal: { fontSize: 9, fontWeight: 'bold', color: C.text },
+  totalLabel: { fontSize: 9, color: C.muted, textAlign: 'right' },
+  totalVal: { fontSize: 10, fontWeight: 'bold', color: C.text, textAlign: 'left' },
   grandRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 10, borderTopWidth: 2, borderTopColor: C.primary, marginTop: 5 },
-  grandLabel: { fontSize: 14, fontWeight: 'bold', color: C.primary },
-  grandVal: { fontSize: 15, fontWeight: 'bold', color: C.primary },
-  notesBox: { padding: 10, backgroundColor: '#fffcf5', borderRightWidth: 3, borderRightColor: C.border, borderRadius: 3, marginTop: 14 },
-  notesLabel: { fontSize: 7.5, fontWeight: 'bold', color: C.accent, marginBottom: 3 },
-  notesText: { fontSize: 8.5, color: '#555' },
+  grandLabel: { fontSize: 14, fontWeight: 'bold', color: C.primary, textAlign: 'right' },
+  grandVal: { fontSize: 15, fontWeight: 'bold', color: C.primary, textAlign: 'left' },
+  
+  notesBox: { padding: 10, backgroundColor: '#fffcf5', borderRightWidth: 3, borderRightColor: C.border, borderRadius: 3, marginTop: 14, alignItems: 'flex-end' },
+  notesLabel: { fontSize: 8, fontWeight: 'bold', color: C.accent, marginBottom: 3, textAlign: 'right' },
+  notesText: { fontSize: 9, color: '#555', textAlign: 'right' },
+  
   footer: { position: 'absolute', bottom: 16, left: 38, right: 38, textAlign: 'center', borderTopWidth: 1, borderTopColor: C.border, paddingTop: 6 },
-  footerText: { fontSize: 6.5, color: C.light },
+  footerText: { fontSize: 8, color: C.light },
 });
 
 const fmtDate = (d: string) => {
@@ -64,8 +74,10 @@ const fmtDate = (d: string) => {
   catch { return d; }
 };
 const fmt = (n: number) => {
-  // Return pure digits with Arabic currency - avoid BiDi mixing
-  return String(Math.round(n)) + ' د.ل';
+  return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+};
+const fmtCurrency = (n: number) => {
+  return fmt(n) + ' د.ل';
 };
 
 const STATUS: Record<string, { label: string; color: string; bg: string }> = {
@@ -91,55 +103,56 @@ export const InvoicePDF: React.FC<Props> = ({ invoice, client }) => {
         <View style={s.header}>
           <Image src={logoUrl} style={s.logo} />
           <View style={s.headerRight}>
-            <Text style={s.invoiceLabel}>INVOICE</Text>
-            <Text style={s.invoiceNum}>{invoice.invoiceNumber}</Text>
+            <Text style={s.companyName}>{COMPANY_INFO.fullName}</Text>
+            <Text style={s.companyDetail}>{COMPANY_INFO.address}</Text>
+            <Text style={s.companyDetail}>{COMPANY_INFO.phone}</Text>
           </View>
         </View>
 
-        {/* COMPANY */}
-        <View style={s.companyBar}>
-          <Text style={s.companyName}>{COMPANY_INFO.fullName}</Text>
-          <Text style={s.companyDetail}>{COMPANY_INFO.address}</Text>
-          <Text style={s.companyDetail}>{COMPANY_INFO.phone}</Text>
+        <View style={s.invoiceMeta}>
+          <Text style={s.invoiceNum}>#{invoice.invoiceNumber}</Text>
+          <Text style={s.invoiceLabel}>فـاتـورة INVOICE</Text>
         </View>
 
         {/* CLIENT + DATES */}
         <View style={s.infoRow}>
+          <View style={s.datesBox}>
+            <View style={s.dateRow}>
+              <Text style={s.dateValue}>{fmtDate(invoice.issueDate)}</Text>
+              <Text style={s.dateLabel}>تاريخ الاصدار</Text>
+            </View>
+            <View style={s.dateRow}>
+              <Text style={s.dateValue}>{fmtDate(invoice.dueDate)}</Text>
+              <Text style={s.dateLabel}>الاستحقاق</Text>
+            </View>
+            <View style={[s.dateRow, { borderBottomWidth: 0 }]}>
+              <Text style={[s.statusBadge, { color: st.color, backgroundColor: st.bg }]}>{st.label}</Text>
+              <Text style={s.dateLabel}>الحالة</Text>
+            </View>
+          </View>
+
           <View style={s.clientBox}>
             <Text style={s.sectionLabel}>فاتورة الى</Text>
             <Text style={s.clientName}>{client.name}</Text>
             {client.phone ? <Text style={s.clientSub}>{client.phone}</Text> : null}
             {client.address ? <Text style={s.clientSub}>{client.address}</Text> : null}
           </View>
-          <View style={s.datesBox}>
-            <View style={s.dateRow}>
-              <Text style={s.dateLabel}>تاريخ الاصدار</Text>
-              <Text style={s.dateValue}>{fmtDate(invoice.issueDate)}</Text>
-            </View>
-            <View style={s.dateRow}>
-              <Text style={s.dateLabel}>الاستحقاق</Text>
-              <Text style={s.dateValue}>{fmtDate(invoice.dueDate)}</Text>
-            </View>
-            <View style={[s.dateRow, { borderBottomWidth: 0 }]}>
-              <Text style={s.dateLabel}>الحالة</Text>
-              <Text style={[s.statusBadge, { color: st.color, backgroundColor: st.bg }]}>{st.label}</Text>
-            </View>
-          </View>
         </View>
 
         {/* TABLE */}
+        {/* Visual LTR rendered with JSX items: Left-most element first, Right-most last */}
         <View style={s.tableHead}>
-          <Text style={[s.th, s.cDesc]}>الوصف</Text>
-          <Text style={[s.th, s.cNum]}>الكمية</Text>
+          <Text style={[s.th, s.cTotal, { textAlign: 'left' }]}>الاجمالي (د.ل)</Text>
           <Text style={[s.th, s.cPrice]}>السعر</Text>
-          <Text style={[s.th, s.cTotal]}>الاجمالي</Text>
+          <Text style={[s.th, s.cNum]}>الكمية</Text>
+          <Text style={[s.th, s.cDesc]}>الوصف</Text>
         </View>
         {invoice.items.map((item, i) => (
           <View key={i} style={[s.tableRow, i % 2 !== 0 && s.rowEven]}>
-            <Text style={[s.tdBold, s.cDesc]}>{item.description}</Text>
-            <Text style={[s.td, s.cNum]}>{item.quantity}</Text>
+            <Text style={[s.tdBold, s.cTotal, { textAlign: 'left' }]}>{fmt(item.total)}</Text>
             <Text style={[s.td, s.cPrice]}>{fmt(item.unitPrice)}</Text>
-            <Text style={[s.tdBold, s.cTotal]}>{fmt(item.total)}</Text>
+            <Text style={[s.td, s.cNum]}>{item.quantity}</Text>
+            <Text style={[s.tdBold, s.cDesc]}>{item.description}</Text>
           </View>
         ))}
 
@@ -147,18 +160,18 @@ export const InvoicePDF: React.FC<Props> = ({ invoice, client }) => {
         <View style={s.totals}>
           <View style={s.totalsBox}>
             <View style={s.totalRow}>
+              <Text style={s.totalVal}>{fmtCurrency(invoice.subtotal)}</Text>
               <Text style={s.totalLabel}>المجموع</Text>
-              <Text style={s.totalVal}>{fmt(invoice.subtotal)}</Text>
             </View>
             {invoice.taxAmount > 0 && (
               <View style={s.totalRow}>
+                <Text style={s.totalVal}>{fmtCurrency(invoice.taxAmount)}</Text>
                 <Text style={s.totalLabel}>الضريبة</Text>
-                <Text style={s.totalVal}>{fmt(invoice.taxAmount)}</Text>
               </View>
             )}
             <View style={s.grandRow}>
+              <Text style={s.grandVal}>{fmtCurrency(invoice.total)}</Text>
               <Text style={s.grandLabel}>الاجمالي</Text>
-              <Text style={s.grandVal}>{fmt(invoice.total)}</Text>
             </View>
           </View>
         </View>

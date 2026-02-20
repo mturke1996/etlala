@@ -6,27 +6,12 @@ import React from 'react';
 import { pdf } from '@react-pdf/renderer';
 import toast from 'react-hot-toast';
 
-// Pre-verify font availability on first load (warm up the CDN connection)
-let fontsPreloaded = false;
-const preloadFonts = async () => {
-  if (fontsPreloaded) return;
-  try {
-    await fetch('https://fonts.gstatic.com/s/cairo/v28/SLXGc1nY6HkvamImRJqExst1.ttf', {
-      method: 'HEAD',
-      mode: 'cors',
-    });
-    fontsPreloaded = true;
-  } catch {
-    // Silently fail - will still try to generate
-  }
-};
-
-// Start preloading fonts in background immediately
-preloadFonts();
-
 export const generatePdfBlob = async (component: React.ReactElement): Promise<Blob> => {
-  const pdfDoc = pdf(component);
-  const blob = await pdfDoc.toBlob();
+  // Fix for react-pdf hanging on second generation: 
+  // Initialize with false/null, then use updateContainer
+  const asPdf = pdf();
+  asPdf.updateContainer(component);
+  const blob = await asPdf.toBlob();
   return blob;
 };
 

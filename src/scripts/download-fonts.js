@@ -1,59 +1,73 @@
 /**
- * Font Setup Script (ES Module - compatible with "type": "module")
- * Run once: node scripts/download-fonts.js
- * Downloads Cairo Arabic font to public/fonts/ for offline use
+ * Font Download Script - ES Module (Node.js 18+)
+ * Fetches Cairo Arabic font URLs from Google Fonts CSS API
+ * Run: node src/scripts/download-fonts.js
  */
 import { writeFileSync, mkdirSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const FONTS_DIR = join(__dirname, '..', 'public', 'fonts');
+const FONTS_DIR = join(__dirname, '..', '..', 'public', 'fonts');
 
 if (!existsSync(FONTS_DIR)) {
   mkdirSync(FONTS_DIR, { recursive: true });
-  console.log('📁 Created public/fonts/ directory');
+  console.log('📁 Created public/fonts/');
 }
 
-const fonts = [
-  {
-    name: 'Cairo-Regular.ttf',
-    url: 'https://fonts.gstatic.com/s/cairo/v28/SLXGc1nY6HkvamImRJqExst1.ttf',
-  },
-  {
-    name: 'Cairo-Bold.ttf',
-    url: 'https://fonts.gstatic.com/s/cairo/v28/SLXvc1nY6HkvamImRTo9Tq4v.ttf',
-  },
+// Google Fonts CSS API - request Arabic + Latin subsets as TTF
+const FONTS_CSS_URLS = [
+  // Cairo Regular (400)
+  'https://fonts.googleapis.com/css2?family=Cairo:wght@400&display=swap',
+  // Cairo Bold (700)
+  'https://fonts.googleapis.com/css2?family=Cairo:wght@700&display=swap',
 ];
 
-async function downloadFont(url, filepath) {
-  console.log(`⬇  Downloading ${url.split('/').pop()}...`);
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}: ${url}`);
+const FILE_NAMES = ['Cairo-Regular.ttf', 'Cairo-Bold.ttf'];
+
+async function fetchFontUrl(cssUrl) {
+  // Use a legacy User-Agent to get TTF (not WOFF2)
+  const res = await fetch(cssUrl, {
+    headers: {
+      'User-Agent':
+        'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)',
+    },
+  });
+  const css = await res.text();
+  // Extract the first TTF src URL from the CSS
+  const match = css.match(/src:\s*url\(([^)]+\.ttf)\)/);
+  if (!match) {
+    // Also try matching without .ttf extension (some responses differ)
+    const match2 = css.match(/url\((https:\/\/fonts\.gstatic\.com[^)]+)\)/);
+    return match2 ? match2[1] : null;
   }
-  const contentType = response.headers.get('content-type') || '';
-  if (!contentType.includes('font') && !contentType.includes('octet')) {
-    console.warn(`⚠  Unexpected content type: ${contentType}`);
-  }
-  const buffer = await response.arrayBuffer();
-  writeFileSync(filepath, Buffer.from(buffer));
-  const sizeKB = Math.round(buffer.byteLength / 1024);
-  console.log(`✅ Saved: ${filepath.split('/').pop()} (${sizeKB} KB)`);
+  return match[1];
 }
 
-console.log('📥 Downloading Cairo Arabic fonts...\n');
-for (const font of fonts) {
-  const dest = join(FONTS_DIR, font.name);
+async function downloadFile(url, dest) {
+  console.log(`⬇  Downloading from ${url.substring(0, 60)}...`);
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`HTTP ${res.status}: ${url}`);
+  const buf = await res.arrayBuffer();
+  writeFileSync(dest, Buffer.from(buf));
+  console.log(`✅ Saved ${(buf.byteLength / 1024).toFixed(0)} KB → ${dest}`);
+}
+
+console.log('🔤 Getting Cairo Arabic font URLs from Google Fonts...\n');
+
+for (let i = 0; i < FONTS_CSS_URLS.length; i++) {
+  const dest = join(FONTS_DIR, FILE_NAMES[i]);
   if (existsSync(dest)) {
-    console.log(`⏭  Already exists: ${font.name}`);
+    console.log(`⏭  Exists: ${FILE_NAMES[i]}`);
     continue;
   }
   try {
-    await downloadFont(font.url, dest);
+    const fontUrl = await fetchFontUrl(FONTS_CSS_URLS[i]);
+    if (!fontUrl) throw new Error('Could not find TTF URL in CSS response');
+    await downloadFile(fontUrl, dest);
   } catch (err) {
-    console.error(`❌ Failed: ${font.name} - ${err.message}`);
+    console.error(`❌ Failed: ${FILE_NAMES[i]} → ${err.message}`);
   }
 }
 
-console.log('\n✨ Done! Fonts are ready in public/fonts/');
+console.log('\n✨ Done! Restart dev server: npm run dev');
