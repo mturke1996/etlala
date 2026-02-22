@@ -31,6 +31,11 @@ import {
   ArrowBack,
   PersonAdd,
   AttachMoney,
+  Person,
+  Phone,
+  LocationOn,
+  Receipt,
+  CalendarToday,
 } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -44,16 +49,33 @@ import { useDataStore } from '../store/useDataStore';
 import { useAuthStore } from '../store/useAuthStore';
 import { InvoiceItem } from '../types';
 
+const inputStyle = {
+  '& .MuiOutlinedInput-root': {
+    borderRadius: 3,
+    bgcolor: '#faf9f7',
+    transition: 'all 0.2s ease',
+    '& fieldset': { borderColor: 'rgba(0,0,0,0.06)' },
+    '&:hover fieldset': { borderColor: 'rgba(0,0,0,0.1)' },
+    '&.Mui-focused fieldset': { borderColor: '#4a5d4a', borderWidth: 2 },
+    '&.Mui-focused': { bgcolor: '#fff', boxShadow: '0 4px 20px rgba(74,93,74,0.08)' }
+  }
+};
+
 export const NewInvoicePage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { clients, addInvoice, invoices } = useDataStore();
+  const editId = searchParams.get('edit');
+  const { clients, addInvoice, updateInvoice, invoices } = useDataStore();
   const { user } = useAuthStore();
   
   const [loading, setLoading] = useState(false);
+  const [hasInitialized, setHasInitialized] = useState(false);
 
   // Form State
   const [clientId, setClientId] = useState(searchParams.get('clientId') || '');
+  const [tempClientName, setTempClientName] = useState('');
+  const [tempClientPhone, setTempClientPhone] = useState('');
+  const [tempClientAddress, setTempClientAddress] = useState('');
   const [invoiceNumber, setInvoiceNumber] = useState('');
   const [issueDate, setIssueDate] = useState<Dayjs | null>(dayjs());
   const [dueDate, setDueDate] = useState<Dayjs | null>(dayjs().add(7, 'day'));
@@ -63,11 +85,38 @@ export const NewInvoicePage = () => {
   const [taxRate, setTaxRate] = useState(0);
   const [notes, setNotes] = useState('');
 
-  // Auto-generate invoice number (simple logic)
+  // Auto-generate invoice number and populate form when editing
   useEffect(() => {
-    const nextNum = invoices.length + 1001;
-    setInvoiceNumber(`INV-${nextNum}`);
-  }, [invoices]);
+    if (editId) {
+      if (hasInitialized) return; // Prevent overwriting user's typing when invoices reload
+      const existing = invoices.find(inv => inv.id === editId);
+      if (existing) {
+        setClientId(existing.clientId);
+        setTempClientName(existing.tempClientName || '');
+        setTempClientPhone(existing.tempClientPhone || '');
+        setTempClientAddress(existing.tempClientAddress || '');
+        setInvoiceNumber(existing.invoiceNumber);
+        setIssueDate(dayjs(existing.issueDate));
+        setDueDate(dayjs(existing.dueDate));
+        setItems(existing.items);
+        setTaxRate(existing.taxRate);
+        setNotes(existing.notes || '');
+        setHasInitialized(true);
+      }
+    } else {
+      let maxNum = 1000;
+      invoices.forEach(inv => {
+        const match = inv.invoiceNumber.match(/\d+$/);
+        if (match) {
+          const num = parseInt(match[0], 10);
+          if (!isNaN(num) && num > maxNum) {
+            maxNum = num;
+          }
+        }
+      });
+      setInvoiceNumber(`INV-${maxNum + 1}`);
+    }
+  }, [invoices, editId]);
 
   const handleAddItem = () => {
     setItems([
@@ -110,6 +159,10 @@ export const NewInvoicePage = () => {
       alert('يرجى اختيار العميل أولاً');
       return;
     }
+    if (clientId === 'temp' && !tempClientName.trim()) {
+      alert('يرجى إدخال اسم العميل المؤقت');
+      return;
+    }
     if (items.some(i => !i.description)) {
       alert('يرجى ملء وصف جميع البنود');
       return;
@@ -117,23 +170,40 @@ export const NewInvoicePage = () => {
     
     setLoading(true);
     try {
-      await addInvoice({
-        id: crypto.randomUUID(),
+      const invoiceData = {
         invoiceNumber,
         clientId,
+        ...(clientId === 'temp' ? { 
+          tempClientName: tempClientName.trim(),
+          tempClientPhone: tempClientPhone.trim(),
+          tempClientAddress: tempClientAddress.trim(),
+        } : {
+          tempClientName: '',
+          tempClientPhone: '',
+          tempClientAddress: '',
+        }),
         items,
         subtotal,
         taxRate,
         taxAmount,
         total,
-        status: 'draft', // Default is draft
         issueDate: issueDate?.toISOString() || new Date().toISOString(),
         dueDate: dueDate?.toISOString() || new Date().toISOString(),
         notes,
-        createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        createdBy: user?.displayName || 'غير معروف',
-      });
+      };
+
+      if (editId) {
+        await updateInvoice(editId, invoiceData);
+      } else {
+        await addInvoice({
+          id: crypto.randomUUID(),
+          ...invoiceData,
+          status: 'draft', // Default is draft on insert
+          createdAt: new Date().toISOString(),
+          createdBy: user?.displayName || 'غير معروف',
+        });
+      }
       navigate('/invoices');
     } catch (error) {
       console.error(error);
@@ -151,7 +221,9 @@ export const NewInvoicePage = () => {
             <IconButton onClick={() => navigate('/invoices')} sx={{ color: 'rgba(255,255,255,0.9)' }}>
               <ArrowBack />
             </IconButton>
-            <Typography fontWeight={800} sx={{ fontSize: '1.2rem' }}>فاتورة جديدة</Typography>
+            <Typography fontWeight={800} sx={{ fontSize: '1.2rem' }}>
+              {editId ? 'تعديل الفاتورة' : 'فاتورة جديدة'}
+            </Typography>
           </Stack>
 
           {/* Summary */}
@@ -166,35 +238,103 @@ export const NewInvoicePage = () => {
 
       <Container maxWidth="sm" sx={{ mt: -2, pb: 4 }}>
         {/* Client & Invoice Info */}
-        <Paper elevation={0} sx={{ p: 3, borderRadius: 4, mb: 2, bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider' }}>
-          <Stack spacing={2.5}>
-            <TextField
-              select
-              fullWidth
-              label="العميل"
-              value={clientId}
-              onChange={(e) => setClientId(e.target.value)}
-              variant="filled"
-              InputProps={{ disableUnderline: true }}
-              sx={{ '& .MuiFilledInput-root': { borderRadius: 3, bgcolor: 'rgba(0,0,0,0.04)', '&:hover': { bgcolor: 'rgba(0,0,0,0.06)' }, '&.Mui-focused': { bgcolor: 'rgba(0,0,0,0.06)' } } }}
-            >
-              {clients.map((client) => (
-                <MenuItem key={client.id} value={client.id}>{client.name}</MenuItem>
-              ))}
-              <MenuItem value="" onClick={() => navigate('/clients')}>
-                <Typography color="primary" fontWeight={700}>+ عميل جديد</Typography>
-              </MenuItem>
-            </TextField>
+        <Paper elevation={0} sx={{ p: { xs: 2.5, sm: 3.5 }, borderRadius: 4, mb: 3, bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', boxShadow: '0 4px 24px rgba(0,0,0,0.02)' }}>
+          <Stack spacing={3}>
+            <Box>
+              <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, mb: 1, display: 'block', ml: 0.5 }}>
+                بيانات العميل
+              </Typography>
+              <TextField
+                select
+                fullWidth
+                label="اختر العميل"
+                value={clientId}
+                onChange={(e) => setClientId(e.target.value)}
+                variant="outlined"
+                InputProps={{
+                  startAdornment: <InputAdornment position="start"><Person sx={{ color: '#4a5d4a', opacity: 0.8 }} /></InputAdornment>,
+                }}
+                sx={inputStyle}
+              >
+                {clients.map((client) => (
+                  <MenuItem key={client.id} value={client.id}>{client.name}</MenuItem>
+                ))}
+                <MenuItem value="temp">
+                  <Typography color="secondary" fontWeight={700}>+ إضافة عميل مؤقت</Typography>
+                </MenuItem>
+                <MenuItem value="" onClick={() => navigate('/clients')}>
+                  <Typography color="primary" fontWeight={700}>+ عميل جديد ثابت</Typography>
+                </MenuItem>
+              </TextField>
+            </Box>
 
-            <TextField
-              fullWidth
-              label="رقم الفاتورة"
-              value={invoiceNumber}
-              onChange={(e) => setInvoiceNumber(e.target.value)}
-              variant="filled"
-              InputProps={{ disableUnderline: true }}
-              sx={{ '& .MuiFilledInput-root': { borderRadius: 3, bgcolor: 'rgba(0,0,0,0.04)' } }}
-            />
+            {clientId === 'temp' && (
+              <Box sx={{ p: 2.5, bgcolor: '#fdfcfb', borderRadius: 3, border: '1px solid rgba(0,0,0,0.04)' }}>
+                <Typography variant="caption" sx={{ color: 'secondary.main', fontWeight: 800, mb: 2, display: 'block' }}>
+                  تفاصيل العميل المؤقت (لا يتم حفظه بالقائمة)
+                </Typography>
+                <Stack spacing={2}>
+                  <TextField
+                    fullWidth
+                    label="الاسم *"
+                    value={tempClientName}
+                    onChange={(e) => setTempClientName(e.target.value)}
+                    variant="outlined"
+                    InputProps={{
+                      startAdornment: <InputAdornment position="start"><Person sx={{ color: '#888' }} /></InputAdornment>,
+                    }}
+                    sx={inputStyle}
+                  />
+                  <Grid container spacing={2}>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <TextField
+                        fullWidth
+                        label="رقم الهاتف (اختياري)"
+                        value={tempClientPhone}
+                        onChange={(e) => setTempClientPhone(e.target.value)}
+                        variant="outlined"
+                        InputProps={{
+                          startAdornment: <InputAdornment position="start"><Phone sx={{ color: '#888' }} /></InputAdornment>,
+                        }}
+                        sx={inputStyle}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <TextField
+                        fullWidth
+                        label="العنوان (اختياري)"
+                        value={tempClientAddress}
+                        onChange={(e) => setTempClientAddress(e.target.value)}
+                        variant="outlined"
+                        InputProps={{
+                          startAdornment: <InputAdornment position="start"><LocationOn sx={{ color: '#888' }} /></InputAdornment>,
+                        }}
+                        sx={inputStyle}
+                      />
+                    </Grid>
+                  </Grid>
+                </Stack>
+              </Box>
+            )}
+
+            <Divider sx={{ borderStyle: 'dashed' }} />
+
+            <Box>
+              <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, mb: 1, display: 'block', ml: 0.5 }}>
+                تفاصيل الفاتورة
+              </Typography>
+              <TextField
+                fullWidth
+                label="رقم الفاتورة (تلقائي)"
+                value={invoiceNumber}
+                variant="outlined"
+                InputProps={{
+                  readOnly: true,
+                  startAdornment: <InputAdornment position="start"><Receipt sx={{ color: '#4a5d4a', opacity: 0.8 }} /></InputAdornment>,
+                }}
+                sx={{ ...inputStyle, pointerEvents: 'none', opacity: 0.8 }}
+              />
+            </Box>
 
             <Grid container spacing={2}>
               <Grid size={{ xs: 6 }}>
@@ -206,9 +346,11 @@ export const NewInvoicePage = () => {
                     slotProps={{ 
                       textField: { 
                         fullWidth: true, 
-                        variant: 'filled',
-                        InputProps: { disableUnderline: true },
-                        sx: { '& .MuiFilledInput-root': { borderRadius: 3, bgcolor: 'rgba(0,0,0,0.04)' } }
+                        variant: 'outlined',
+                        sx: inputStyle,
+                        InputProps: {
+                          startAdornment: <InputAdornment position="start"><CalendarToday sx={{ color: '#4a5d4a', opacity: 0.8, fontSize: 20 }} /></InputAdornment>,
+                        }
                       } 
                     }}
                   />
@@ -223,9 +365,11 @@ export const NewInvoicePage = () => {
                     slotProps={{ 
                       textField: { 
                         fullWidth: true, 
-                        variant: 'filled',
-                        InputProps: { disableUnderline: true },
-                        sx: { '& .MuiFilledInput-root': { borderRadius: 3, bgcolor: 'rgba(0,0,0,0.04)' } }
+                        variant: 'outlined',
+                        sx: inputStyle,
+                        InputProps: {
+                          startAdornment: <InputAdornment position="start"><CalendarToday sx={{ color: '#4a5d4a', opacity: 0.8, fontSize: 20 }} /></InputAdornment>,
+                        }
                       } 
                     }}
                   />
@@ -412,7 +556,7 @@ export const NewInvoicePage = () => {
               boxShadow: '0 4px 14px rgba(74,93,74,0.4)',
             }}
           >
-            {loading ? 'جاري الحفظ...' : 'حفظ الفاتورة'}
+            {loading ? 'جاري الحفظ...' : (editId ? 'تحديث البيانات' : 'حفظ الفاتورة')}
           </Button>
         </Container>
       </Box>

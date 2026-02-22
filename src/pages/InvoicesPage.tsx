@@ -21,9 +21,10 @@ export const InvoicesPage = () => {
   const filteredInvoices = useMemo(() => {
     return invoices.filter((inv) => {
       const client = clients.find(c => c.id === inv.clientId);
+      const clientName = client?.name || inv.tempClientName || '';
       const matchesSearch = 
         inv.invoiceNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        client?.name.toLowerCase().includes(searchQuery.toLowerCase());
+        clientName.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesStatus = filterStatus === 'all' || inv.status === filterStatus;
       return matchesSearch && matchesStatus;
     });
@@ -166,7 +167,7 @@ export const InvoicesPage = () => {
                         #{inv.invoiceNumber}
                       </Typography>
                       <Typography color="text.secondary" sx={{ fontSize: '0.75rem', mt: 0.3 }}>
-                        {client?.name || 'عميل غير معروف'} • {formatDate(inv.issueDate)}
+                        {client?.name || inv.tempClientName || 'عميل غير معروف'} • {formatDate(inv.issueDate)}
                       </Typography>
                     </Box>
                     <Stack alignItems="flex-end" spacing={0.3}>

@@ -35,18 +35,20 @@ const Grid = MuiGrid as any;
 export const PaymentsPage = () => {
   const theme = useTheme();
   const navigate = useNavigate();
-  const { payments, clients } = useDataStore();
+  const { payments, clients, invoices } = useDataStore();
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredPayments = useMemo(() => {
     return payments.filter(payment => {
       const client = clients.find(c => c.id === payment.clientId);
+      const invoice = invoices.find(inv => inv.id === payment.invoiceId);
+      const clientName = client?.name || invoice?.tempClientName || '';
       return (
         payment.notes?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        client?.name.toLowerCase().includes(searchQuery.toLowerCase())
+        clientName.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }).sort((a, b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime());
-  }, [payments, clients, searchQuery]);
+  }, [payments, clients, invoices, searchQuery]);
 
   const getPaymentMethodLabel = (method: string) => {
     const labels: Record<string, string> = {
@@ -131,13 +133,15 @@ export const PaymentsPage = () => {
           ) : (
             filteredPayments.map((payment) => {
               const client = clients.find(c => c.id === payment.clientId);
+              const invoice = invoices.find(inv => inv.id === payment.invoiceId);
+              const clientName = client?.name || invoice?.tempClientName || 'عميل غير معروف';
               return (
                 <Card key={payment.id} sx={{ borderRadius: 0, boxShadow: 'none', border: '1px solid', borderColor: 'divider', borderRight: '3px solid', borderRightColor: 'success.main' }}>
                   <CardContent sx={{ py: 2, '&:last-child': { pb: 2 } }}>
                     <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
                       <Box sx={{ minWidth: 0, flex: 1 }}>
                         <Typography fontWeight={700} variant="body2">
-                          {client?.name || 'عميل غير معروف'}
+                          {clientName}
                         </Typography>
                         <Stack direction="row" spacing={1} alignItems="center" color="text.secondary" sx={{ mt: 0.5 }}>
                           <CalendarToday sx={{ fontSize: 13 }} />

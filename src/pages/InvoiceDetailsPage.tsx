@@ -8,8 +8,9 @@ import {
 } from '@mui/material';
 import {
   ArrowBack, Print, MoreVert, CheckCircle, Cancel, Email,
-  Delete, PictureAsPdf, Share, Download,
+  Delete, PictureAsPdf, Share, Download, Edit
 } from '@mui/icons-material';
+import { useAuthStore } from '../store/useAuthStore';
 import { useDataStore } from '../store/useDataStore';
 import { PrintableInvoice } from '../components/PrintableInvoice';
 import { InvoicePDF } from '../components/pdf/InvoicePDF';
@@ -21,6 +22,7 @@ import React from 'react';
 export const InvoiceDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useAuthStore();
   const { invoices, clients, updateInvoice, deleteInvoice } = useDataStore();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -28,7 +30,12 @@ export const InvoiceDetailsPage = () => {
   const [deleting, setDeleting] = useState(false);
 
   const invoice = invoices.find(inv => inv.id === id);
-  const client = clients.find(c => c.id === invoice?.clientId);
+  const client = clients.find(c => c.id === invoice?.clientId) || 
+    (invoice?.tempClientName ? { 
+      id: 'temp', name: invoice.tempClientName, type: 'individual', 
+      phone: invoice.tempClientPhone || '', address: invoice.tempClientAddress || '', 
+      createdAt: '', updatedAt: '' 
+    } as any : undefined);
 
   const componentRef = useRef<HTMLDivElement>(null);
 
@@ -196,6 +203,11 @@ export const InvoiceDetailsPage = () => {
             <MenuItem onClick={() => handleStatusChange('cancelled')} disabled={invoice.status === 'cancelled'}>
               <Cancel fontSize="small" color="warning" sx={{ mr: 1 }} /> إلغاء
             </MenuItem>
+            {user?.role === 'admin' && (
+              <MenuItem onClick={() => navigate(`/invoices/new?edit=${invoice.id}`)}>
+                <Edit fontSize="small" color="primary" sx={{ mr: 1 }} /> تعديل الفاتورة
+              </MenuItem>
+            )}
             <MenuItem
               onClick={() => {
                 setAnchorEl(null);

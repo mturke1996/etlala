@@ -48,6 +48,9 @@ export interface Invoice {
   id: string;
   invoiceNumber: string;
   clientId: string;
+  tempClientName?: string; // أسم العميل المؤقت (إذا لم يكن مسجل)
+  tempClientPhone?: string; // هاتف العميل المؤقت
+  tempClientAddress?: string; // عنوان العميل المؤقت
   items: InvoiceItem[];
   subtotal: number;
   taxRate: number;
