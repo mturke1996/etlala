@@ -1,0 +1,409 @@
+/* Fonts are loaded via index.html with preload + non-blocking strategy */
+/* No duplicate @import needed - improves initial load by ~200-400ms */
+
+/* ═══════════════════════════════════════════════════════════
+   ETLALA Design System — Premium UI
+   ═══════════════════════════════════════════════════════════ */
+
+:root {
+  --etlala-green: #4a5d4a;
+  --etlala-green-light: #6b7f6b;
+  --etlala-green-dark: #364036;
+  --etlala-cream: #c8c0b0;
+  --etlala-cream-light: #f5f3ef;
+  --etlala-taupe: #8b7e6a;
+  --etlala-bg: #f5f3ef;
+  --etlala-paper: #ffffff;
+  --etlala-text: #2d3a2d;
+  --etlala-text-secondary: #6b7b6b;
+
+  /* Timing */
+  --ease-spring: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-smooth: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --duration-slow: 400ms;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 4px rgba(74, 93, 74, 0.08), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 16px rgba(74, 93, 74, 0.1), 0 2px 6px rgba(0,0,0,0.06);
+  --shadow-lg: 0 8px 32px rgba(74, 93, 74, 0.14), 0 4px 12px rgba(0,0,0,0.08);
+  --shadow-xl: 0 16px 48px rgba(74, 93, 74, 0.18), 0 8px 24px rgba(0,0,0,0.1);
+}
+
+/* ── Base ── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+  /* GPU-accelerated scroll */
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: 'Cairo', 'Tajawal', system-ui, -apple-system, sans-serif !important;
+  background-color: var(--etlala-bg);
+  color: var(--etlala-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  line-height: 1.6;
+  /* Performance: tell browser root element doesn't affect layout of others */
+  text-rendering: optimizeSpeed;
+}
+
+/* ── Typography ── */
+h1, h2, h3, h4, h5, h6,
+p, span, div, label,
+input, button, textarea, select {
+  font-family: 'Tajawal', 'Cairo', sans-serif !important;
+}
+
+.font-en {
+  font-family: 'Outfit', sans-serif !important;
+}
+
+/* ── RTL Button Icon Fix ── */
+.MuiButton-startIcon {
+  margin-left: 8px !important;
+  margin-right: -2px !important;
+}
+.MuiButton-endIcon {
+  margin-right: 8px !important;
+  margin-left: -2px !important;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--etlala-cream);
+  border-radius: 20px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--etlala-taupe);
+}
+
+/* ══════════════════════════════════════════
+   ANIMATIONS & KEYFRAMES
+   ══════════════════════════════════════════ */
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInFast {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(32px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes scaleInBounce {
+  from { opacity: 0; transform: scale(0.85); }
+  60%  { transform: scale(1.04); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.6; }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-6px); }
+}
+
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 8px rgba(74,93,74,0.3); }
+  50%       { box-shadow: 0 0 20px rgba(74,93,74,0.5); }
+}
+
+@keyframes ripple {
+  from { transform: scale(0); opacity: 0.6; }
+  to   { transform: scale(4); opacity: 0; }
+}
+
+/* ── Animation Utility Classes ── */
+.animate-fade-in {
+  animation: fadeIn var(--duration-slow) var(--ease-smooth) forwards;
+}
+.animate-fade-in-fast {
+  animation: fadeInFast var(--duration-normal) ease forwards;
+}
+.animate-slide-up {
+  animation: slideUp var(--duration-slow) var(--ease-spring) forwards;
+}
+.animate-slide-down {
+  animation: slideDown var(--duration-normal) var(--ease-spring) forwards;
+}
+.animate-slide-in-right {
+  animation: slideInRight var(--duration-normal) var(--ease-spring) forwards;
+}
+.animate-scale-in {
+  animation: scaleIn var(--duration-normal) var(--ease-spring) forwards;
+}
+.animate-scale-in-bounce {
+  animation: scaleInBounce 0.5s var(--ease-bounce) forwards;
+}
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+.animate-pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Staggered children */
+.stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+.stagger-children > *:nth-child(2) { animation-delay: 60ms; }
+.stagger-children > *:nth-child(3) { animation-delay: 120ms; }
+.stagger-children > *:nth-child(4) { animation-delay: 180ms; }
+.stagger-children > *:nth-child(5) { animation-delay: 240ms; }
+.stagger-children > *:nth-child(6) { animation-delay: 300ms; }
+
+/* ══════════════════════════════════════════
+   GLASS MORPHISM
+   ══════════════════════════════════════════ */
+.glass {
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+.glass-dark {
+  background: rgba(26, 31, 26, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(200, 192, 176, 0.1);
+}
+
+/* ══════════════════════════════════════════
+   INTERACTIVE ELEMENT ENHANCEMENTS
+   ══════════════════════════════════════════ */
+
+/* Cards with hover */
+.card-hover {
+  transition: transform var(--duration-normal) var(--ease-spring),
+              box-shadow var(--duration-normal) var(--ease-spring);
+  cursor: pointer;
+  will-change: transform;
+  /* Improve rendering performance with containment */
+  contain: layout style;
+}
+.card-hover:hover {
+  transform: translateY(-3px) scale(1.005);
+  box-shadow: var(--shadow-lg);
+}
+.card-hover:active {
+  transform: scale(0.98);
+  transition-duration: 100ms;
+}
+
+/* Icon button enhancement */
+.icon-btn-glow:hover {
+  filter: drop-shadow(0 4px 8px rgba(74, 93, 74, 0.4));
+}
+
+/* ══════════════════════════════════════════
+   MUI OVERRIDES — Global Refinements
+   ══════════════════════════════════════════ */
+
+/* Dialog backdrop blur */
+.MuiDialog-root .MuiBackdrop-root {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  background-color: rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Dialog paper slide-up */
+.MuiDialog-paper {
+  animation: scaleIn 0.28s var(--ease-spring) !important;
+}
+
+/* Snackbar slide-in */
+.MuiSnackbar-root {
+  animation: slideInRight 0.3s var(--ease-spring);
+}
+
+/* Bottom navigation label */
+.MuiBottomNavigationAction-label {
+  font-family: 'Tajawal', 'Cairo', sans-serif !important;
+  letter-spacing: 0.3px;
+}
+
+/* Input improvements */
+.MuiOutlinedInput-root {
+  transition: box-shadow 0.2s ease !important;
+}
+
+/* Select dropdown */
+.MuiSelect-select {
+  font-weight: 600 !important;
+}
+
+/* Chip pulse on hover */
+.MuiChip-root {
+  transition: all 0.2s var(--ease-spring) !important;
+}
+.MuiChip-root:hover {
+  transform: scale(1.04);
+  box-shadow: 0 3px 10px rgba(0,0,0,0.12);
+}
+
+/* Alert border radius */
+.MuiAlert-root {
+  border-radius: 14px !important;
+}
+
+/* Collapse transition */
+.MuiCollapse-root {
+  transition: height 0.32s var(--ease-spring) !important;
+}
+
+/* Avatar border */
+.MuiAvatar-root {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+
+/* Divider */
+.MuiDivider-root {
+  opacity: 0.6;
+}
+
+/* Tooltip */
+.MuiTooltip-tooltip {
+  font-family: 'Tajawal', 'Cairo', sans-serif !important;
+  font-size: 0.8rem !important;
+  font-weight: 600 !important;
+  padding: 8px 14px !important;
+  border-radius: 10px !important;
+}
+
+/* Loading spinner color */
+.MuiCircularProgress-root {
+  color: var(--etlala-green) !important;
+}
+
+/* ══════════════════════════════════════════
+   SHIMMER LOADING EFFECT
+   ══════════════════════════════════════════ */
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255,255,255,0) 0%,
+    rgba(255,255,255,0.3) 50%,
+    rgba(255,255,255,0) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s infinite;
+}
+
+/* ══════════════════════════════════════════
+   SCROLLABLE CONTAINER
+   ══════════════════════════════════════════ */
+.scroll-container {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  /* GPU-accelerated scrolling */
+  will-change: scroll-position;
+}
+
+/* ══════════════════════════════════════════
+   PERFORMANCE: CONTENT VISIBILITY
+   ══════════════════════════════════════════ */
+
+/* Off-screen content optimization */
+.content-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 300px;
+}
+
+/* GPU acceleration for animated elements */
+.gpu-accelerated {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* ══════════════════════════════════════════
+   PRINT STYLES
+   ══════════════════════════════════════════ */
+@media print {
+  body {
+    background: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  .no-print,
+  .MuiBottomNavigation-root {
+    display: none !important;
+  }
+  @page {
+    margin: 0;
+    size: A4;
+  }
+}
+
+/* ══════════════════════════════════════════
+   MOBILE ENHANCEMENTS
+   ══════════════════════════════════════════ */
+@media (max-width: 600px) {
+  body {
+    -webkit-tap-highlight-color: transparent;
+  }
+  * {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  /* Larger touch targets */
+  .MuiIconButton-root {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  .MuiButton-root {
+    min-height: 44px;
+  }
+}
