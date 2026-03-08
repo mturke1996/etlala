@@ -14,7 +14,7 @@ import {
   QueryConstraint,
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
-import type { Client, Invoice, Payment, StandaloneDebt, Expense, ExpenseInvoice, DebtParty, Worker, UserBalance, GlobalFundTransaction } from '../types';
+import type { Client, Invoice, Payment, StandaloneDebt, Expense, ExpenseInvoice, DebtParty, Worker, UserBalance, GlobalFundTransaction, Letter } from '../types';
 
 // Generic CRUD operations
 export class FirestoreService<T extends { id: string }> {
@@ -106,3 +106,4 @@ export const expenseInvoicesService = new FirestoreService<ExpenseInvoice>('expe
 export const workersService = new FirestoreService<Worker>('workers');
 export const userBalancesService = new FirestoreService<UserBalance>('user_balances');
 export const globalFundTransactionsService = new FirestoreService<GlobalFundTransaction>('global_fund_transactions');
+export const lettersService = new FirestoreService<Letter>('letters');

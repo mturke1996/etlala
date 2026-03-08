@@ -221,3 +221,27 @@ export interface GlobalFundTransaction {
   updatedAt: string;
   createdBy?: string;          // من قام بإنشاء السجل
 }
+
+// Letter Types
+export type LetterType = 'official' | 'offer' | 'entitlement';
+
+export interface Letter {
+  id: string;
+  type: LetterType;
+  refNumber: string;
+  date: string;
+  recipientName: string;
+  recipientTitle?: string;
+  recipientAddress?: string;
+  recipientPhone?: string;
+  clientId?: string;
+  subject: string;
+  greeting: string;
+  bodyParagraphs: string[];
+  notes?: string;
+  closing: string;
+  signerName: string;
+  signerTitle: string;
+  showStamp: boolean;
+  createdAt: string;
+}

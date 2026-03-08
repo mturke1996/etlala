@@ -9,6 +9,7 @@ import {
   expenseInvoicesService,
   workersService,
   userBalancesService,
+  lettersService,
 } from '../services/firebaseService';
 import type {
   Client,
@@ -20,6 +21,7 @@ import type {
   ExpenseInvoice,
   Worker,
   UserBalance,
+  Letter,
 } from '../types';
 import { orderBy, where } from 'firebase/firestore';
 import toast from 'react-hot-toast'; // We need to install this or remove it if not used, assuming user wants notifications
@@ -46,6 +48,7 @@ interface DataState {
   debtParties: DebtParty[];
   workers: Worker[];
   userBalances: UserBalance[];
+  letters: Letter[];
   isLoading: boolean;
   
   // Initialization
@@ -87,6 +90,10 @@ interface DataState {
   addUserBalance: (balance: UserBalance) => Promise<void>;
   updateUserBalance: (id: string, data: Partial<UserBalance>) => Promise<void>;
   deleteUserBalance: (id: string) => Promise<void>;
+
+  addLetter: (letter: Letter) => Promise<void>;
+  updateLetter: (id: string, data: Partial<Letter>) => Promise<void>;
+  deleteLetter: (id: string) => Promise<void>;
 }
 
 export const useDataStore = create<DataState>((set, get) => ({
@@ -99,6 +106,7 @@ export const useDataStore = create<DataState>((set, get) => ({
   debtParties: [],
   workers: [],
   userBalances: [],
+  letters: [],
   isLoading: true,
 
   initialize: () => {
@@ -106,7 +114,7 @@ export const useDataStore = create<DataState>((set, get) => ({
     
     // Track when all collections have received first data
     let loadedCount = 0;
-    const totalCollections = 9;
+    const totalCollections = 10;
     const markLoaded = () => {
       loadedCount++;
       if (loadedCount >= totalCollections) {
@@ -124,6 +132,7 @@ export const useDataStore = create<DataState>((set, get) => ({
     const unsubParties = debtPartiesService.subscribe((data) => { set({ debtParties: data }); markLoaded(); }, [orderBy('name', 'asc')]);
     const unsubWorkers = workersService.subscribe((data) => { set({ workers: data }); markLoaded(); }, [orderBy('createdAt', 'desc')]);
     const unsubUserBalances = userBalancesService.subscribe((data) => { set({ userBalances: data }); markLoaded(); }, [orderBy('date', 'desc')]);
+  const unsubLetters = lettersService.subscribe((data) => { set({ letters: data }); markLoaded(); }, [orderBy('createdAt', 'desc')]);
 
     // Timeout fallback: if data doesn't load in 8s, stop showing loading
     const timeout = setTimeout(() => {
@@ -143,6 +152,7 @@ export const useDataStore = create<DataState>((set, get) => ({
       unsubParties();
       unsubWorkers();
       unsubUserBalances();
+      unsubLetters();
     };
   },
 
@@ -269,5 +279,16 @@ export const useDataStore = create<DataState>((set, get) => ({
   },
   deleteUserBalance: async (id) => {
     await handleAsync(() => userBalancesService.delete(id), 'تم حذف الرصيد');
+  },
+
+  // Letter Actions
+  addLetter: async (letter) => {
+    await handleAsync(() => lettersService.add(letter), '');
+  },
+  updateLetter: async (id, data) => {
+    await handleAsync(() => lettersService.update(id, data), '');
+  },
+  deleteLetter: async (id) => {
+    await handleAsync(() => lettersService.delete(id), '');
   },
 }));

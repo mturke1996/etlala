@@ -18,6 +18,7 @@ import { useDataStore } from '../store/useDataStore';
 import { downloadPdf, sharePdf } from '../utils/pdfService';
 import { LetterPDF } from '../components/pdf/LetterPDF';
 import type { LetterData, LetterType } from '../components/pdf/LetterPDF';
+import type { Letter } from '../types';
 import toast from 'react-hot-toast';
 import dayjs from 'dayjs';
 import 'dayjs/locale/ar';
@@ -25,12 +26,7 @@ import React from 'react';
 
 dayjs.locale('ar');
 
-// ── Storage ──
-const STORAGE_KEY = 'etlala-letters';
-const loadLetters = (): LetterData[] => {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch { return []; }
-};
-const saveLetters = (l: LetterData[]) => localStorage.setItem(STORAGE_KEY, JSON.stringify(l));
+
 
 // ── Labels ──
 const typeLabels: Record<LetterType, string> = { official: 'خطاب رسمي', offer: 'عرض سعر', entitlement: 'مستخلص' };
@@ -75,9 +71,11 @@ export const LettersPage = () => {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
   const { user } = useAuthStore();
-  const { clients } = useDataStore();
+  const { clients, letters: firebaseLetters, addLetter, updateLetter, deleteLetter } = useDataStore();
 
-  const [letters, setLetters] = useState<LetterData[]>(loadLetters);
+  // Convert Firebase Letter to LetterData format
+  const letters: LetterData[] = firebaseLetters as any;
+
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -112,7 +110,7 @@ export const LettersPage = () => {
       if (c) setForm(p => ({ ...p, clientId: c.id, recipientName: c.name, recipientAddress: c.address || '', recipientPhone: c.phone || '' }));
     }
   };
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.recipientName?.trim() || !form.subject?.trim()) { toast.error('يرجى ملء اسم المستلم والموضوع'); return; }
     const now = dayjs().toISOString();
     const data: LetterData = {
@@ -127,13 +125,17 @@ export const LettersPage = () => {
       signerName: form.signerName || '', signerTitle: form.signerTitle || '',
       showStamp: form.showStamp !== false, createdAt: editingId ? form.createdAt || now : now,
     };
-    const updated = editingId ? letters.map(l => l.id === editingId ? data : l) : [data, ...letters];
-    setLetters(updated); saveLetters(updated); setDialogOpen(false);
+    if (editingId) {
+      await updateLetter(editingId, data as any);
+    } else {
+      await addLetter(data as any);
+    }
+    setDialogOpen(false);
     toast.success(editingId ? 'تم تحديث الرسالة' : 'تم إنشاء الرسالة');
   };
-  const handleDelete = (id: string) => {
-    const updated = letters.filter(l => l.id !== id);
-    setLetters(updated); saveLetters(updated); setExpandedId(null); toast.success('تم حذف الرسالة');
+  const handleDelete = async (id: string) => {
+    await deleteLetter(id);
+    setExpandedId(null); toast.success('تم حذف الرسالة');
   };
   const updateForm = (f: string, v: any) => setForm(p => ({ ...p, [f]: v }));
   const updateParagraph = (i: number, v: string) => {
