@@ -24,31 +24,16 @@ export const downloadPdf = async (
     const blob = await generatePdfBlob(component);
     const url = URL.createObjectURL(blob);
 
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
-    if (isMobile) {
-      // Mobile: open in new tab so user can save/share from browser
-      const tab = window.open(url, '_blank');
-      if (!tab) {
-        // Popup blocked - fallback to same window
-        window.location.href = url;
-      }
-      setTimeout(() => URL.revokeObjectURL(url), 120_000);
-    } else {
-      // Desktop: trigger direct download
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `${filename}.pdf`;
-      link.style.display = 'none';
-      document.body.appendChild(link);
-      link.click();
-      setTimeout(() => {
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-      }, 500);
+    // Always open in new tab — user can save/print from browser
+    const tab = window.open(url, '_blank');
+    if (!tab) {
+      // Popup blocked — fallback to same window
+      window.location.href = url;
     }
+    // Keep URL alive for 2 minutes so the tab can load
+    setTimeout(() => URL.revokeObjectURL(url), 120_000);
 
-    toast.success('تم إنشاء PDF بنجاح', { id: toastId });
+    toast.success('تم فتح PDF', { id: toastId });
   } catch (error: any) {
     console.error('PDF generation error:', error);
     toast.error('فشل في إنشاء PDF - تحقق من الاتصال بالإنترنت', { id: toastId });

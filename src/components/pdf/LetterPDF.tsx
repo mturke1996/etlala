@@ -4,6 +4,7 @@ import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/render
 import './pdfFonts';
 import { PDF_FONT_FAMILY } from './pdfFonts';
 import { COMPANY_INFO } from '../../constants/companyInfo';
+import type { Letter, LetterType } from '../../types';
 
 // ═══════════════════════════════════════════════════════════
 // LETTER PDF — Exact same style as InvoicePDF (proven working)
@@ -77,7 +78,8 @@ const s = StyleSheet.create({
   footerText: { fontSize: 8, color: '#888' },
 });
 
-export type LetterType = 'official' | 'offer' | 'entitlement';
+// Re-export for backwards compatibility
+export type { Letter as LetterData, LetterType } from '../../types';
 
 const typeLabelsAr: Record<LetterType, string> = {
   official: 'خطاب رسمي',
@@ -90,41 +92,12 @@ const typeLabelsEn: Record<LetterType, string> = {
   entitlement: 'STATEMENT',
 };
 
-export interface LetterItem {
-  description: string;
-  quantity: number;
-  unitPrice: number;
-  total: number;
-}
-
-export interface LetterData {
-  id: string;
-  type: LetterType;
-  refNumber: string;
-  date: string;
-  recipientName: string;
-  recipientTitle?: string;
-  recipientAddress?: string;
-  recipientPhone?: string;
-  clientId?: string;
-  subject: string;
-  greeting: string;
-  bodyParagraphs: string[];
-  items?: LetterItem[];
-  notes?: string;
-  closing: string;
-  signerName: string;
-  signerTitle: string;
-  showStamp: boolean;
-  createdAt: string;
-}
-
 const fmtDate = (d: string) => {
   try { const dt = new Date(d); return `${dt.getDate().toString().padStart(2,'0')}/${(dt.getMonth()+1).toString().padStart(2,'0')}/${dt.getFullYear()}`; }
   catch { return d; }
 };
 
-interface Props { letter: LetterData; }
+interface Props { letter: Letter; }
 
 export const LetterPDF: React.FC<Props> = ({ letter }) => {
   const logoUrl = `${window.location.origin}/logo-icon.jpg`;

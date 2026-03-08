@@ -26,6 +26,7 @@ const MODULES: { id: AppModule; label: string }[] = [
   { id: 'users', label: 'المستخدمين' },
   { id: 'workers', label: 'العمال' },
   { id: 'balances', label: 'أرصدة المستخدمين (العهد)' },
+  { id: 'letters', label: 'الرسائل الرسمية' },
 ];
 
 export const AppLockSettingsDialog = ({ open, onClose }: Props) => {

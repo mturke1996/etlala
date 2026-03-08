@@ -586,6 +586,7 @@ export const HomePage = () => {
         )}
 
         {/* Letters Card */}
+        {canAccess('letters') && (
         <Card
           onClick={() => navigate('/letters')}
           sx={{
@@ -638,6 +639,7 @@ export const HomePage = () => {
             </Box>
           </CardContent>
         </Card>
+        )}
 
         {/* Fund Card */}
         {showFund && (

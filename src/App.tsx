@@ -1,4 +1,4 @@
-import { useEffect, Suspense, lazy, useMemo, useCallback } from 'react';
+import { useEffect, useMemo } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, CssBaseline } from '@mui/material';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -13,20 +13,20 @@ import { LoadingScreen } from './components/LoadingScreen';
 import { AppLockGuard } from './components/AppLockGuard';
 import { useAppLockStore } from './store/useAppLockStore';
 
-// ─── Lazy-loaded Pages (code-splitting) ─────────────────────
-const LoginPage = lazy(() => import('./pages/LoginPage').then(m => ({ default: m.LoginPage })));
-const HomePage = lazy(() => import('./pages/HomePage').then(m => ({ default: m.HomePage })));
-const ClientsPage = lazy(() => import('./pages/ClientsPage').then(m => ({ default: m.ClientsPage })));
-const ClientProfilePage = lazy(() => import('./pages/ClientProfilePage').then(m => ({ default: m.ClientProfilePage })));
-const InvoicesPage = lazy(() => import('./pages/InvoicesPage').then(m => ({ default: m.InvoicesPage })));
-const NewInvoicePage = lazy(() => import('./pages/NewInvoicePage').then(m => ({ default: m.NewInvoicePage })));
-const InvoiceDetailsPage = lazy(() => import('./pages/InvoiceDetailsPage').then(m => ({ default: m.InvoiceDetailsPage })));
-const ExpensesPage = lazy(() => import('./pages/ExpensesPage').then(m => ({ default: m.ExpensesPage })));
-const PaymentsPage = lazy(() => import('./pages/PaymentsPage').then(m => ({ default: m.PaymentsPage })));
-const DebtsPage = lazy(() => import('./pages/DebtsPage').then(m => ({ default: m.DebtsPage })));
-const UsersPage = lazy(() => import('./pages/UsersPage').then(m => ({ default: m.UsersPage })));
-const FundPage = lazy(() => import('./pages/FundPage').then(m => ({ default: m.FundPage })));
-const LettersPage = lazy(() => import('./pages/LettersPage').then(m => ({ default: m.LettersPage })));
+// ─── Direct imports (no lazy loading = instant transitions) ──
+import { LoginPage } from './pages/LoginPage';
+import { HomePage } from './pages/HomePage';
+import { ClientsPage } from './pages/ClientsPage';
+import { ClientProfilePage } from './pages/ClientProfilePage';
+import { InvoicesPage } from './pages/InvoicesPage';
+import { NewInvoicePage } from './pages/NewInvoicePage';
+import { InvoiceDetailsPage } from './pages/InvoiceDetailsPage';
+import { ExpensesPage } from './pages/ExpensesPage';
+import { PaymentsPage } from './pages/PaymentsPage';
+import { DebtsPage } from './pages/DebtsPage';
+import { UsersPage } from './pages/UsersPage';
+import { FundPage } from './pages/FundPage';
+import { LettersPage } from './pages/LettersPage';
 
 // ─── QueryClient with optimized defaults ────────────────────
 const queryClient = new QueryClient({
@@ -104,31 +104,29 @@ function AppContent() {
       <Toaster position="top-center" toastOptions={toastOptions} />
       
       <BrowserRouter>
-        <Suspense fallback={<LoadingScreen />}>
-          <Routes>
-            <Route path="/login" element={!isAuthenticated ? <LoginPage /> : <Navigate to="/" />} />
+        <Routes>
+          <Route path="/login" element={!isAuthenticated ? <LoginPage /> : <Navigate to="/" />} />
+          
+          <Route element={isAuthenticated ? <Layout /> : <Navigate to="/login" />}>
+            <Route path="/" element={<HomePage />} />
             
-            <Route element={isAuthenticated ? <Layout /> : <Navigate to="/login" />}>
-              <Route path="/" element={<HomePage />} />
-              
-              <Route path="/clients" element={<AppLockGuard module="clients" requireScreen><ClientsPage /></AppLockGuard>} />
-              <Route path="/clients/:id" element={<AppLockGuard module="clients" requireScreen><ClientProfilePage /></AppLockGuard>} />
-              
-              <Route path="/invoices" element={<AppLockGuard module="invoices" requireScreen><InvoicesPage /></AppLockGuard>} />
-              <Route path="/invoices/new" element={<AppLockGuard module="invoices" requireScreen><NewInvoicePage /></AppLockGuard>} />
-              <Route path="/invoices/:id" element={<AppLockGuard module="invoices" requireScreen><InvoiceDetailsPage /></AppLockGuard>} />
-              
-              <Route path="/expenses" element={<AppLockGuard module="expenses" requireScreen><ExpensesPage /></AppLockGuard>} />
-              <Route path="/payments" element={<AppLockGuard module="payments" requireScreen><PaymentsPage /></AppLockGuard>} />
-              <Route path="/debts" element={<AppLockGuard module="debts" requireScreen><DebtsPage /></AppLockGuard>} />
-              <Route path="/users" element={<AppLockGuard module="users" requireScreen><UsersPage /></AppLockGuard>} />
-              <Route path="/fund" element={<AppLockGuard module="balances" requireScreen><FundPage /></AppLockGuard>} />
-              <Route path="/letters" element={<LettersPage />} />
-            </Route>
+            <Route path="/clients" element={<AppLockGuard module="clients" requireScreen><ClientsPage /></AppLockGuard>} />
+            <Route path="/clients/:id" element={<AppLockGuard module="clients" requireScreen><ClientProfilePage /></AppLockGuard>} />
+            
+            <Route path="/invoices" element={<AppLockGuard module="invoices" requireScreen><InvoicesPage /></AppLockGuard>} />
+            <Route path="/invoices/new" element={<AppLockGuard module="invoices" requireScreen><NewInvoicePage /></AppLockGuard>} />
+            <Route path="/invoices/:id" element={<AppLockGuard module="invoices" requireScreen><InvoiceDetailsPage /></AppLockGuard>} />
+            
+            <Route path="/expenses" element={<AppLockGuard module="expenses" requireScreen><ExpensesPage /></AppLockGuard>} />
+            <Route path="/payments" element={<AppLockGuard module="payments" requireScreen><PaymentsPage /></AppLockGuard>} />
+            <Route path="/debts" element={<AppLockGuard module="debts" requireScreen><DebtsPage /></AppLockGuard>} />
+            <Route path="/users" element={<AppLockGuard module="users" requireScreen><UsersPage /></AppLockGuard>} />
+            <Route path="/fund" element={<AppLockGuard module="balances" requireScreen><FundPage /></AppLockGuard>} />
+            <Route path="/letters" element={<AppLockGuard module="letters" requireScreen><LettersPage /></AppLockGuard>} />
+          </Route>
 
-            <Route path="*" element={<Navigate to="/" />} />
-          </Routes>
-        </Suspense>
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
       </BrowserRouter>
     </ThemeProvider>
   );

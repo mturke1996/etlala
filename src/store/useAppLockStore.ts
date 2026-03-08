@@ -4,7 +4,7 @@ import { useAuthStore } from './useAuthStore';
 import { doc, setDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../config/firebase';
 
-export type AppModule = 'stats' | 'clients' | 'invoices' | 'payments' | 'debts' | 'expenses' | 'users' | 'workers' | 'balances';
+export type AppModule = 'stats' | 'clients' | 'invoices' | 'payments' | 'debts' | 'expenses' | 'users' | 'workers' | 'balances' | 'letters';
 
 export interface AppLockState {
   pinCode: string;

@@ -17,8 +17,7 @@ import { useAuthStore } from '../store/useAuthStore';
 import { useDataStore } from '../store/useDataStore';
 import { downloadPdf, sharePdf } from '../utils/pdfService';
 import { LetterPDF } from '../components/pdf/LetterPDF';
-import type { LetterData, LetterType } from '../components/pdf/LetterPDF';
-import type { Letter } from '../types';
+import type { Letter, LetterType } from '../types';
 import toast from 'react-hot-toast';
 import dayjs from 'dayjs';
 import 'dayjs/locale/ar';
@@ -53,7 +52,7 @@ const CLOSINGS = [
 
 const fmtDate = (d: string) => dayjs(d).format('DD/MM/YYYY');
 
-const createDefault = (): Partial<LetterData> => ({
+const createDefault = (): Partial<Letter> => ({
   type: 'official',
   refNumber: `ETL-${dayjs().format('YYYYMMDD')}-${String(Math.floor(Math.random() * 999) + 1).padStart(3, '0')}`,
   date: dayjs().format('YYYY-MM-DD'),
@@ -71,10 +70,7 @@ export const LettersPage = () => {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
   const { user } = useAuthStore();
-  const { clients, letters: firebaseLetters, addLetter, updateLetter, deleteLetter } = useDataStore();
-
-  // Convert Firebase Letter to LetterData format
-  const letters: LetterData[] = firebaseLetters as any;
+  const { clients, letters, addLetter, updateLetter, deleteLetter } = useDataStore();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -82,7 +78,7 @@ export const LettersPage = () => {
   const [pdfLoading, setPdfLoading] = useState(false);
   const [useExistingClient, setUseExistingClient] = useState(true);
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
-  const [form, setForm] = useState<Partial<LetterData>>(createDefault());
+  const [form, setForm] = useState<Partial<Letter>>(createDefault());
 
   const cardBg = isDark ? 'rgba(30,37,30,0.85)' : '#ffffff';
   const cardBorder = isDark ? 'rgba(200,192,176,0.08)' : 'rgba(74,93,74,0.06)';
@@ -98,8 +94,9 @@ export const LettersPage = () => {
     setEditingId(null); setUseExistingClient(true); setSelectedClientId(null);
     setDialogOpen(true);
   };
-  const openEdit = (letter: LetterData) => {
-    setForm({ ...letter }); setEditingId(letter.id);
+  const openEdit = (letter: Letter) => {
+    setForm({ ...letter, bodyParagraphs: letter.bodyParagraphs?.length ? letter.bodyParagraphs : [''] });
+    setEditingId(letter.id);
     setUseExistingClient(!!letter.clientId); setSelectedClientId(letter.clientId || null);
     setDialogOpen(true);
   };
@@ -113,22 +110,24 @@ export const LettersPage = () => {
   const handleSave = async () => {
     if (!form.recipientName?.trim() || !form.subject?.trim()) { toast.error('يرجى ملء اسم المستلم والموضوع'); return; }
     const now = dayjs().toISOString();
-    const data: LetterData = {
+    const data: Letter = {
       id: editingId || crypto.randomUUID(), type: form.type as LetterType,
       refNumber: form.refNumber || '', date: form.date || dayjs().format('YYYY-MM-DD'),
       recipientName: form.recipientName || '', recipientTitle: form.recipientTitle || '',
       recipientAddress: form.recipientAddress || '', recipientPhone: form.recipientPhone || '',
       clientId: useExistingClient ? selectedClientId || '' : '',
       subject: form.subject || '', greeting: form.greeting || GREETINGS[0],
-      bodyParagraphs: (form.bodyParagraphs || ['']).filter(p => p.trim()),
+      bodyParagraphs: ((form.bodyParagraphs || ['']).filter(p => p.trim())).length
+        ? (form.bodyParagraphs || ['']).filter(p => p.trim())
+        : [''],
       notes: form.notes || '', closing: form.closing || CLOSINGS[0],
       signerName: form.signerName || '', signerTitle: form.signerTitle || '',
       showStamp: form.showStamp !== false, createdAt: editingId ? form.createdAt || now : now,
     };
     if (editingId) {
-      await updateLetter(editingId, data as any);
+      await updateLetter(editingId, data);
     } else {
-      await addLetter(data as any);
+      await addLetter(data);
     }
     setDialogOpen(false);
     toast.success(editingId ? 'تم تحديث الرسالة' : 'تم إنشاء الرسالة');
@@ -149,8 +148,8 @@ export const LettersPage = () => {
   };
 
   const withPdf = async (fn: () => Promise<void>) => { setPdfLoading(true); try { await fn(); } finally { setPdfLoading(false); } };
-  const handleDownload = (l: LetterData) => withPdf(() => downloadPdf(React.createElement(LetterPDF, { letter: l }), `${typeLabels[l.type]}-${l.refNumber}`));
-  const handleShare = (l: LetterData) => withPdf(() => sharePdf(React.createElement(LetterPDF, { letter: l }), `${typeLabels[l.type]}-${l.refNumber}`, `${typeLabels[l.type]} - ${l.subject}`));
+  const handleDownload = (l: Letter) => withPdf(() => downloadPdf(React.createElement(LetterPDF, { letter: l }), `${typeLabels[l.type]}-${l.refNumber}`));
+  const handleShare = (l: Letter) => withPdf(() => sharePdf(React.createElement(LetterPDF, { letter: l }), `${typeLabels[l.type]}-${l.refNumber}`, `${typeLabels[l.type]} - ${l.subject}`));
 
   return (
     <Box sx={{ minHeight: '100vh', background: isDark ? 'linear-gradient(180deg,#1a1f1a,#151a15)' : 'linear-gradient(180deg,#f5f3ef,#ede9e3)', pb: 10 }}>
