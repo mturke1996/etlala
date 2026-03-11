@@ -24,7 +24,27 @@ import type {
   Letter,
 } from '../types';
 import { orderBy, where } from 'firebase/firestore';
-import toast from 'react-hot-toast'; // We need to install this or remove it if not used, assuming user wants notifications
+import toast from 'react-hot-toast';
+
+// ─── localStorage Cache helpers ──────────────────────────────
+const CACHE_PREFIX = 'etlala-cache-';
+const CACHE_KEYS = ['clients', 'invoices', 'payments', 'expenses', 'expenseInvoices', 'standaloneDebts', 'debtParties', 'workers', 'userBalances', 'letters'] as const;
+
+const loadCache = (key: string): any[] => {
+  try {
+    const raw = localStorage.getItem(CACHE_PREFIX + key);
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
+};
+
+// Debounced save to avoid excessive writes
+const saveCacheTimers: Record<string, any> = {};
+const saveCache = (key: string, data: any[]) => {
+  clearTimeout(saveCacheTimers[key]);
+  saveCacheTimers[key] = setTimeout(() => {
+    try { localStorage.setItem(CACHE_PREFIX + key, JSON.stringify(data)); } catch {}
+  }, 500);
+};
 
 // Helper to handle async operations with toast notifications
 const handleAsync = async (operation: () => Promise<any>, successMessage: string) => {
@@ -97,20 +117,25 @@ interface DataState {
 }
 
 export const useDataStore = create<DataState>((set, get) => ({
-  clients: [],
-  invoices: [],
-  payments: [],
-  expenses: [],
-  expenseInvoices: [],
-  standaloneDebts: [],
-  debtParties: [],
-  workers: [],
-  userBalances: [],
-  letters: [],
+  // ─── Load cached data instantly on store creation ──────────
+  clients: loadCache('clients'),
+  invoices: loadCache('invoices'),
+  payments: loadCache('payments'),
+  expenses: loadCache('expenses'),
+  expenseInvoices: loadCache('expenseInvoices'),
+  standaloneDebts: loadCache('standaloneDebts'),
+  debtParties: loadCache('debtParties'),
+  workers: loadCache('workers'),
+  userBalances: loadCache('userBalances'),
+  letters: loadCache('letters'),
   isLoading: true,
 
   initialize: () => {
-    set({ isLoading: true });
+    // If we have cached data, immediately mark as "not loading" so UI renders fast
+    const hasCachedData = CACHE_KEYS.some(k => loadCache(k).length > 0);
+    if (hasCachedData) {
+      set({ isLoading: false });
+    }
     
     // Track when all collections have received first data
     let loadedCount = 0;
@@ -122,17 +147,17 @@ export const useDataStore = create<DataState>((set, get) => ({
       }
     };
 
-    // Subscribe to collections
-    const unsubClients = clientsService.subscribe((data) => { set({ clients: data }); markLoaded(); }, [orderBy('createdAt', 'desc')]);
-    const unsubInvoices = invoicesService.subscribe((data) => { set({ invoices: data }); markLoaded(); }, [orderBy('createdAt', 'desc')]);
-    const unsubPayments = paymentsService.subscribe((data) => { set({ payments: data }); markLoaded(); }, [orderBy('createdAt', 'desc')]);
-    const unsubExpenses = expensesService.subscribe((data) => { set({ expenses: data }); markLoaded(); }, [orderBy('date', 'desc')]);
-    const unsubExpenseInvoices = expenseInvoicesService.subscribe((data) => { set({ expenseInvoices: data }); markLoaded(); }, [orderBy('createdAt', 'desc')]);
-    const unsubDebts = standaloneDebtsService.subscribe((data) => { set({ standaloneDebts: data }); markLoaded(); }, [orderBy('date', 'desc')]);
-    const unsubParties = debtPartiesService.subscribe((data) => { set({ debtParties: data }); markLoaded(); }, [orderBy('name', 'asc')]);
-    const unsubWorkers = workersService.subscribe((data) => { set({ workers: data }); markLoaded(); }, [orderBy('createdAt', 'desc')]);
-    const unsubUserBalances = userBalancesService.subscribe((data) => { set({ userBalances: data }); markLoaded(); }, [orderBy('date', 'desc')]);
-  const unsubLetters = lettersService.subscribe((data) => { set({ letters: data }); markLoaded(); }, [orderBy('createdAt', 'desc')]);
+    // Subscribe to collections — update state AND cache
+    const unsubClients = clientsService.subscribe((data) => { set({ clients: data }); saveCache('clients', data); markLoaded(); }, [orderBy('createdAt', 'desc')]);
+    const unsubInvoices = invoicesService.subscribe((data) => { set({ invoices: data }); saveCache('invoices', data); markLoaded(); }, [orderBy('createdAt', 'desc')]);
+    const unsubPayments = paymentsService.subscribe((data) => { set({ payments: data }); saveCache('payments', data); markLoaded(); }, [orderBy('createdAt', 'desc')]);
+    const unsubExpenses = expensesService.subscribe((data) => { set({ expenses: data }); saveCache('expenses', data); markLoaded(); }, [orderBy('date', 'desc')]);
+    const unsubExpenseInvoices = expenseInvoicesService.subscribe((data) => { set({ expenseInvoices: data }); saveCache('expenseInvoices', data); markLoaded(); }, [orderBy('createdAt', 'desc')]);
+    const unsubDebts = standaloneDebtsService.subscribe((data) => { set({ standaloneDebts: data }); saveCache('standaloneDebts', data); markLoaded(); }, [orderBy('date', 'desc')]);
+    const unsubParties = debtPartiesService.subscribe((data) => { set({ debtParties: data }); saveCache('debtParties', data); markLoaded(); }, [orderBy('name', 'asc')]);
+    const unsubWorkers = workersService.subscribe((data) => { set({ workers: data }); saveCache('workers', data); markLoaded(); }, [orderBy('createdAt', 'desc')]);
+    const unsubUserBalances = userBalancesService.subscribe((data) => { set({ userBalances: data }); saveCache('userBalances', data); markLoaded(); }, [orderBy('date', 'desc')]);
+    const unsubLetters = lettersService.subscribe((data) => { set({ letters: data }); saveCache('letters', data); markLoaded(); }, [orderBy('createdAt', 'desc')]);
 
     // Timeout fallback: if data doesn't load in 8s, stop showing loading
     const timeout = setTimeout(() => {
