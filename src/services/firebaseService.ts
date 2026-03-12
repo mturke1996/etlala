@@ -24,10 +24,11 @@ export class FirestoreService<T extends { id: string }> {
   subscribe(callback: (data: T[]) => void, qConstraints: QueryConstraint[] = []) {
     const q = query(collection(db, this.collectionName), ...qConstraints);
     return onSnapshot(q, (snapshot) => {
-      const raw = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as T[];
+      const raw = snapshot.docs.map((d) => ({
+        ...d.data(),
+        id: d.id,        // Always use the Firestore doc ID as the canonical id
+        _docId: d.id,     // Keep a reference to the Firestore doc ID for update/delete
+      })) as unknown as T[];
       // Deduplicate by id to handle legacy mismatched IDs
       const deduped = [...new Map(raw.map(item => [item.id, item])).values()];
       callback(deduped);
@@ -38,10 +39,11 @@ export class FirestoreService<T extends { id: string }> {
   async getAll(qConstraints: QueryConstraint[] = []): Promise<T[]> {
     const q = query(collection(db, this.collectionName), ...qConstraints);
     const snapshot = await getDocs(q);
-    return snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    })) as T[];
+    return snapshot.docs.map((d) => ({
+      ...d.data(),
+      id: d.id,
+      _docId: d.id,
+    })) as unknown as T[];
   }
 
   // Get single document
@@ -62,34 +64,43 @@ export class FirestoreService<T extends { id: string }> {
     return id;
   }
 
-  // Update document — optimized: direct merge without pre-fetch
+  // Update document — checks existence first, then falls back to internal ID lookup
   async update(id: string, data: Partial<T>): Promise<void> {
     const docRef = doc(db, this.collectionName, id);
-    try {
-      // Directly merge — Firestore setDoc with merge:true creates doc if missing
+    const docSnap = await getDoc(docRef);
+    
+    if (docSnap.exists()) {
+      // Document found by its Firestore doc ID — update it directly
       await setDoc(docRef, data as DocumentData, { merge: true });
-    } catch {
-      // Fallback: check if "id" field matches (Legacy ID support)
+    } else {
+      // Fallback: the app's id might differ from the Firestore doc ID (legacy data)
       const q = query(collection(db, this.collectionName), where('id', '==', id));
       const querySnap = await getDocs(q);
       if (!querySnap.empty) {
         const realRef = doc(db, this.collectionName, querySnap.docs[0].id);
         await setDoc(realRef, data as DocumentData, { merge: true });
+      } else {
+        console.warn(`[FirestoreService] update: document not found for id="${id}" in "${this.collectionName}"`);
       }
     }
   }
 
-  // Delete document — optimized: direct delete without pre-fetch
+  // Delete document — checks existence first, then falls back to internal ID lookup
   async delete(id: string): Promise<void> {
     const docRef = doc(db, this.collectionName, id);
-    try {
+    const docSnap = await getDoc(docRef);
+    
+    if (docSnap.exists()) {
+      // Document found by its Firestore doc ID — delete it
       await deleteDoc(docRef);
-    } catch {
-      // Fallback: lookup by internal ID
+    } else {
+      // Fallback: the app's id might differ from the Firestore doc ID (legacy data)
       const q = query(collection(db, this.collectionName), where('id', '==', id));
       const querySnap = await getDocs(q);
       if (!querySnap.empty) {
         await deleteDoc(doc(db, this.collectionName, querySnap.docs[0].id));
+      } else {
+        console.warn(`[FirestoreService] delete: document not found for id="${id}" in "${this.collectionName}"`);
       }
     }
   }
