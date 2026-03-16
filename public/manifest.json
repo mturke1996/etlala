@@ -1,0 +1,32 @@
+{
+  "name": "إطلالة للاستشارات الهندسية",
+  "short_name": "إطلالة",
+  "description": "نظام إدارة شركة إطلالة للاستشارات الهندسية",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1a1f1a",
+  "theme_color": "#364036",
+  "dir": "rtl",
+  "lang": "ar",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/logo-icon.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo-icon.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo-icon.jpg",
+      "sizes": "180x180",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ]
+}

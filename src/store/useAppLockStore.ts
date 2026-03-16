@@ -9,6 +9,7 @@ export type AppModule = 'stats' | 'clients' | 'invoices' | 'payments' | 'debts' 
 export interface AppLockState {
   pinCode: string;
   isLocked: boolean;
+  isAppLockReady: boolean; // true once Firestore settings loaded
   ownerId: string | null;
   unlockedModules: AppModule[];
   unlockedUsers: string[]; // persisted per user id
@@ -41,6 +42,7 @@ export const useAppLockStore = create<AppLockState>()(
     (set, get) => ({
       pinCode: '',
       isLocked: false,
+      isAppLockReady: false,
       ownerId: null,
       unlockedModules: ['expenses', 'workers'], // default allowed modules
       unlockedUsers: [],
@@ -54,10 +56,14 @@ export const useAppLockStore = create<AppLockState>()(
             set({
               pinCode: data.pinCode || '',
               isLocked: data.isLocked || false,
+              isAppLockReady: true,
               ownerId: data.ownerId || null,
               unlockedModules: data.unlockedModules || ['expenses', 'workers'],
               exemptUsers: data.exemptUsers || []
             });
+          } else {
+            // No settings doc: no lock configured, still mark ready
+            set({ isAppLockReady: true });
           }
         });
         return unsubscribe;
@@ -102,8 +108,13 @@ export const useAppLockStore = create<AppLockState>()(
         }
       },
       canAccess: (module) => {
-        const { isLocked, ownerId, unlockedModules, unlockedUsers, exemptUsers } = get();
+        const { isLocked, isAppLockReady, ownerId, unlockedModules, unlockedUsers, exemptUsers } = get();
         const userId = useAuthStore.getState().user?.id;
+        // While app lock settings are still loading, block restricted modules to prevent flash
+        if (!isAppLockReady) {
+          // Allow only the default unlocked modules during loading
+          return unlockedModules.includes(module);
+        }
         if (!isLocked) return true; // everything allowed if no pin
         if (userId && userId === ownerId) return true; // Admin/Owner always has full access
         if (userId && exemptUsers.includes(userId)) return true; // Exempt users have full access
@@ -111,8 +122,9 @@ export const useAppLockStore = create<AppLockState>()(
         return unlockedModules.includes(module); // otherwise only if explicitly unlocked
       },
       isSessionUnlocked: () => {
-        const { isLocked, ownerId, unlockedUsers, exemptUsers } = get();
+        const { isLocked, isAppLockReady, ownerId, unlockedUsers, exemptUsers } = get();
         const userId = useAuthStore.getState().user?.id;
+        if (!isAppLockReady) return false; // Not ready yet, assume locked
         if (!isLocked) return true;
         if (userId && userId === ownerId) return true;
         if (userId && exemptUsers.includes(userId)) return true;
