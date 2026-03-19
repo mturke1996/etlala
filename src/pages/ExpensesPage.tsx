@@ -192,10 +192,10 @@ export const ExpensesPage = () => {
     : 'linear-gradient(160deg, #2a3a2a 0%, #364036 60%, #4a5d4a 100%)';
 
   return (
-    <Box sx={{ minHeight: '100vh', background: isDark ? '#161b16' : '#f5f3ef', pb: 10 }}>
+    <Box sx={{ minHeight: '100dvh', background: isDark ? '#161b16' : '#f5f3ef', pb: 10 }}>
 
       {/* ── Header ── */}
-      <Box sx={{ background: headerGradient, pt: 3, pb: 5, px: 2, position: 'relative', overflow: 'hidden' }}>
+      <Box sx={{ background: headerGradient, pt: 'calc(env(safe-area-inset-top) + 24px)', pb: 5, px: 2, position: 'relative', overflow: 'hidden' }}>
         {/* Decorative glow */}
         <Box sx={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'radial-gradient(ellipse at 80% 0%, rgba(200,192,176,0.1) 0%, transparent 55%)', pointerEvents: 'none' }} />
 

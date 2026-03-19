@@ -48,12 +48,12 @@ export const InvoicesPage = () => {
   };
 
   return (
-    <Box sx={{ pb: 8, minHeight: '100vh', bgcolor: theme.palette.mode === 'dark' ? '#121812' : '#f5f3ef' }}>
+    <Box sx={{ pb: 8, minHeight: '100dvh', bgcolor: theme.palette.mode === 'dark' ? '#121812' : '#f5f3ef' }}>
       {/* Header */}
       <Box
         sx={{
           background: 'linear-gradient(160deg, #364036 0%, #4a5d4a 100%)',
-          pt: 2, pb: 4, px: 2,
+          pt: 'calc(env(safe-area-inset-top) + 16px)', pb: 4, px: 2,
           color: 'white',
         }}
       >

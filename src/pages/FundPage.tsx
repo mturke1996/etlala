@@ -160,10 +160,10 @@ export const FundPage = () => {
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: BG, pb: 10, fontFamily: F }}>
+    <Box sx={{ minHeight: '100dvh', bgcolor: BG, pb: 10, fontFamily: F }}>
 
       {/* ══ HEADER ══════════════════════════════════════════════════════════ */}
-      <Box sx={{ background: HEADER, pt: 4, pb: 5, px: 0 }}>
+      <Box sx={{ background: HEADER, pt: 'calc(env(safe-area-inset-top) + 32px)', pb: 5, px: 0 }}>
         <Container maxWidth="sm">
 
           {/* Nav Bar */}
@@ -537,7 +537,7 @@ export const FundPage = () => {
         PaperProps={{ sx: { bgcolor: isDark ? '#0d1117' : '#f0f2f5', fontFamily: F } }}>
 
         {/* Dialog Header */}
-        <Box sx={{ background: HEADER, pt: 3.5, pb: 4.5, px: 2.5, position: 'relative', overflow: 'hidden' }}>
+        <Box sx={{ background: HEADER, pt: 'calc(env(safe-area-inset-top) + 28px)', pb: 4.5, px: 2.5, position: 'relative', overflow: 'hidden' }}>
           <Stack direction="row" alignItems="center" spacing={1.5} mb={3}>
             <IconButton onClick={() => setDialogOpen(false)}
               sx={{ color: '#fff', bgcolor: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 1.5, p: 1 }}>

@@ -213,9 +213,9 @@ export const NewInvoicePage = () => {
   };
 
   return (
-    <Box sx={{ pb: 12, minHeight: '100vh', bgcolor: '#f5f3ef' }}>
+    <Box sx={{ pb: 12, minHeight: '100dvh', bgcolor: '#f5f3ef' }}>
       {/* Header */}
-      <Box sx={{ background: 'linear-gradient(160deg, #364036 0%, #4a5d4a 100%)', pt: 2, pb: 3, px: 2, color: 'white' }}>
+      <Box sx={{ background: 'linear-gradient(160deg, #364036 0%, #4a5d4a 100%)', pt: 'calc(env(safe-area-inset-top) + 16px)', pb: 3, px: 2, color: 'white' }}>
         <Container maxWidth="sm">
           <Stack direction="row" alignItems="center" spacing={1} mb={2}>
             <IconButton onClick={() => navigate('/invoices')} sx={{ color: 'rgba(255,255,255,0.9)' }}>
@@ -543,7 +543,7 @@ export const NewInvoicePage = () => {
       </Container>
 
       {/* Sticky Save Button */}
-      <Box sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, p: 2, bgcolor: 'background.paper', borderTop: '1px solid', borderColor: 'divider', zIndex: 1300, boxShadow: '0 -4px 10px rgba(0,0,0,0.05)' }}>
+      <Box sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, p: 2, pb: 'calc(env(safe-area-inset-bottom) + 16px)', bgcolor: 'background.paper', borderTop: '1px solid', borderColor: 'divider', zIndex: 1300, boxShadow: '0 -4px 10px rgba(0,0,0,0.05)' }}>
         <Container maxWidth="sm">
           <Button
             variant="contained" fullWidth size="large"

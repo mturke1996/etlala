@@ -132,7 +132,7 @@ export const ClientsPage = () => {
   return (
     <Box
       sx={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: theme.palette.mode === 'dark'
           ? 'linear-gradient(180deg, #1a1f1a 0%, #151a15 100%)'
           : 'linear-gradient(180deg, #f5f3ef 0%, #ede9e3 100%)',
@@ -145,7 +145,7 @@ export const ClientsPage = () => {
           background: theme.palette.mode === 'light'
             ? 'linear-gradient(160deg, #364036 0%, #4a5d4a 100%)'
             : 'linear-gradient(160deg, #2a3a2a 0%, #364036 100%)',
-          pt: 3,
+          pt: 'calc(env(safe-area-inset-top) + 24px)',
           pb: 4,
           px: 2,
           borderRadius: '0 0 28px 28px',
@@ -382,6 +382,7 @@ export const ClientsPage = () => {
                 : 'linear-gradient(160deg, #2a3a2a 0%, #364036 100%)',
               color: 'white',
               p: 2,
+              pt: 'calc(env(safe-area-inset-top) + 16px)',
               position: 'relative',
               overflow: 'hidden',
               '&::before': {

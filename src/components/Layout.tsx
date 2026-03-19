@@ -36,7 +36,7 @@ export const Layout = () => {
   });
 
   return (
-    <Box sx={{ minHeight: '100vh', pb: '72px', '@media print': { pb: 0 } }}>
+    <Box sx={{ minHeight: '100dvh', pb: 'calc(72px + env(safe-area-inset-bottom))', '@media print': { pb: 0 } }}>
       <Outlet />
 
       {/* Bottom Navigation Bar */}
@@ -47,10 +47,11 @@ export const Layout = () => {
         sx={{
           position: 'fixed',
           bottom: 0,
+          paddingBottom: 'env(safe-area-inset-bottom)',
           left: 0,
           right: 0,
           zIndex: 1200,
-          height: 68,
+          height: 'calc(68px + env(safe-area-inset-bottom))',
           bgcolor: isDark
             ? 'rgba(22, 27, 22, 0.96)'
             : 'rgba(255, 255, 255, 0.97)',

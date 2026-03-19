@@ -501,9 +501,9 @@ export const ClientProfilePage = () => {
   );
 
   return (
-    <Box sx={{ minHeight: '100vh', background: pageBg, pb: 8 }}>
+    <Box sx={{ minHeight: '100dvh', background: pageBg, pb: 8 }}>
       {/* Header */}
-      <Box sx={{ background: headerGradient, pt: 2, pb: 4, px: 2, position: 'relative', overflow: 'hidden', '&::before': { content: '""', position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'radial-gradient(ellipse at 70% 20%, rgba(200,192,176,0.08) 0%, transparent 50%)', pointerEvents: 'none' } }}>
+      <Box sx={{ background: headerGradient, pt: 'calc(env(safe-area-inset-top) + 16px)', pb: 4, px: 2, position: 'relative', overflow: 'hidden', '&::before': { content: '""', position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'radial-gradient(ellipse at 70% 20%, rgba(200,192,176,0.08) 0%, transparent 50%)', pointerEvents: 'none' } }}>
         <Container maxWidth="sm">
           <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 3 }}>
             <IconButton onClick={() => navigate('/clients')} sx={{ color: 'rgba(255,255,255,0.9)' }}><ArrowBack /></IconButton>
@@ -648,7 +648,7 @@ export const ClientProfilePage = () => {
 
       {/* ===== EXPENSES LIST DIALOG ===== */}
       <Dialog open={expensesListOpen} onClose={() => setExpensesListOpen(false)} fullScreen sx={{ '& .MuiDialog-paper': { bgcolor: theme.palette.mode === 'dark' ? '#1a1f1a' : '#f5f3ef' } }}>
-        <Box sx={{ background: headerGradient, color: 'white', p: 2 }}>
+        <Box sx={{ background: headerGradient, color: 'white', p: 2, pt: 'calc(env(safe-area-inset-top) + 16px)' }}>
           <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.5 }}>
             <Stack direction="row" alignItems="center" spacing={1.5}>
               <IconButton onClick={() => setExpensesListOpen(false)} sx={{ color: 'white' }}><ArrowBack /></IconButton>
@@ -814,7 +814,7 @@ export const ClientProfilePage = () => {
 
       {/* ===== PAYMENTS LIST DIALOG ===== */}
       <Dialog open={paymentsListOpen} onClose={() => setPaymentsListOpen(false)} fullScreen sx={{ '& .MuiDialog-paper': { bgcolor: theme.palette.mode === 'dark' ? '#1a1f1a' : '#f5f3ef' } }}>
-        <Box sx={{ background: headerGradient, color: 'white', p: 2 }}>
+        <Box sx={{ background: headerGradient, color: 'white', p: 2, pt: 'calc(env(safe-area-inset-top) + 16px)' }}>
           <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.5 }}>
             <Stack direction="row" alignItems="center" spacing={1.5}>
               <IconButton onClick={() => setPaymentsListOpen(false)} sx={{ color: 'white' }}><ArrowBack /></IconButton>
@@ -871,7 +871,7 @@ export const ClientProfilePage = () => {
 
       {/* ===== DEBTS LIST DIALOG ===== */}
       <Dialog open={debtsListOpen} onClose={() => setDebtsListOpen(false)} fullScreen sx={{ '& .MuiDialog-paper': { bgcolor: theme.palette.mode === 'dark' ? '#1a1f1a' : '#f5f3ef' } }}>
-        <Box sx={{ background: headerGradient, color: 'white', p: 2 }}>
+        <Box sx={{ background: headerGradient, color: 'white', p: 2, pt: 'calc(env(safe-area-inset-top) + 16px)' }}>
           <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.5 }}>
             <Stack direction="row" alignItems="center" spacing={1.5}>
               <IconButton onClick={() => setDebtsListOpen(false)} sx={{ color: 'white' }}><ArrowBack /></IconButton>
@@ -918,7 +918,7 @@ export const ClientProfilePage = () => {
       {/* ===== ADD/EDIT EXPENSE DIALOG ===== */}
       <Dialog open={expenseDialogOpen} onClose={() => setExpenseDialogOpen(false)} fullScreen sx={{ '& .MuiDialog-paper': { bgcolor: theme.palette.mode === 'dark' ? '#1a1f1a' : '#f5f3ef' } }}>
         <form onSubmit={handleExpSubmit(onSubmitExpense)}>
-          <Box sx={{ background: headerGradient, color: 'white', p: 2 }}>
+          <Box sx={{ background: headerGradient, color: 'white', p: 2, pt: 'calc(env(safe-area-inset-top) + 16px)' }}>
             <Stack direction="row" alignItems="center" spacing={2}><IconButton onClick={() => setExpenseDialogOpen(false)} sx={{ color: 'white' }}><ArrowBack /></IconButton><Typography variant="h6" fontWeight={700}>{editingExpense ? 'تعديل مصروف' : 'إضافة مصروف'}</Typography></Stack>
           </Box>
           <Box sx={{ p: 3.5 }}>
@@ -952,7 +952,7 @@ export const ClientProfilePage = () => {
       {/* ===== ADD/EDIT PAYMENT DIALOG ===== */}
       <Dialog open={paymentDialogOpen} onClose={() => setPaymentDialogOpen(false)} fullScreen sx={{ '& .MuiDialog-paper': { bgcolor: theme.palette.mode === 'dark' ? '#1a1f1a' : '#f5f3ef' } }}>
         <form onSubmit={handlePaySubmit(onSubmitPayment)}>
-          <Box sx={{ background: headerGradient, color: 'white', p: 2 }}>
+          <Box sx={{ background: headerGradient, color: 'white', p: 2, pt: 'calc(env(safe-area-inset-top) + 16px)' }}>
             <Stack direction="row" alignItems="center" spacing={2}><IconButton onClick={() => setPaymentDialogOpen(false)} sx={{ color: 'white' }}><ArrowBack /></IconButton><Typography variant="h6" fontWeight={700}>{editingPayment ? 'تعديل دفعة' : 'إضافة دفعة'}</Typography></Stack>
           </Box>
           <Box sx={{ p: 3.5 }}>
@@ -973,7 +973,7 @@ export const ClientProfilePage = () => {
       {/* ===== ADD/EDIT DEBT DIALOG ===== */}
       <Dialog open={debtDialogOpen} onClose={() => setDebtDialogOpen(false)} fullScreen sx={{ '& .MuiDialog-paper': { bgcolor: theme.palette.mode === 'dark' ? '#1a1f1a' : '#f5f3ef' } }}>
         <form onSubmit={handleDebtSubmit(onSubmitDebt)}>
-          <Box sx={{ background: headerGradient, color: 'white', p: 2 }}>
+          <Box sx={{ background: headerGradient, color: 'white', p: 2, pt: 'calc(env(safe-area-inset-top) + 16px)' }}>
             <Stack direction="row" alignItems="center" spacing={2}><IconButton onClick={() => setDebtDialogOpen(false)} sx={{ color: 'white' }}><ArrowBack /></IconButton><Typography variant="h6" fontWeight={700}>{editingDebt ? 'تعديل دين' : 'إضافة دين'}</Typography></Stack>
           </Box>
           <Box sx={{ p: 3.5 }}>
@@ -1008,7 +1008,7 @@ export const ClientProfilePage = () => {
       {/* ===== EDIT CLIENT DIALOG ===== */}
       <Dialog open={editClientOpen} onClose={() => setEditClientOpen(false)} fullScreen sx={{ '& .MuiDialog-paper': { bgcolor: theme.palette.mode === 'dark' ? '#1a1f1a' : '#f5f3ef' } }}>
         <form onSubmit={handleClientSubmit(onSubmitClient)}>
-          <Box sx={{ background: headerGradient, color: 'white', p: 2 }}>
+          <Box sx={{ background: headerGradient, color: 'white', p: 2, pt: 'calc(env(safe-area-inset-top) + 16px)' }}>
             <Stack direction="row" alignItems="center" spacing={2}><IconButton onClick={() => setEditClientOpen(false)} sx={{ color: 'white' }}><ArrowBack /></IconButton><Typography variant="h6" fontWeight={700}>تعديل بيانات العميل</Typography></Stack>
           </Box>
           <Box sx={{ p: 3.5 }}>
@@ -1515,7 +1515,7 @@ export const ClientProfilePage = () => {
       {/* ===== EDIT CLIENT DIALOG ===== */}
       <Dialog open={editClientOpen} onClose={() => setEditClientOpen(false)} fullScreen sx={{ '& .MuiDialog-paper': { bgcolor: theme.palette.mode === 'dark' ? '#1a1f1a' : '#f5f3ef' } }}>
         <form onSubmit={handleClientSubmit(onSubmitClient)}>
-          <Box sx={{ background: headerGradient, color: 'white', p: 2 }}>
+          <Box sx={{ background: headerGradient, color: 'white', p: 2, pt: 'calc(env(safe-area-inset-top) + 16px)' }}>
             <Stack direction="row" alignItems="center" justifyContent="space-between">
               <Stack direction="row" alignItems="center" spacing={1.5}>
                 <IconButton onClick={() => setEditClientOpen(false)} sx={{ color: 'white' }}><ArrowBack /></IconButton>

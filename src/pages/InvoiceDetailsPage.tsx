@@ -99,14 +99,14 @@ export const InvoiceDetailsPage = () => {
 
   return (
     <Box sx={{
-      pb: 4, minHeight: '100vh', bgcolor: '#f5f3ef',
+      pb: 4, minHeight: '100dvh', bgcolor: '#f5f3ef',
       '@media print': { bgcolor: 'white', pb: 0, minHeight: 'auto' },
     }}>
       {/* Header */}
       <Box
         sx={{
           background: 'linear-gradient(160deg, #364036 0%, #4a5d4a 100%)',
-          pt: 2, pb: 3, px: 2, color: 'white',
+          pt: 'calc(env(safe-area-inset-top) + 16px)', pb: 3, px: 2, color: 'white',
           '@media print': { display: 'none' },
         }}
       >

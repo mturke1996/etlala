@@ -187,7 +187,7 @@ export const HomePage = () => {
   return (
     <Box
       sx={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: theme.palette.mode === 'dark'
           ? 'linear-gradient(180deg, #1a1f1a 0%, #151a15 100%)'
           : 'linear-gradient(180deg, #f5f3ef 0%, #ede9e3 100%)',
@@ -198,7 +198,7 @@ export const HomePage = () => {
       <Box
         sx={{
           background: 'linear-gradient(160deg, #1a1f1a 0%, #2f3e2f 50%, #3a4a3a 100%)',
-          pt: 6,
+          pt: 'calc(env(safe-area-inset-top) + 48px)',
           pb: 10,
           px: 3,
           position: 'relative',

@@ -199,14 +199,14 @@ export const UsersPage = () => {
   );
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', pb: 8 }}>
+    <Box sx={{ minHeight: '100dvh', bgcolor: 'background.default', pb: 8 }}>
       {/* Header aligned with Brand Colors */}
       <Box
         sx={{
           background: theme.palette.mode === 'light'
             ? 'linear-gradient(135deg, #2a3a2a 0%, #364036 100%)'
             : 'linear-gradient(135deg, #1a221a 0%, #2a3a2a 100%)',
-          pt: { xs: 3, sm: 4 },
+          pt: { xs: 'calc(env(safe-area-inset-top) + 24px)', sm: 4 },
           pb: { xs: 6, sm: 8 },
           px: 2,
           position: 'relative',

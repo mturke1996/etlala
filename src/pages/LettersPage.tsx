@@ -152,12 +152,12 @@ export const LettersPage = () => {
   const handleShare = (l: Letter) => withPdf(() => sharePdf(React.createElement(LetterPDF, { letter: l }), `${typeLabels[l.type]}-${l.refNumber}`, `${typeLabels[l.type]} - ${l.subject}`));
 
   return (
-    <Box sx={{ minHeight: '100vh', background: isDark ? 'linear-gradient(180deg,#1a1f1a,#151a15)' : 'linear-gradient(180deg,#f5f3ef,#ede9e3)', pb: 10 }}>
+    <Box sx={{ minHeight: '100dvh', background: isDark ? 'linear-gradient(180deg,#1a1f1a,#151a15)' : 'linear-gradient(180deg,#f5f3ef,#ede9e3)', pb: 10 }}>
 
       {/* ── Header ── */}
       <Box sx={{
         background: 'linear-gradient(160deg,#1a1f1a 0%,#2f3e2f 50%,#3a4a3a 100%)',
-        pt: 3, pb: 4, px: 2.5, borderRadius: '0 0 32px 32px',
+        pt: 'calc(env(safe-area-inset-top) + 24px)', pb: 4, px: 2.5, borderRadius: '0 0 32px 32px',
         boxShadow: '0 12px 40px rgba(0,0,0,0.35)', position: 'relative', overflow: 'hidden',
       }}>
         <Container maxWidth="sm" sx={{ position: 'relative', zIndex: 1 }}>
@@ -317,7 +317,7 @@ export const LettersPage = () => {
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} fullScreen
         PaperProps={{ sx: { bgcolor: isDark ? '#151a15' : '#f5f3ef', backgroundImage: 'none' } }}>
         {/* Top bar */}
-        <Box sx={{ bgcolor: isDark ? '#1e251e' : '#fff', borderBottom: `1px solid ${cardBorder}`, px: 2, py: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Box sx={{ bgcolor: isDark ? '#1e251e' : '#fff', borderBottom: `1px solid ${cardBorder}`, px: 2, pt: 'calc(env(safe-area-inset-top) + 12px)', pb: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <IconButton onClick={() => setDialogOpen(false)} size="small"><Close /></IconButton>
           <Typography fontWeight={800} sx={{ flex: 1, textAlign: 'center' }}>{editingId ? 'تعديل الرسالة' : 'رسالة جديدة'}</Typography>
           <Button variant="contained" size="small" onClick={handleSave} sx={{ borderRadius: 1, px: 3, fontWeight: 700 }}>حفظ</Button>
