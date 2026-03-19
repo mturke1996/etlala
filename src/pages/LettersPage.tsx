@@ -305,7 +305,7 @@ export const LettersPage = () => {
 
       {/* ── FAB ── */}
       <Fab onClick={openAdd} size="medium" sx={{
-        position: 'fixed', bottom: 80, left: '50%', transform: 'translateX(-50%)',
+        position: 'fixed', bottom: 'calc(env(safe-area-inset-bottom) + 96px)', left: '50%', transform: 'translateX(-50%)',
         bgcolor: isDark ? '#5a7a5a' : '#4a5d4a', color: '#fff', zIndex: 999,
         boxShadow: '0 6px 20px rgba(74,93,74,0.5)',
         '&:hover': { bgcolor: isDark ? '#6b8f6b' : '#364036' },
