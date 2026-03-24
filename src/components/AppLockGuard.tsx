@@ -34,7 +34,7 @@ export const AppLockGuard = ({ module, children, fallback = null, requireScreen 
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', p: 2, background: 'linear-gradient(160deg, #1a1f1a 0%, #2f3e2f 50%, #3a4a3a 100%)', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999 }}>
+    <Box sx={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', p: 2, background: 'linear-gradient(160deg, #1a1f1a 0%, #2f3e2f 50%, #3a4a3a 100%)', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999 }}>
       <Card sx={{ maxWidth: 400, width: '100%', borderRadius: 5, textAlign: 'center', bgcolor: 'rgba(255,255,255,0.98)', backdropFilter: 'blur(20px)', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}>
         <form onSubmit={handleUnlock}>
           <CardContent sx={{ p: 4, pt: 6 }}>

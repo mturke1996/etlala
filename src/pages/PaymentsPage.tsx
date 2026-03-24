@@ -61,14 +61,14 @@ export const PaymentsPage = () => {
   };
 
   return (
-    <Box sx={{ pb: 8 }}>
+    <Box sx={{ pb: 8, minHeight: '100dvh' }}>
       {/* Header */}
       <Box
         sx={{
           background: theme.palette.mode === 'light'
             ? 'linear-gradient(160deg, #364036 0%, #4a5d4a 100%)'
             : 'linear-gradient(160deg, #2a3a2a 0%, #364036 100%)',
-          pt: 2,
+          pt: 'calc(env(safe-area-inset-top) + 16px)',
           pb: 5,
           px: 2,
           position: 'relative',

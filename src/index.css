@@ -410,3 +410,81 @@ input, button, textarea, select {
     min-height: 44px;
   }
 }
+
+/* ══════════════════════════════════════════
+   iOS PWA PERFORMANCE & SMOOTHNESS
+   ══════════════════════════════════════════ */
+
+/* Standalone PWA mode detection */
+@media all and (display-mode: standalone) {
+  html, body {
+    /* Prevent rubber-band overscroll */
+    overscroll-behavior: none;
+    /* Use dynamic viewport height */
+    height: 100dvh;
+  }
+}
+
+/* Smooth scrolling with momentum on iOS */
+* {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Prevent text selection lag on interactive elements */
+button, a, [role="button"], .MuiBottomNavigationAction-root,
+.MuiIconButton-root, .MuiButton-root, .MuiChip-root, .MuiTab-root {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+/* GPU acceleration for fixed elements to prevent jank */
+.MuiBottomNavigation-root,
+.MuiDialog-root .MuiDialog-paper,
+[style*="position: fixed"],
+[style*="position:fixed"] {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Fix iOS input zoom - prevent page scaling when tapping inputs */
+@media screen and (max-width: 768px) {
+  input[type="text"],
+  input[type="password"],
+  input[type="email"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="url"],
+  input[type="search"],
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
+/* Improve chart rendering performance */
+.recharts-wrapper,
+.recharts-surface {
+  will-change: auto !important;
+  contain: layout style paint;
+}
+
+/* Optimize MUI Dialog for mobile - prevent body scroll when dialog open */
+body.MuiDialog-open {
+  overflow: hidden !important;
+  position: fixed;
+  width: 100%;
+}
+

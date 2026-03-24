@@ -40,7 +40,7 @@ export const LoginPage = () => {
   return (
     <Box
       sx={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         width: '100%',
         display: 'flex',
         flexDirection: 'column',
@@ -72,7 +72,7 @@ export const LoginPage = () => {
           flexGrow: 1, display: 'flex', flexDirection: 'column',
           justifyContent: isMobile ? 'flex-end' : 'center',
           px: { xs: 0, sm: 3 }, pb: { xs: 0, sm: 4 },
-          height: '100vh',
+          height: '100dvh',
         }}
       >
         <motion.div
