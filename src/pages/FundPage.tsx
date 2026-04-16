@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box, Button, Typography, Stack, Container,
@@ -20,6 +20,10 @@ import { db } from '../config/firebase';
 import dayjs from 'dayjs';
 import 'dayjs/locale/ar';
 import toast from 'react-hot-toast';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
+
+gsap.registerPlugin(useGSAP);
 
 dayjs.locale('ar');
 const fmt = (d: string) => dayjs(d).format('DD/MM/YYYY');
@@ -44,6 +48,12 @@ export const FundPage = () => {
   const [editingTx, setEditingTx] = useState<any>(null);
   const [openId, setOpenId] = useState<string | null>(null);
   const [form, setForm] = useState({ userId: '', amount: '', description: '', date: dayjs().format('YYYY-MM-DD'), notes: '' });
+
+  // ── GSAP Refs ──────────────────────────────────────────────────────────────
+  const pageRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
+  const balanceCardRef = useRef<HTMLDivElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { const u = initialize(); return u; }, []);
   useEffect(() => {
@@ -203,10 +213,16 @@ export const FundPage = () => {
   };
 
   // ── الألوان ────────────────────────────────────────────────────────────────
-  const BG = isDark ? '#0d1117' : '#f0f2f5';
-  const CARD = isDark ? '#161b22' : '#ffffff';
-  const HEADER = 'linear-gradient(160deg,#0a1628 0%,#0d2b1e 60%,#0f3322 100%)';
-  const USER_HDR = isDark ? '#0f1f2e' : '#1a2d3e';
+  // مستوحاة من تصميم Revolut و Stripe وألوان هوية إطلالة
+  const BG = isDark ? '#161b16' : '#f5f3ef'; // خلفية ناعمة جداً
+  const CARD = isDark ? '#1e251e' : '#ffffff';
+  
+  // الهيرو (Header) نستخدم فيه تدرج ألوان إطلالة الأساسية ليظهر بشكل فخم جداً
+  const HEADER = isDark
+    ? 'linear-gradient(160deg, #1a1f1a 0%, #2f3e2f 50%, #3a4a3a 100%)'
+    : 'linear-gradient(160deg, #4a5d4a 0%, #6b7f6b 50%, #364036 100%)';
+    
+  const USER_HDR = isDark ? '#2d3a2d' : '#fdfdfc';
 
   // ── Status ─────────────────────────────────────────────────────────────────
   const getStatus = (remaining: number, amount: number) => {
@@ -216,15 +232,89 @@ export const FundPage = () => {
     return { color: '#10b981', bg: 'rgba(16,185,129,0.12)', border: 'rgba(16,185,129,0.3)', label: 'نشطة' };
   };
 
-  return (
-    <Box sx={{ minHeight: '100dvh', bgcolor: BG, pb: 10, fontFamily: F }}>
+  // ── GSAP Animations ────────────────────────────────────────────────────────
+  useGSAP(() => {
+    // التأكد من وجود GSAP لتجنب الشاشة البيضاء لو فشل التحميل
+    if (typeof gsap === 'undefined') return;
+    
+    const mm = gsap.matchMedia();
+    mm.add('(prefers-reduced-motion: no-preference)', () => {
+        // ── Header Nav ──
+        gsap.from('.fund-nav', {
+          opacity: 0,
+          y: -15,
+          duration: 0.6,
+          ease: 'power3.out',
+        });
 
-      {/* ══ HEADER ══════════════════════════════════════════════════════════ */}
-      <Box sx={{ background: HEADER, pt: 'calc(env(safe-area-inset-top) + 32px)', pb: 5, px: 0 }}>
+        // ── Balance Card ──
+        if (balanceCardRef.current) {
+          gsap.from(balanceCardRef.current, {
+            opacity: 0,
+            y: 20,
+            scale: 0.98,
+            duration: 0.7,
+            delay: 0.1,
+            ease: 'power3.out',
+          });
+        }
+
+        // ── Stats Grid ──
+        gsap.from('.fund-stat-item', {
+          opacity: 0,
+          y: 10,
+          duration: 0.5,
+          stagger: 0.1,
+          delay: 0.25,
+          ease: 'power2.out',
+        });
+
+        // ── User Cards (body) ──
+        if (bodyRef.current) {
+          gsap.from('.fund-user-card', {
+            opacity: 0,
+            y: 30,
+            duration: 0.6,
+            stagger: 0.08,
+            delay: 0.2,
+            ease: 'power3.out',
+          });
+        }
+    });
+
+  }, { scope: pageRef });
+
+  return (
+    <Box ref={pageRef} sx={{ minHeight: '100dvh', bgcolor: BG, pb: 10, fontFamily: F }}>
+
+      {/* ══ STUNNING HEADER (LINEAR / STRIPE STYLE) ════════════════════════════════════ */}
+      <Box sx={{ 
+        background: isDark 
+          ? 'radial-gradient(120% 120% at 50% 0%, #152219 0%, #0a110c 50%, #050806 100%)' 
+          : 'radial-gradient(120% 120% at 50% 0%, #213526 0%, #132217 50%, #0b140e 100%)', 
+        pt: 'calc(env(safe-area-inset-top) + 32px)', 
+        pb: 8, 
+        px: 0, 
+        position: 'relative', 
+        overflow: 'hidden', 
+        borderBottom: isDark ? '1px solid rgba(200, 192, 176, 0.1)' : 'none',
+        boxShadow: '0 10px 40px -10px rgba(74,93,74,0.4)',
+        borderBottomLeftRadius: 32,
+        borderBottomRightRadius: 32,
+        mb: 2,
+        '&::after': { 
+            content: '""', 
+            position: 'absolute', 
+            top: '-50%', right: '-30%', 
+            width: '70%', height: '180%', 
+            background: 'radial-gradient(ellipse, rgba(255,255,255,0.08) 0%, transparent 60%)', 
+            pointerEvents: 'none' 
+        } 
+      }}>
         <Container maxWidth="sm">
 
           {/* Nav Bar */}
-          <Stack direction="row" alignItems="center" justifyContent="space-between" mb={3.5}>
+          <Stack className="fund-nav" direction="row" alignItems="center" justifyContent="space-between" mb={3.5}>
             <Stack direction="row" alignItems="center" spacing={1.5}>
               <IconButton onClick={() => navigate('/')}
                 sx={{ color: '#fff', p: 0.5 }}>
@@ -243,19 +333,30 @@ export const FundPage = () => {
               <Button onClick={openAdd}
                 startIcon={<Add />}
                 sx={{
-                  bgcolor: '#10b981', color: '#fff', fontWeight: 800, borderRadius: 1.5,
+                  bgcolor: '#10b981', color: '#fff', fontWeight: 800, borderRadius: 2,
                   px: 2.2, py: 1, fontFamily: F, fontSize: '0.85rem',
                   '&:hover': { bgcolor: '#059669' },
-                  boxShadow: '0 4px 16px rgba(16,185,129,0.35)',
+                  '&:active': { transform: 'scale(0.97)' },
+                  boxShadow: '0 4px 20px rgba(16,185,129,0.4)',
+                  transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
                 }}>
                 عهدة جديدة
               </Button>
             )}
           </Stack>
 
-          {/* Balance Card */}
-          <Box sx={{ bgcolor: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 2, p: 2.5, mb: 1 }}>
-            <Stack direction="row" alignItems="center" justifyContent="space-between" mb={2}>
+          {/* Balance Card - Revolut/Stripe Glassmorphism */}
+          <Box ref={balanceCardRef} sx={{ 
+              bgcolor: 'rgba(255,255,255,0.1)', 
+              backdropFilter: 'blur(24px)', 
+              WebkitBackdropFilter: 'blur(24px)', 
+              border: '1px solid rgba(255,255,255,0.2)', 
+              borderRadius: 4, 
+              p: 3, 
+              mb: 1, 
+              boxShadow: '0 12px 40px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.2)' 
+            }}>
+            <Stack direction="row" alignItems="center" justifyContent="space-between" mb={2.5}>
               <Box>
                 <Typography sx={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.6rem', letterSpacing: 1.5, fontWeight: 600, mb: 0.4, fontFamily: F }}>
                   إجمالي صندوق العهدات
@@ -265,11 +366,14 @@ export const FundPage = () => {
                 </Typography>
               </Box>
               <Box sx={{
-                width: 52, height: 52, borderRadius: 1.5,
-                bgcolor: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.25)',
+                width: 56, height: 56, borderRadius: '50%',
+                background: 'linear-gradient(135deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.1) 100%)',
+                border: '1px solid rgba(255,255,255,0.4)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 8px 24px rgba(0,0,0,0.1)',
+                backdropFilter: 'blur(10px)',
               }}>
-                <AccountBalanceWallet sx={{ fontSize: 26, color: '#34d399' }} />
+                <AccountBalanceWallet sx={{ fontSize: 28, color: '#ffffff' }} />
               </Box>
             </Stack>
             {/* 3-col stats */}
@@ -277,17 +381,17 @@ export const FundPage = () => {
               const totalRemaining = perUser.reduce((sum, [, ud]) => sum + ud.custodies.reduce((s: number, c: any) => s + c.remaining, 0), 0);
               const remainingColor = totalRemaining < 0 ? '#fca5a5' : '#6ee7b7';
               return (
-                <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', pt: 1.5, borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+                <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', pt: 2, borderTop: '1px solid rgba(255,255,255,0.15)', mt: 1 }}>
                   {[
-                    { label: 'عدد العهدات', value: totalDeposits, color: '#93c5fd' },
-                    { label: 'إجمالي العهدات', value: formatCurrency(totalFund), color: '#6ee7b7' },
-                    { label: 'المتبقي', value: totalRemaining < 0 ? `-${formatCurrency(Math.abs(totalRemaining))}` : formatCurrency(totalRemaining), color: remainingColor },
+                    { label: 'عدد العهدات', value: totalDeposits, color: '#ffffff' },
+                    { label: 'إجمالي العهدات', value: formatCurrency(totalFund), color: '#ffffff' },
+                    { label: 'المتبقي', value: totalRemaining < 0 ? `-${formatCurrency(Math.abs(totalRemaining))}` : formatCurrency(totalRemaining), color: remainingColor === '#6ee7b7' ? '#ffffff' : remainingColor },
                   ].map((s, i) => (
-                    <Box key={i} sx={{ textAlign: 'center', borderRight: i < 2 ? '1px solid rgba(255,255,255,0.07)' : 'none' }}>
-                      <Typography sx={{ color: s.color, fontSize: '0.85rem', fontWeight: 800, fontFamily: FN, lineHeight: 1.2 }}>
+                    <Box key={i} className="fund-stat-item" sx={{ textAlign: 'center', borderRight: i < 2 ? '1px solid rgba(255,255,255,0.15)' : 'none' }}>
+                      <Typography sx={{ color: s.color, fontSize: '0.9rem', fontWeight: 800, fontFamily: FN, lineHeight: 1.2 }}>
                         {s.value}
                       </Typography>
-                      <Typography sx={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.58rem', fontWeight: 600, fontFamily: F, mt: 0.3 }}>
+                      <Typography sx={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.65rem', fontWeight: 600, fontFamily: F, mt: 0.5 }}>
                         {s.label}
                       </Typography>
                     </Box>
@@ -312,25 +416,32 @@ export const FundPage = () => {
             )}
           </Box>
         ) : (
-          <Stack spacing={2}>
+          <Stack spacing={2} ref={bodyRef}>
             {perUser.map(([uid, userData]) => (
-              <Box key={uid}>
-                {/* User Title */}
-                <Box sx={{ bgcolor: USER_HDR, borderRadius: '10px 10px 0 0', px: 2.5, py: 1.6 }}>
+              <Box key={uid} className="fund-user-card">
+                {/* User Title - Premium Card Look */}
+                <Box sx={{ 
+                  bgcolor: USER_HDR, 
+                  borderRadius: '16px 16px 0 0', 
+                  px: 2.5, py: 2, 
+                  border: isDark ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(0,0,0,0.04)',
+                  borderBottom: 'none',
+                }}>
                   <Stack direction="row" alignItems="center" sx={{ gap: 2 }}>
                     <Box sx={{
-                      width: 38, height: 38, borderRadius: '50%', flexShrink: 0,
-                      bgcolor: 'rgba(16,185,129,0.2)', border: '1.5px solid rgba(16,185,129,0.4)',
+                      width: 44, height: 44, borderRadius: '50%', flexShrink: 0,
+                      background: isDark ? 'linear-gradient(135deg, rgba(122,154,122,0.2) 0%, rgba(122,154,122,0.05) 100%)' : 'linear-gradient(135deg, rgba(74,93,74,0.15) 0%, rgba(74,93,74,0.05) 100%)',
+                      border: isDark ? '1px solid rgba(122,154,122,0.3)' : '1px solid rgba(74,93,74,0.2)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}>
-                      <Person sx={{ fontSize: 22, color: '#34d399' }} />
+                      <Person sx={{ fontSize: 24, color: isDark ? '#9ab89a' : '#4a5d4a' }} />
                     </Box>
                     <Box sx={{ flex: 1 }}>
-                      <Typography sx={{ color: '#fff', fontWeight: 800, fontSize: '0.95rem', fontFamily: F, lineHeight: 1.2 }}>
+                      <Typography sx={{ color: isDark ? '#fff' : '#1a1f1a', fontWeight: 800, fontSize: '1rem', fontFamily: F, lineHeight: 1.2 }}>
                         {userData.name}
                       </Typography>
-                      <Typography sx={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.62rem', fontFamily: F }}>
-                        {userData.custodies.length} عهدة
+                      <Typography sx={{ color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)', fontSize: '0.68rem', fontFamily: F, mt: 0.2 }}>
+                        {userData.custodies.length} عهدة مسجلة
                       </Typography>
                     </Box>
                     <Box sx={{ textAlign: 'left' }}>
@@ -339,11 +450,11 @@ export const FundPage = () => {
                         const isNeg = userRemaining < 0;
                         return (
                           <>
-                            <Typography sx={{ color: isNeg ? '#fca5a5' : '#6ee7b7', fontWeight: 900, fontSize: '0.92rem', fontFamily: FN, lineHeight: 1 }}>
+                            <Typography sx={{ color: isNeg ? '#e11d48' : (isDark ? '#34d399' : '#059669'), fontWeight: 900, fontSize: '1.05rem', fontFamily: FN, lineHeight: 1 }}>
                               {isNeg ? `-${formatCurrency(Math.abs(userRemaining))}` : formatCurrency(userRemaining)}
                             </Typography>
-                            <Typography sx={{ color: isNeg ? 'rgba(252,165,165,0.6)' : 'rgba(255,255,255,0.35)', fontSize: '0.56rem', fontFamily: F }}>
-                              {isNeg ? 'عجز' : 'المتبقي'}
+                            <Typography sx={{ color: isNeg ? 'rgba(225,29,72,0.7)' : (isDark ? 'rgba(52,211,153,0.7)' : 'rgba(5,150,105,0.7)'), fontSize: '0.65rem', fontFamily: F, mt: 0.3, fontWeight: 600 }}>
+                              {isNeg ? 'عجز الرصيد' : 'متبقي متاح'}
                             </Typography>
                           </>
                         );
@@ -351,9 +462,17 @@ export const FundPage = () => {
                     </Box>
                   </Stack>
                 </Box>
-
-                {/* Custodies */}
-                <Box sx={{ bgcolor: CARD, borderRadius: '0 0 10px 10px', overflow: 'hidden', border: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.07)', borderTop: 'none' }}>
+                
+                {/* Custodies List */}
+                <Box sx={{ 
+                    bgcolor: CARD, 
+                    borderRadius: '0 0 16px 16px', 
+                    overflow: 'hidden', 
+                    border: '1px solid', 
+                    borderColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)', 
+                    borderTop: isDark ? '1px solid rgba(255,255,255,0.02)' : '1px solid rgba(0,0,0,0.02)',
+                    boxShadow: isDark ? '0 10px 30px rgba(0,0,0,0.4)' : '0 10px 30px rgba(0,0,0,0.06)' 
+                }}>
                   {[...userData.custodies].reverse().map((c, ci, arr) => {
                     const st = getStatus(c.remaining, c.amount);
                     const pct = c.amount > 0 ? Math.min(100, (Math.max(c.spent, 0) / c.amount) * 100) : 0;
@@ -366,7 +485,7 @@ export const FundPage = () => {
 
                         {/* ── Custody Row (clickable to toggle) ── */}
                         <Box onClick={() => setOpenId(isOpen ? null : c.id)}
-                          sx={{ px: 2, py: 1.8, cursor: 'pointer', '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.015)' }, transition: 'background 0.15s' }}>
+                          sx={{ px: 2, py: 2, cursor: 'pointer', '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.015)' }, '&:active': { bgcolor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)' }, transition: 'background 0.2s cubic-bezier(0.4,0,0.2,1)', WebkitTapHighlightColor: 'transparent' }}>
 
                           {/* Row 1: Ref Badge + Status Badge + Date (right-aligned) */}
                           <Stack direction="row" alignItems="center" spacing={1} mb={0.8}>
@@ -428,11 +547,18 @@ export const FundPage = () => {
                           )}
 
                           {/* Progress Bar */}
-                          <Box sx={{ height: 3, bgcolor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)', borderRadius: 2, overflow: 'hidden', mb: 1.4 }}>
+                          <Box sx={{ height: 4, bgcolor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)', borderRadius: 3, overflow: 'hidden', mb: 1.4 }}>
                             <Box sx={{
-                              height: '100%', width: `${pct}%`, borderRadius: 2,
-                              bgcolor: c.remaining < 0 ? '#dc2626' : c.remaining === 0 ? '#ef4444' : pct > 70 ? '#f59e0b' : '#10b981',
-                              transition: 'width 0.4s',
+                              height: '100%', width: `${pct}%`, borderRadius: 3,
+                              background: c.remaining < 0
+                                ? 'linear-gradient(90deg, #dc2626, #ef4444)'
+                                : c.remaining === 0
+                                  ? 'linear-gradient(90deg, #ef4444, #f87171)'
+                                  : pct > 70
+                                    ? 'linear-gradient(90deg, #f59e0b, #fbbf24)'
+                                    : 'linear-gradient(90deg, #059669, #10b981, #34d399)',
+                              transition: 'width 0.5s cubic-bezier(0.4,0,0.2,1)',
+                              boxShadow: pct > 0 ? '0 1px 4px rgba(0,0,0,0.15)' : 'none',
                             }} />
                           </Box>
 
@@ -625,13 +751,13 @@ export const FundPage = () => {
 
       {/* ══ ADD/EDIT DIALOG ══════════════════════════════════════════════════ */}
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} fullScreen
-        PaperProps={{ sx: { bgcolor: isDark ? '#0d1117' : '#f0f2f5', fontFamily: F } }}>
+        PaperProps={{ sx: { bgcolor: isDark ? '#0a0e14' : '#f0f2f5', fontFamily: F } }}>
 
         {/* Dialog Header */}
-        <Box sx={{ background: HEADER, pt: 'calc(env(safe-area-inset-top) + 28px)', pb: 4.5, px: 2.5, position: 'relative', overflow: 'hidden' }}>
+        <Box sx={{ background: HEADER, pt: 'calc(env(safe-area-inset-top) + 28px)', pb: 4.5, px: 2.5, position: 'relative', overflow: 'hidden', '&::after': { content: '""', position: 'absolute', top: '-40%', right: '-20%', width: '60%', height: '160%', background: 'radial-gradient(ellipse, rgba(16,185,129,0.06) 0%, transparent 60%)', pointerEvents: 'none' } }}>
           <Stack direction="row" alignItems="center" spacing={1.5} mb={3}>
             <IconButton onClick={() => setDialogOpen(false)}
-              sx={{ color: '#fff', bgcolor: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 1.5, p: 1 }}>
+              sx={{ color: '#fff', bgcolor: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 2, p: 1, '&:active': { transform: 'scale(0.95)' }, transition: 'transform 0.15s' }}>
               <ArrowBack fontSize="small" />
             </IconButton>
             <Box>
@@ -764,7 +890,7 @@ export const FundPage = () => {
         </Box>
 
         {/* Dialog Footer */}
-        <Box sx={{ px: 2.5, py: 2, bgcolor: isDark ? '#0d1117' : '#e8eaed', borderTop: '1px solid', borderColor: 'divider' }}>
+        <Box sx={{ px: 2.5, py: 2, pb: 'calc(env(safe-area-inset-bottom, 8px) + 16px)', bgcolor: isDark ? '#0a0e14' : '#e8eaed', borderTop: '1px solid', borderColor: 'divider' }}>
           {form.userId && form.amount && (
             <Box sx={{ mb: 1.5, px: 1.8, py: 1, borderRadius: 1.5, bgcolor: 'rgba(16,185,129,0.07)', border: '1px solid rgba(16,185,129,0.15)' }}>
               <Typography sx={{ fontSize: '0.65rem', fontWeight: 800, color: '#10b981', mb: 0.2, fontFamily: F }}>ملخص</Typography>
@@ -780,7 +906,7 @@ export const FundPage = () => {
             </Button>
             <Button onClick={handleSave} variant="contained" fullWidth size="large"
               disabled={!form.userId || !form.amount}
-              sx={{ borderRadius: 1.5, fontWeight: 900, fontFamily: F, bgcolor: '#10b981', '&:hover': { bgcolor: '#059669' }, boxShadow: '0 6px 20px rgba(16,185,129,0.4)', '&:disabled': { bgcolor: 'rgba(16,185,129,0.25)', color: 'rgba(255,255,255,0.5)' } }}>
+              sx={{ borderRadius: 2, fontWeight: 900, fontFamily: F, bgcolor: '#10b981', '&:hover': { bgcolor: '#059669' }, '&:active': { transform: 'scale(0.98)' }, boxShadow: '0 6px 24px rgba(16,185,129,0.4)', transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)', '&:disabled': { bgcolor: 'rgba(16,185,129,0.2)', color: 'rgba(255,255,255,0.4)', boxShadow: 'none' } }}>
               {editingTx ? 'حفظ التعديلات' : 'إضافة العهدة'}
             </Button>
           </Stack>

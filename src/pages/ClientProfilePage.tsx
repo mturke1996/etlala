@@ -1274,25 +1274,30 @@ export const ClientProfilePage = () => {
       </Dialog>
 
       {/* ===== BALANCES LIST DIALOG ===== */}
-      <Dialog open={balancesListOpen} onClose={() => setBalancesListOpen(false)} fullScreen sx={{ '& .MuiDialog-paper': { bgcolor: theme.palette.mode === 'dark' ? '#1a1f1a' : '#f5f3ef' } }}>
-        <Box sx={{ background: theme.palette.mode === 'light' ? 'linear-gradient(135deg, #2a3a2a 0%, #364036 100%)' : 'linear-gradient(135deg, #1a221a 0%, #2a3a2a 100%)', color: 'white', p: { xs: 2.5, sm: 3 }, position: 'relative', overflow: 'hidden' }}>
-          <Box sx={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'radial-gradient(ellipse at 80% 0%, rgba(200,192,176,0.12) 0%, transparent 60%)', pointerEvents: 'none' }} />
-          <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ position: 'relative', zIndex: 1, pt: {xs: 1, sm: 2} }}>
+      <Dialog open={balancesListOpen} onClose={() => setBalancesListOpen(false)} fullScreen sx={{ '& .MuiDialog-paper': { bgcolor: theme.palette.mode === 'dark' ? '#0a0e14' : '#f0f2f5' } }}>
+        <Box sx={{ 
+          background: theme.palette.mode === 'dark' 
+            ? 'radial-gradient(120% 120% at 50% 0%, #152219 0%, #0a110c 50%, #050806 100%)' 
+            : 'radial-gradient(120% 120% at 50% 0%, #213526 0%, #132217 50%, #0b140e 100%)', 
+          color: 'white', px: 2, pt: 'calc(env(safe-area-inset-top) + 24px)', pb: 3.5, position: 'relative', overflow: 'hidden',
+          borderBottomLeftRadius: 28, borderBottomRightRadius: 28, boxShadow: '0 10px 30px -10px rgba(0,0,0,0.5)'
+        }}>
+          <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ position: 'relative', zIndex: 1 }}>
             <Stack direction="row" alignItems="center" spacing={1.5}>
-              <IconButton onClick={() => setBalancesListOpen(false)} sx={{ color: 'white', bgcolor: 'rgba(255,255,255,0.05)', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
+              <IconButton onClick={() => setBalancesListOpen(false)} sx={{ color: '#fff', bgcolor: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.1)', '&:active': { transform: 'scale(0.95)' } }}>
                 <ArrowBack />
               </IconButton>
               <Box>
-                 <Typography variant="h5" fontWeight={900} sx={{ textShadow: '0 2px 4px rgba(0,0,0,0.2)', fontSize: { xs: '1.2rem', sm: '1.5rem' }, lineHeight: 1.2 }}>المصروفات و العهد</Typography>
-                 <Typography variant="caption" sx={{ opacity: 0.8, fontWeight: 600, fontSize: { xs: '0.75rem', sm: '0.8rem' } }}>يوجد {clientUserBalances.length} سجل عهدة مسجل للعميل</Typography>
+                 <Typography variant="h6" fontWeight={900} sx={{ lineHeight: 1.2, letterSpacing: '-0.3px' }}>أرصدة العميل (العهد)</Typography>
+                 <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>يوجد {clientUserBalances.length} سجل للعهد والمصروفات</Typography>
               </Box>
             </Stack>
-            <Button variant="contained" startIcon={<Add />} onClick={() => { setEditingBalance(null); resetBal(); setBalanceDialogOpen(true); }} sx={{ bgcolor: 'rgba(200,192,176,0.95)', color: '#2a3a2a', fontWeight: 800, borderRadius: 2.5, px: {xs: 1.5, sm: 2.5}, minWidth: {xs: 'auto', sm: '120px'}, '& .MuiButton-startIcon': { mr: { xs: 0, sm: 1 }, ml: { xs: -0.5, sm: -0.5 } }, '&:hover': { bgcolor: '#e0d8c8', transform: 'translateY(-2px)' }, transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(200,192,176,0.4)' }}>
-              <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>إضافة رصيد (عهدة)</Box>
-            </Button>
+            <IconButton onClick={() => { setEditingBalance(null); resetBal(); setBalanceDialogOpen(true); }} sx={{ bgcolor: '#4a5d4a', color: '#fff', border: '1px solid rgba(255,255,255,0.2)', '&:hover': { bgcolor: '#364036' } }}>
+              <Add />
+            </IconButton>
           </Stack>
         </Box>
-        <Box sx={{ flex: 1, overflowY: 'auto', pb: 4, pt: {xs: 1.5, sm: 2} }}>
+        <Box sx={{ flex: 1, overflowY: 'auto', pb: 4, pt: 2.5 }}>
           <Container maxWidth="sm">
             {/* Show User Summary Cards first */}
             {Object.entries(userBalancesSummary).length > 0 && (
@@ -1419,96 +1424,84 @@ export const ClientProfilePage = () => {
         </Box>
       </Dialog>
 
-      {/* ===== ADD/EDIT BALANCE DIALOG ===== */}
-      <Dialog open={balanceDialogOpen} onClose={() => setBalanceDialogOpen(false)} fullScreen sx={{ '& .MuiDialog-paper': { bgcolor: 'background.default' } }}>
+      {/* ===== ADD/EDIT BALANCE DIALOG (MOBILE OPTIMIZED) ===== */}
+      <Dialog open={balanceDialogOpen} onClose={() => setBalanceDialogOpen(false)} fullScreen sx={{ '& .MuiDialog-paper': { bgcolor: theme.palette.mode === 'dark' ? '#0a0e14' : '#f0f2f5' } }}>
         <form onSubmit={handleBalSubmit(onSubmitBalance)} style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-          {/* MD3 Top App Bar */}
-          <Box sx={{ background: headerGradient, color: 'white', px: 1, py: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
-            <IconButton onClick={() => setBalanceDialogOpen(false)} sx={{ color: 'white' }}><ArrowBack /></IconButton>
-            <Box sx={{ flex: 1 }}>
-              <Typography variant="h6" fontWeight={700}>{editingBalance ? 'تعديل رصيد مستخدم' : 'منح رصيد عهدة'}</Typography>
-              <Typography variant="caption" sx={{ opacity: 0.75, fontWeight: 500 }}>الرصيد مرتبط بمعرف المستخدم ويحسب تلقائياً</Typography>
-            </Box>
-          </Box>
-
-          <Box sx={{ flex: 1, overflowY: 'auto', bgcolor: 'background.paper' }}>
-
-            {/* USER SELECTION - MD3 style list */}
-            <Box sx={{ px: 3, pt: 3, pb: 1 }}>
-              <Typography variant="overline" sx={{ color: 'text.secondary', fontWeight: 700, letterSpacing: 2 }}>اختر المستخدم</Typography>
-            </Box>
-            <Divider />
-            <Controller name="userId" control={balCtrl} render={({ field }) => (
-              <Stack divider={<Divider />}>
-                {systemUsers.map(u => {
-                  // Use Firebase Auth UID (stored as u.uid) as value - falls back to doc ID
-                  const authUid = u.uid || u.id;
-                  return (
-                    <Box
-                      key={u.id}
-                      onClick={() => field.onChange(authUid)}
-                      sx={{
-                        display: 'flex', alignItems: 'center', gap: 2, px: 2, py: 1.8,
-                        bgcolor: field.value === authUid ? alpha('#4a5d4a', 0.08) : 'background.paper',
-                        cursor: 'pointer', transition: 'background 0.15s',
-                        borderRight: field.value === authUid ? '4px solid #4a5d4a' : '4px solid transparent',
-                        '&:hover': { bgcolor: alpha('#4a5d4a', 0.05) }
-                      }}
-                    >
-                      <Box sx={{ width: 44, height: 44, bgcolor: field.value === authUid ? '#4a5d4a' : alpha('#4a5d4a', 0.1), display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <Typography fontWeight={900} sx={{ color: field.value === authUid ? '#fff' : '#4a5d4a', fontSize: '1.1rem' }}>{u.displayName?.charAt(0)}</Typography>
-                      </Box>
-                      <Box sx={{ flex: 1, minWidth: 0 }}>
-                        <Typography fontWeight={700} noWrap>{u.displayName}</Typography>
-                        <Typography variant="caption" color="text.secondary" fontWeight={600}>{u.role === 'admin' ? 'مدير النظام' : 'مستخدم'} • {u.email || 'لا يوجد بريد'}</Typography>
-                      </Box>
-                      {field.value === authUid && (
-                        <Box sx={{ width: 22, height: 22, bgcolor: '#4a5d4a', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                          <Typography sx={{ color: '#fff', fontSize: '0.7rem', fontWeight: 900 }}>✓</Typography>
-                        </Box>
-                      )}
-                    </Box>
-                  );
-                })}
-              </Stack>
-            )} />
-
-            {/* BALANCE DETAILS */}
-            <Box sx={{ px: 3, pt: 3, pb: 1, mt: 1 }}>
-              <Typography variant="overline" sx={{ color: 'text.secondary', fontWeight: 700, letterSpacing: 2 }}>تفاصيل العهدة</Typography>
-            </Box>
-            <Divider />
-            <Stack divider={<Divider />}>
-              <Controller name="amount" control={balCtrl} render={({ field }) => (
-                <TextField {...field} fullWidth label="مبلغ الرصيد (د.ل)" type="number" variant="filled"
-                  InputProps={{ disableUnderline: false, startAdornment: <InputAdornment position="start"><AccountBalanceWallet sx={{ color: '#4a5d4a', fontSize: 20 }} /></InputAdornment> }}
-                  sx={{ '& .MuiFilledInput-root': { borderRadius: 0, bgcolor: 'background.paper', '&:hover': { bgcolor: alpha('#4a5d4a', 0.04) }, '&.Mui-focused': { bgcolor: alpha('#4a5d4a', 0.06) } }, '& .MuiInputLabel-root': { fontWeight: 600 } }}
-                />
-              )} />
-              <Controller name="date" control={balCtrl} render={({ field }) => (
-                <TextField {...field} fullWidth label="تاريخ الإضافة" type="date" variant="filled"
-                  InputProps={{ disableUnderline: false, startAdornment: <InputAdornment position="start"><CalendarToday sx={{ color: '#4a5d4a', fontSize: 20 }} /></InputAdornment> }}
-                  sx={{ '& .MuiFilledInput-root': { borderRadius: 0, bgcolor: 'background.paper', '&:hover': { bgcolor: alpha('#4a5d4a', 0.04) }, '&.Mui-focused': { bgcolor: alpha('#4a5d4a', 0.06) } }, '& .MuiInputLabel-root': { fontWeight: 600 } }}
-                />
-              )} />
-              <Controller name="notes" control={balCtrl} render={({ field }) => (
-                <TextField {...field} fullWidth label="ملاحظات (اختياري)" multiline rows={3} variant="filled"
-                  InputProps={{ disableUnderline: false, startAdornment: <InputAdornment position="start" sx={{ alignSelf: 'flex-start', mt: 1 }}><NoteAlt sx={{ color: '#4a5d4a', fontSize: 20 }} /></InputAdornment> }}
-                  sx={{ '& .MuiFilledInput-root': { borderRadius: 0, bgcolor: 'background.paper', '&:hover': { bgcolor: alpha('#4a5d4a', 0.04) }, '&.Mui-focused': { bgcolor: alpha('#4a5d4a', 0.06) } }, '& .MuiInputLabel-root': { fontWeight: 600 } }}
-                />
-              )} />
+          
+          <Box sx={{ 
+            background: theme.palette.mode === 'dark' 
+              ? 'radial-gradient(120% 120% at 50% 0%, #152219 0%, #0a110c 50%, #050806 100%)' 
+              : 'radial-gradient(120% 120% at 50% 0%, #213526 0%, #132217 50%, #0b140e 100%)', 
+            pt: 'calc(env(safe-area-inset-top) + 24px)', pb: 4, px: 2, position: 'relative', overflow: 'hidden'
+          }}>
+            <Stack direction="row" alignItems="center" spacing={1.5} mb={2}>
+              <IconButton onClick={() => setBalanceDialogOpen(false)} sx={{ color: '#fff', bgcolor: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.1)', '&:active': { transform: 'scale(0.95)' } }}>
+                <ArrowBack fontSize="small" />
+              </IconButton>
+              <Box>
+                <Typography sx={{ color: '#fff', fontWeight: 900, fontSize: '1.05rem', letterSpacing: '-0.2px' }}>
+                  {editingBalance ? 'تعديل رصيد العهدة' : 'إضافة عهدة للمشروع'}
+                </Typography>
+                <Typography sx={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.7rem', fontWeight: 500 }}>
+                  يرجى تحديد الموظف وإدخال تفاصيل الدفعة المالية
+                </Typography>
+              </Box>
             </Stack>
           </Box>
 
-          {/* Bottom Action Bar */}
-          <Box sx={{ display: 'flex', gap: 0, borderTop: '1px solid', borderColor: 'divider', bgcolor: 'background.paper' }}>
-            <Button onClick={() => setBalanceDialogOpen(false)} fullWidth size="large"
-              sx={{ borderRadius: 0, fontWeight: 700, color: 'text.secondary', py: 2, fontSize: '1rem' }}>إلغاء</Button>
-            <Divider orientation="vertical" flexItem />
-            <Button type="submit" variant="contained" fullWidth size="large"
-              sx={{ borderRadius: 0, fontWeight: 900, bgcolor: '#4a5d4a', color: '#fff', py: 2, fontSize: '1rem', boxShadow: 'none', '&:hover': { bgcolor: '#364036', boxShadow: 'none' } }}>
-              {editingBalance ? 'حفظ التعديل' : 'إضافة الرصيد'}
-            </Button>
+          <Box sx={{ flex: 1, overflowY: 'auto', p: 3, mt: -2, bgcolor: theme.palette.mode === 'dark' ? '#0a0e14' : '#f0f2f5', borderTopLeftRadius: 16, borderTopRightRadius: 16, zIndex: 2 }}>
+            <Stack spacing={3}>
+              
+              <Controller name="userId" control={balCtrl} render={({ field }) => (
+                <FormControl fullWidth>
+                  <InputLabel sx={{ fontWeight: 700 }}>الموظف / المستلم</InputLabel>
+                  <Select {...field} label="الموظف / المستلم" sx={{ borderRadius: 3, bgcolor: 'background.paper', '& .MuiSelect-select': { py: 2 } }}>
+                    {systemUsers.map(u => (
+                       <MenuItem key={u.id} value={u.uid || u.id} sx={{ fontWeight: 600 }}>
+                         <Stack direction="row" alignItems="center" spacing={1.5}>
+                           <Avatar sx={{ width: 24, height: 24, fontSize: '0.75rem', bgcolor: 'rgba(74,93,74,0.1)', color: '#4a5d4a' }}>{u.displayName?.charAt(0)}</Avatar>
+                           <Typography>{u.displayName}</Typography>
+                         </Stack>
+                       </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              )} />
+
+              <Controller name="amount" control={balCtrl} render={({ field }) => (
+                <TextField {...field} fullWidth label="مبلغ العهدة (د.ل)" type="number" 
+                  InputProps={{ startAdornment: <InputAdornment position="start" sx={{ mr: 1, ml: 1 }}><AccountBalanceWallet sx={{ color: '#4a5d4a', opacity: 0.7 }} /></InputAdornment> }}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3, bgcolor: 'background.paper' }, '& .MuiInputLabel-root': { fontWeight: 700 } }}
+                />
+              )} />
+
+              <Controller name="date" control={balCtrl} render={({ field }) => (
+                <TextField {...field} fullWidth label="تاريخ الإضافة" type="date"
+                  InputProps={{ startAdornment: <InputAdornment position="start" sx={{ mr: 1, ml: 1 }}><CalendarToday sx={{ color: '#4a5d4a', opacity: 0.7 }} /></InputAdornment> }}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3, bgcolor: 'background.paper' }, '& .MuiInputLabel-root': { fontWeight: 700 } }}
+                />
+              )} />
+
+              <Controller name="notes" control={balCtrl} render={({ field }) => (
+                <TextField {...field} fullWidth label="ملاحظات توضيحية (اختياري)" multiline rows={3}
+                  InputProps={{ startAdornment: <InputAdornment position="start" sx={{ alignSelf: 'flex-start', mt: 1.5, mr: 1, ml: 1 }}><NoteAlt sx={{ color: '#4a5d4a', opacity: 0.7 }} /></InputAdornment> }}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3, bgcolor: 'background.paper' }, '& .MuiInputLabel-root': { fontWeight: 700 } }}
+                />
+              )} />
+              
+            </Stack>
+          </Box>
+
+          {/* Bottom Action Area */}
+          <Box sx={{ p: 2, pb: 'calc(env(safe-area-inset-bottom) + 16px)', bgcolor: theme.palette.mode === 'dark' ? '#0a0e14' : '#f0f2f5', borderTop: '1px solid', borderColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }}>
+            <Stack direction="row" spacing={2}>
+              <Button onClick={() => setBalanceDialogOpen(false)} variant="outlined" fullWidth size="large" sx={{ borderRadius: 3, p: 1.5, fontWeight: 700, borderColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)', color: 'text.secondary' }}>
+                رجوع
+              </Button>
+              <Button type="submit" variant="contained" fullWidth size="large" sx={{ borderRadius: 3, p: 1.5, fontWeight: 900, bgcolor: '#4a5d4a', color: '#fff', '&:hover': { bgcolor: '#364036' }, boxShadow: '0 4px 12px rgba(74,93,74,0.3)' }}>
+                {editingBalance ? 'حفظ التعديل' : 'إيداع العهدة'}
+              </Button>
+            </Stack>
           </Box>
         </form>
       </Dialog>
