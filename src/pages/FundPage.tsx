@@ -80,8 +80,18 @@ export const FundPage = () => {
         amount: tx.amount, date: tx.date, createdAt: tx.createdAt,
         description: tx.description, notes: tx.notes,
         spent: 0, remaining: tx.amount, expenses: [],
+        carryOver: 0, // القيمة المنقولة من العهدة السابقة (سالب)
         _raw: tx,
       });
+    });
+
+    // ── ترحيل السالب من العهدة السابقة إلى التالية ──
+    // إذا كانت العهدة السابقة سالبة، يتم خصم المبلغ من العهدة التالية
+    Object.values(map).forEach(userData => {
+      for (let i = 1; i < userData.custodies.length; i++) {
+        const prev = userData.custodies[i - 1];
+        // سيتم تطبيق الترحيل بعد حساب المصروفات
+      }
     });
 
     const allExp = [...expenses.filter(e => e.userId)]
@@ -92,15 +102,61 @@ export const FundPage = () => {
       if (!map[uid]) return;
       let rem = exp.amount;
       const expTime = dayjs(exp.createdAt);
-      for (const c of map[uid].custodies) {
+      const userCustodies = map[uid].custodies;
+
+      for (let i = 0; i < userCustodies.length; i++) {
+        const c = userCustodies[i];
         if (rem <= 0) break;
-        if (c.remaining <= 0) continue;
         if (expTime.isBefore(dayjs(c.createdAt))) continue;
-        const take = Math.min(rem, c.remaining);
-        c.spent += take;
-        c.remaining -= take;
-        c.expenses.push({ ...exp, usedAmount: take, clientName: exp.clientId ? (clientMap[exp.clientId] || 'عميل') : 'مصروف عام' });
-        rem -= take;
+
+        // تخطي العهدات التي نفذت وهناك عهدة تالية تستوعب
+        if (c.remaining <= 0) {
+          // إذا كانت هذه آخر عهدة متاحة (لا عهدة بعدها)، اسمح بالسالب
+          const hasNextCustody = userCustodies.slice(i + 1).some(
+            nc => !expTime.isBefore(dayjs(nc.createdAt))
+          );
+          if (hasNextCustody) continue;
+        }
+
+        const take = Math.min(rem, Math.max(c.remaining, 0));
+
+        if (take > 0) {
+          c.spent += take;
+          c.remaining -= take;
+          c.expenses.push({ ...exp, usedAmount: take, clientName: exp.clientId ? (clientMap[exp.clientId] || 'عميل') : 'مصروف عام' });
+          rem -= take;
+        }
+
+        // إذا بقي مبلغ ولم نجد عهدة تالية، ضعه كسالب على آخر عهدة
+        if (rem > 0) {
+          const hasNextCustody = userCustodies.slice(i + 1).some(
+            nc => !expTime.isBefore(dayjs(nc.createdAt))
+          );
+          if (!hasNextCustody) {
+            c.spent += rem;
+            c.remaining -= rem;
+            c.expenses.push({ ...exp, usedAmount: rem, clientName: exp.clientId ? (clientMap[exp.clientId] || 'عميل') : 'مصروف عام' });
+            rem = 0;
+          }
+        }
+      }
+    });
+
+    // ── ترحيل الرصيد السالب بين العهدات ──
+    // بعد حساب كل المصروفات، إذا كانت عهدة سالبة وهناك عهدة تالية،
+    // يتم نقل السالب إلى العهدة التالية
+    Object.values(map).forEach(userData => {
+      for (let i = 0; i < userData.custodies.length - 1; i++) {
+        const current = userData.custodies[i];
+        const next = userData.custodies[i + 1];
+        if (current.remaining < 0) {
+          const deficit = Math.abs(current.remaining);
+          next.carryOver = deficit;
+          next.remaining -= deficit;
+          next.spent += deficit;
+          // تصفير السالب في العهدة الحالية لأنه تم ترحيله
+          current.remaining = 0;
+        }
       }
     });
 
@@ -154,7 +210,8 @@ export const FundPage = () => {
 
   // ── Status ─────────────────────────────────────────────────────────────────
   const getStatus = (remaining: number, amount: number) => {
-    if (remaining <= 0) return { color: '#ef4444', bg: 'rgba(239,68,68,0.12)', border: 'rgba(239,68,68,0.3)', label: 'منتهية' };
+    if (remaining < 0) return { color: '#dc2626', bg: 'rgba(220,38,38,0.15)', border: 'rgba(220,38,38,0.4)', label: 'متجاوزة' };
+    if (remaining === 0) return { color: '#ef4444', bg: 'rgba(239,68,68,0.12)', border: 'rgba(239,68,68,0.3)', label: 'منتهية' };
     if (remaining < amount * 0.3) return { color: '#f59e0b', bg: 'rgba(245,158,11,0.12)', border: 'rgba(245,158,11,0.3)', label: 'منخفضة' };
     return { color: '#10b981', bg: 'rgba(16,185,129,0.12)', border: 'rgba(16,185,129,0.3)', label: 'نشطة' };
   };
@@ -215,22 +272,29 @@ export const FundPage = () => {
                 <AccountBalanceWallet sx={{ fontSize: 26, color: '#34d399' }} />
               </Box>
             </Stack>
-            {/* 3-col stats - only عدد العهدات */}
-            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', pt: 1.5, borderTop: '1px solid rgba(255,255,255,0.07)' }}>
-              {[
-                { label: 'عدد العهدات', value: totalDeposits, color: '#93c5fd' },
-                { label: 'إجمالي العهدات', value: formatCurrency(totalFund), color: '#6ee7b7' },
-              ].map((s, i) => (
-                <Box key={i} sx={{ textAlign: 'center', borderRight: i < 1 ? '1px solid rgba(255,255,255,0.07)' : 'none' }}>
-                  <Typography sx={{ color: s.color, fontSize: '0.85rem', fontWeight: 800, fontFamily: FN, lineHeight: 1.2 }}>
-                    {s.value}
-                  </Typography>
-                  <Typography sx={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.58rem', fontWeight: 600, fontFamily: F, mt: 0.3 }}>
-                    {s.label}
-                  </Typography>
+            {/* 3-col stats */}
+            {(() => {
+              const totalRemaining = perUser.reduce((sum, [, ud]) => sum + ud.custodies.reduce((s: number, c: any) => s + c.remaining, 0), 0);
+              const remainingColor = totalRemaining < 0 ? '#fca5a5' : '#6ee7b7';
+              return (
+                <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', pt: 1.5, borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+                  {[
+                    { label: 'عدد العهدات', value: totalDeposits, color: '#93c5fd' },
+                    { label: 'إجمالي العهدات', value: formatCurrency(totalFund), color: '#6ee7b7' },
+                    { label: 'المتبقي', value: totalRemaining < 0 ? `-${formatCurrency(Math.abs(totalRemaining))}` : formatCurrency(totalRemaining), color: remainingColor },
+                  ].map((s, i) => (
+                    <Box key={i} sx={{ textAlign: 'center', borderRight: i < 2 ? '1px solid rgba(255,255,255,0.07)' : 'none' }}>
+                      <Typography sx={{ color: s.color, fontSize: '0.85rem', fontWeight: 800, fontFamily: FN, lineHeight: 1.2 }}>
+                        {s.value}
+                      </Typography>
+                      <Typography sx={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.58rem', fontWeight: 600, fontFamily: F, mt: 0.3 }}>
+                        {s.label}
+                      </Typography>
+                    </Box>
+                  ))}
                 </Box>
-              ))}
-            </Box>
+              );
+            })()}
           </Box>
         </Container>
       </Box>
@@ -270,10 +334,20 @@ export const FundPage = () => {
                       </Typography>
                     </Box>
                     <Box sx={{ textAlign: 'left' }}>
-                      <Typography sx={{ color: '#6ee7b7', fontWeight: 900, fontSize: '0.92rem', fontFamily: FN, lineHeight: 1 }}>
-                        {formatCurrency(userData.custodies.reduce((s, c) => s + c.remaining, 0))}
-                      </Typography>
-                      <Typography sx={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.56rem', fontFamily: F }}>المتبقي</Typography>
+                      {(() => {
+                        const userRemaining = userData.custodies.reduce((s: number, c: any) => s + c.remaining, 0);
+                        const isNeg = userRemaining < 0;
+                        return (
+                          <>
+                            <Typography sx={{ color: isNeg ? '#fca5a5' : '#6ee7b7', fontWeight: 900, fontSize: '0.92rem', fontFamily: FN, lineHeight: 1 }}>
+                              {isNeg ? `-${formatCurrency(Math.abs(userRemaining))}` : formatCurrency(userRemaining)}
+                            </Typography>
+                            <Typography sx={{ color: isNeg ? 'rgba(252,165,165,0.6)' : 'rgba(255,255,255,0.35)', fontSize: '0.56rem', fontFamily: F }}>
+                              {isNeg ? 'عجز' : 'المتبقي'}
+                            </Typography>
+                          </>
+                        );
+                      })()}
                     </Box>
                   </Stack>
                 </Box>
@@ -282,7 +356,9 @@ export const FundPage = () => {
                 <Box sx={{ bgcolor: CARD, borderRadius: '0 0 10px 10px', overflow: 'hidden', border: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.07)', borderTop: 'none' }}>
                   {[...userData.custodies].reverse().map((c, ci, arr) => {
                     const st = getStatus(c.remaining, c.amount);
-                    const pct = c.amount > 0 ? Math.min(100, (c.spent / c.amount) * 100) : 0;
+                    const pct = c.amount > 0 ? Math.min(100, (Math.max(c.spent, 0) / c.amount) * 100) : 0;
+                    const isOverflow = c.remaining < 0;
+                    const effectiveAmount = c.amount + (c.carryOver || 0);
                     const isOpen = openId === c.id;
 
                     return (
@@ -338,11 +414,24 @@ export const FundPage = () => {
                             </Stack>
                           )}
 
+                          {/* Carry-over badge */}
+                          {c.carryOver > 0 && (
+                            <Box sx={{
+                              display: 'flex', alignItems: 'center', gap: 0.7,
+                              bgcolor: 'rgba(220,38,38,0.1)', border: '1px solid rgba(220,38,38,0.25)',
+                              borderRadius: 1, px: 1.2, py: 0.4, mb: 1, width: 'fit-content',
+                            }}>
+                              <Typography sx={{ fontSize: '0.6rem', color: '#dc2626', fontWeight: 800, fontFamily: F }}>
+                                ⚠ مرحّل من العهدة السابقة: {formatCurrency(c.carryOver)} د.ل
+                              </Typography>
+                            </Box>
+                          )}
+
                           {/* Progress Bar */}
                           <Box sx={{ height: 3, bgcolor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)', borderRadius: 2, overflow: 'hidden', mb: 1.4 }}>
                             <Box sx={{
                               height: '100%', width: `${pct}%`, borderRadius: 2,
-                              bgcolor: c.remaining <= 0 ? '#ef4444' : pct > 70 ? '#f59e0b' : '#10b981',
+                              bgcolor: c.remaining < 0 ? '#dc2626' : c.remaining === 0 ? '#ef4444' : pct > 70 ? '#f59e0b' : '#10b981',
                               transition: 'width 0.4s',
                             }} />
                           </Box>
@@ -363,10 +452,12 @@ export const FundPage = () => {
                                   <Typography sx={{ fontSize: '0.54rem', color: 'text.disabled', fontFamily: F }}>المصروف</Typography>
                                 </Box>
                                 <Box>
-                                  <Typography sx={{ fontSize: '0.72rem', fontWeight: 800, color: st.color, fontFamily: FN, lineHeight: 1 }} noWrap>
-                                    {formatCurrency(c.remaining)}
+                                  <Typography sx={{ fontSize: '0.72rem', fontWeight: 800, color: c.remaining < 0 ? '#dc2626' : st.color, fontFamily: FN, lineHeight: 1 }} noWrap>
+                                    {c.remaining < 0 ? `-${formatCurrency(Math.abs(c.remaining))}` : formatCurrency(c.remaining)}
                                   </Typography>
-                                  <Typography sx={{ fontSize: '0.54rem', color: 'text.disabled', fontFamily: F }}>المتبقي</Typography>
+                                  <Typography sx={{ fontSize: '0.54rem', color: c.remaining < 0 ? '#dc2626' : 'text.disabled', fontFamily: F }}>
+                                    {c.remaining < 0 ? 'عجز' : 'المتبقي'}
+                                  </Typography>
                                 </Box>
                               </Box>
 
