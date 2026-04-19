@@ -211,7 +211,7 @@ export const ClientProfilePage = () => {
   const activeUserKey = user?.id || '';
   const currentUserBalanceInfo = activeUserKey ? userBalancesSummary[activeUserKey] : null;
 
-  // ── رصيد العهدة العام (من useGlobalFundStore) ──────────────────────────
+  // ── رصيد العهدة العام (نفس خوارزمية FundPage بالضبط) ──────────────────
   const globalFundStats = useMemo(() => {
     if (!user) return null;
     const uid = user.id;
@@ -227,30 +227,41 @@ export const ClientProfilePage = () => {
     if (deposits.length === 0) return null;
 
     const custodies = deposits.map(tx => ({
-      createdAt: tx.createdAt,
-      amount: tx.amount,
-      remaining: tx.amount,
-      spent: 0,
+      createdAt: tx.createdAt, amount: tx.amount, remaining: tx.amount, spent: 0,
     }));
 
-    const myExpenses = [...expenses.filter(e =>
-      (uid && e.userId === uid) ||
-      (userName && e.createdBy === userName)
+    const allExp = [...expenses.filter(e =>
+      (uid && e.userId === uid) || (userName && e.createdBy === userName)
     )].sort((a, b) => dayjs(a.createdAt).diff(dayjs(b.createdAt)));
 
-    myExpenses.forEach(exp => {
-      const expCreatedAt = dayjs(exp.createdAt);
+    allExp.forEach(exp => {
       let rem = exp.amount;
-      for (const c of custodies) {
+      const expTime = dayjs(exp.createdAt);
+      for (let i = 0; i < custodies.length; i++) {
+        const c = custodies[i];
         if (rem <= 0) break;
-        if (c.remaining <= 0) continue;
-        if (expCreatedAt.isBefore(dayjs(c.createdAt))) continue;
-        const take = Math.min(rem, c.remaining);
-        c.spent += take;
-        c.remaining -= take;
-        rem -= take;
+        if (expTime.isBefore(dayjs(c.createdAt))) continue;
+        if (c.remaining <= 0) {
+          const hasNext = custodies.slice(i + 1).some(nc => !expTime.isBefore(dayjs(nc.createdAt)));
+          if (hasNext) continue;
+        }
+        const take = Math.min(rem, Math.max(c.remaining, 0));
+        if (take > 0) { c.spent += take; c.remaining -= take; rem -= take; }
+        if (rem > 0) {
+          const hasNext = custodies.slice(i + 1).some(nc => !expTime.isBefore(dayjs(nc.createdAt)));
+          if (!hasNext) { c.spent += rem; c.remaining -= rem; rem = 0; }
+        }
       }
     });
+
+    for (let i = 0; i < custodies.length - 1; i++) {
+      if (custodies[i].remaining < 0) {
+        const deficit = Math.abs(custodies[i].remaining);
+        custodies[i + 1].remaining -= deficit;
+        custodies[i + 1].spent += deficit;
+        custodies[i].remaining = 0;
+      }
+    }
 
     const totalDeposited = custodies.reduce((s, c) => s + c.amount, 0);
     const totalSpent = custodies.reduce((s, c) => s + c.spent, 0);
@@ -924,12 +935,16 @@ export const ClientProfilePage = () => {
           <Box sx={{ p: 3.5 }}>
             <Stack spacing={3}>
               {currentUserBalanceInfo && (
-                <Box sx={{ p: 2, borderRadius: 3, background: currentUserBalanceInfo.remaining > 0 ? 'linear-gradient(135deg, rgba(16,185,129,0.1) 0%, rgba(16,185,129,0.05) 100%)' : 'rgba(214,69,69,0.08)', border: `1px solid ${currentUserBalanceInfo.remaining > 0 ? 'rgba(16,185,129,0.2)' : 'rgba(214,69,69,0.2)'}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Box sx={{ p: 2, borderRadius: 3, background: currentUserBalanceInfo.remaining >= 0 ? 'linear-gradient(135deg, rgba(16,185,129,0.1) 0%, rgba(16,185,129,0.05) 100%)' : 'linear-gradient(135deg, rgba(225,29,72,0.1) 0%, rgba(225,29,72,0.05) 100%)', border: `1px solid ${currentUserBalanceInfo.remaining >= 0 ? 'rgba(16,185,129,0.2)' : 'rgba(225,29,72,0.2)'}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                  <Box>
-                     <Typography variant="caption" sx={{ color: currentUserBalanceInfo.remaining > 0 ? '#0d9668' : '#d64545', fontWeight: 800 }}>الرصيد المتاح للعهدة ({user?.displayName || currentUserBalanceInfo.name})</Typography>
-                     <Typography variant="h6" sx={{ color: currentUserBalanceInfo.remaining > 0 ? '#0d9668' : '#d64545', fontWeight: 900, lineHeight: 1, mt: 0.5 }}>{formatCurrency(currentUserBalanceInfo.remaining)}</Typography>
+                     <Typography variant="caption" sx={{ color: currentUserBalanceInfo.remaining >= 0 ? '#0d9668' : '#f87171', fontWeight: 800 }}>
+                       {currentUserBalanceInfo.remaining >= 0 ? `الرصيد المتاح للعهدة (${user?.displayName || currentUserBalanceInfo.name})` : `عجز عهدة (${user?.displayName || currentUserBalanceInfo.name})`}
+                     </Typography>
+                     <Typography variant="h6" sx={{ color: currentUserBalanceInfo.remaining >= 0 ? '#0d9668' : '#f87171', fontWeight: 900, lineHeight: 1, mt: 0.5 }}>
+                       {currentUserBalanceInfo.remaining < 0 ? `-${formatCurrency(Math.abs(currentUserBalanceInfo.remaining))}` : formatCurrency(currentUserBalanceInfo.remaining)}
+                     </Typography>
                    </Box>
-                   <AccountBalanceWallet sx={{ fontSize: 32, color: currentUserBalanceInfo.remaining > 0 ? 'rgba(16,185,129,0.5)' : 'rgba(214,69,69,0.5)' }} />
+                   <AccountBalanceWallet sx={{ fontSize: 32, color: currentUserBalanceInfo.remaining >= 0 ? 'rgba(16,185,129,0.5)' : 'rgba(225,29,72,0.5)' }} />
                 </Box>
               )}
               

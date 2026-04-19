@@ -99,13 +99,12 @@ export const ExpensesPage = () => {
 
   const COLORS = ['#4a5d4a', '#d64545', '#e6a817', '#3b82f6', '#8b7e6a', '#0d9668', '#6b7f6b', '#a0524a'];
 
-  // ─── رصيد عهدة المستخدم (مضمون الظهور) ─────────────────────────────────
+  // ─── رصيد عهدة المستخدم (نفس خوارزمية FundPage بالضبط) ─────────────────
   const myFundStats = useMemo(() => {
     if (!user) return null;
     const uid = user.id;
     const userName = user.displayName || '';
 
-    // ── محاولة 1: بحث بـ userId أو الاسم في العهدات ──
     const deposits = [...transactions.filter(t =>
       t.type === 'deposit' && (
         (uid && t.userId === uid) ||
@@ -114,43 +113,49 @@ export const ExpensesPage = () => {
     )].sort((a, b) => dayjs(a.createdAt).diff(dayjs(b.createdAt)));
 
     if (deposits.length === 0) {
-      // ── محاولة 2: استخدام getUserStats من الـ store مباشرة ──
       const storeStats = uid ? getUserStats(uid) : null;
       if (storeStats && storeStats.deposited > 0) {
-        return {
-          deposited: storeStats.deposited,
-          spent: storeStats.withdrawn,
-          remaining: storeStats.remaining,
-        };
+        return { deposited: storeStats.deposited, spent: storeStats.withdrawn, remaining: storeStats.remaining };
       }
       return null;
     }
 
     const custodies = deposits.map(tx => ({
-      createdAt: tx.createdAt,
-      amount: tx.amount,
-      remaining: tx.amount,
-      spent: 0,
+      createdAt: tx.createdAt, amount: tx.amount, remaining: tx.amount, spent: 0,
     }));
 
-    const myExpenses = [...expenses.filter(e =>
-      (uid && e.userId === uid) ||
-      (userName && e.createdBy === userName)
+    const allExp = [...expenses.filter(e =>
+      (uid && e.userId === uid) || (userName && e.createdBy === userName)
     )].sort((a, b) => dayjs(a.createdAt).diff(dayjs(b.createdAt)));
 
-    myExpenses.forEach(exp => {
-      const expCreatedAt = dayjs(exp.createdAt);
+    allExp.forEach(exp => {
       let rem = exp.amount;
-      for (const c of custodies) {
+      const expTime = dayjs(exp.createdAt);
+      for (let i = 0; i < custodies.length; i++) {
+        const c = custodies[i];
         if (rem <= 0) break;
-        if (c.remaining <= 0) continue;
-        if (expCreatedAt.isBefore(dayjs(c.createdAt))) continue;
-        const take = Math.min(rem, c.remaining);
-        c.spent += take;
-        c.remaining -= take;
-        rem -= take;
+        if (expTime.isBefore(dayjs(c.createdAt))) continue;
+        if (c.remaining <= 0) {
+          const hasNext = custodies.slice(i + 1).some(nc => !expTime.isBefore(dayjs(nc.createdAt)));
+          if (hasNext) continue;
+        }
+        const take = Math.min(rem, Math.max(c.remaining, 0));
+        if (take > 0) { c.spent += take; c.remaining -= take; rem -= take; }
+        if (rem > 0) {
+          const hasNext = custodies.slice(i + 1).some(nc => !expTime.isBefore(dayjs(nc.createdAt)));
+          if (!hasNext) { c.spent += rem; c.remaining -= rem; rem = 0; }
+        }
       }
     });
+
+    for (let i = 0; i < custodies.length - 1; i++) {
+      if (custodies[i].remaining < 0) {
+        const deficit = Math.abs(custodies[i].remaining);
+        custodies[i + 1].remaining -= deficit;
+        custodies[i + 1].spent += deficit;
+        custodies[i].remaining = 0;
+      }
+    }
 
     const totalDeposited = custodies.reduce((s, c) => s + c.amount, 0);
     const totalSpent = custodies.reduce((s, c) => s + c.spent, 0);
@@ -243,43 +248,42 @@ export const ExpensesPage = () => {
             {myFundStats ? (
               <Box sx={{
                 borderRadius: 3, overflow: 'hidden',
-                background: myFundStats.remaining > myFundStats.deposited * 0.4
+                background: myFundStats.remaining < 0 
+                  ? 'linear-gradient(135deg, rgba(225,29,72,0.18) 0%, rgba(225,29,72,0.06) 100%)'
+                  : myFundStats.remaining > myFundStats.deposited * 0.4
                   ? 'linear-gradient(135deg, rgba(13,150,104,0.18) 0%, rgba(13,150,104,0.06) 100%)'
-                  : myFundStats.remaining > 0
-                    ? 'linear-gradient(135deg, rgba(245,158,11,0.18) 0%, rgba(245,158,11,0.06) 100%)'
-                    : 'linear-gradient(135deg, rgba(214,69,69,0.2) 0%, rgba(214,69,69,0.07) 100%)',
-                border: `1.5px solid ${myFundStats.remaining > myFundStats.deposited * 0.4 ? 'rgba(13,150,104,0.35)' : myFundStats.remaining > 0 ? 'rgba(245,158,11,0.35)' : 'rgba(214,69,69,0.4)'}`,
+                  : 'linear-gradient(135deg, rgba(245,158,11,0.18) 0%, rgba(245,158,11,0.06) 100%)',
+                border: `1.5px solid ${myFundStats.remaining < 0 ? 'rgba(225,29,72,0.4)' : myFundStats.remaining > myFundStats.deposited * 0.4 ? 'rgba(13,150,104,0.35)' : 'rgba(245,158,11,0.35)'}`,
                 backdropFilter: 'blur(12px)',
               }}>
                 {/* Top: icon + title + main balance */}
                 <Box sx={{ px: 2.5, pt: 2, pb: 1.5, display: 'flex', alignItems: 'center', gap: 2 }}>
                   <Box sx={{
                     width: 52, height: 52, borderRadius: 2.5, flexShrink: 0,
-                    background: myFundStats.remaining > 0
+                    background: myFundStats.remaining >= 0
                       ? 'linear-gradient(135deg, rgba(13,150,104,0.25), rgba(13,150,104,0.45))'
-                      : 'linear-gradient(135deg, rgba(214,69,69,0.25), rgba(214,69,69,0.45))',
+                      : 'linear-gradient(135deg, rgba(225,29,72,0.25), rgba(225,29,72,0.45))',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    border: `1.5px solid ${myFundStats.remaining > 0 ? 'rgba(13,150,104,0.4)' : 'rgba(214,69,69,0.4)'}`,
-                    boxShadow: `0 4px 14px ${myFundStats.remaining > 0 ? 'rgba(13,150,104,0.3)' : 'rgba(214,69,69,0.3)'}`,
+                    border: `1.5px solid ${myFundStats.remaining >= 0 ? 'rgba(13,150,104,0.4)' : 'rgba(225,29,72,0.4)'}`,
+                    boxShadow: `0 4px 14px ${myFundStats.remaining >= 0 ? 'rgba(13,150,104,0.3)' : 'rgba(225,29,72,0.3)'}`,
                   }}>
-                    <AccountBalanceWallet sx={{ fontSize: 26, color: myFundStats.remaining > 0 ? '#34d399' : '#f87171' }} />
+                    <AccountBalanceWallet sx={{ fontSize: 26, color: myFundStats.remaining >= 0 ? '#34d399' : '#fca5a5' }} />
                   </Box>
                   <Box sx={{ flex: 1 }}>
                     <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', fontWeight: 700, letterSpacing: 0.8, display: 'block', mb: 0.2, fontSize: '0.62rem' }}>
-                      رصيد عهدتك المتاح
+                      {myFundStats.remaining >= 0 ? 'رصيد عهدتك المتاح' : 'عجز في العهدة'}
                     </Typography>
                     <Typography sx={{
                       fontSize: '2rem', fontWeight: 900, lineHeight: 1, fontFamily: 'Outfit, sans-serif',
-                      color: myFundStats.remaining > myFundStats.deposited * 0.4 ? '#34d399'
-                        : myFundStats.remaining > 0 ? '#fbbf24' : '#f87171',
+                      color: myFundStats.remaining < 0 ? '#f87171' : myFundStats.remaining > myFundStats.deposited * 0.4 ? '#34d399' : '#fbbf24',
                       textShadow: '0 2px 10px rgba(0,0,0,0.15)',
                     }}>
-                      {formatCurrency(myFundStats.remaining)}
+                      {myFundStats.remaining < 0 ? `-${formatCurrency(Math.abs(myFundStats.remaining))}` : formatCurrency(myFundStats.remaining)}
                     </Typography>
                   </Box>
                   {/* Alert icon */}
-                  {myFundStats.remaining <= 0 && (
-                    <Typography sx={{ fontSize: '1.3rem', lineHeight: 1, flexShrink: 0 }}>⚠️</Typography>
+                  {myFundStats.remaining < 0 && (
+                    <Typography sx={{ fontSize: '1.5rem', lineHeight: 1, flexShrink: 0 }}>⚠️</Typography>
                   )}
                 </Box>
 
@@ -302,7 +306,7 @@ export const ExpensesPage = () => {
                           </Typography>
                         </Box>
                         <Box sx={{ height: 6, borderRadius: 3, bgcolor: 'rgba(255,255,255,0.1)', overflow: 'hidden' }}>
-                          <Box sx={{ height: '100%', width: `${pct}%`, borderRadius: 3, background: barColor, transition: 'width 0.5s ease' }} />
+                          <Box sx={{ height: '100%', width: myFundStats.remaining < 0 ? '100%' : `${pct}%`, borderRadius: 3, background: barColor, transition: 'width 0.5s ease' }} />
                         </Box>
                       </Box>
                     );
@@ -317,7 +321,7 @@ export const ExpensesPage = () => {
                   {[
                     { label: 'إجمالي العهدة', val: myFundStats.deposited, color: '#6ee7b7' },
                     { label: 'المصروف', val: myFundStats.spent, color: '#fca5a5' },
-                    { label: 'المتبقي', val: myFundStats.remaining, color: myFundStats.remaining > 0 ? '#34d399' : '#f87171' },
+                    { label: 'المتبقي', val: myFundStats.remaining, color: myFundStats.remaining >= 0 ? '#34d399' : '#f87171' },
                   ].map((s, i) => (
                     <Box key={i} sx={{ py: 1.2, textAlign: 'center', borderRight: i < 2 ? '1px solid rgba(255,255,255,0.07)' : 'none' }}>
                       <Typography fontWeight={900} sx={{ color: s.color, fontFamily: 'Outfit, sans-serif', fontSize: '0.85rem', lineHeight: 1 }}>
@@ -331,9 +335,9 @@ export const ExpensesPage = () => {
                 </Box>
 
                 {/* Alert strip */}
-                {myFundStats.remaining <= 0 && (
-                  <Box sx={{ bgcolor: 'rgba(214,69,69,0.25)', px: 2.5, py: 0.8, display: 'flex', alignItems: 'center', gap: 1, borderTop: '1px solid rgba(214,69,69,0.3)' }}>
-                    <Typography fontWeight={800} sx={{ color: '#fca5a5', fontSize: '0.75rem' }}>⚠️ تحذير: رصيد العهدة نفد — يرجى التواصل مع الإدارة!</Typography>
+                {myFundStats.remaining < 0 && (
+                  <Box sx={{ bgcolor: 'rgba(225,29,72,0.25)', px: 2.5, py: 1, display: 'flex', alignItems: 'center', gap: 1, borderTop: '1px solid rgba(225,29,72,0.4)' }}>
+                    <Typography fontWeight={800} sx={{ color: '#fca5a5', fontSize: '0.8rem' }}>التجاوز المالي مسجل كعجز، سيُخصم من رصيدك القادم!</Typography>
                   </Box>
                 )}
               </Box>
