@@ -36,100 +36,33 @@ export const Layout = () => {
   });
 
   return (
-    <Box sx={{ minHeight: '100dvh', pb: 'calc(72px + env(safe-area-inset-bottom))', '@media print': { pb: 0 } }}>
-      <Outlet />
+    <Box
+      sx={{
+        minHeight: '100dvh',
+        pb: 'calc(72px + env(safe-area-inset-bottom))',
+        position: 'relative',
+        '@media print': { pb: 0 },
+      }}
+    >
+      <Box
+        className={isDark ? 'etlala-app-ambient etlala-app-ambient--dark' : 'etlala-app-ambient'}
+        aria-hidden
+        sx={{
+          position: 'absolute',
+          inset: 0,
+          zIndex: 0,
+          pointerEvents: 'none',
+        }}
+      />
+      <Box sx={{ position: 'relative', zIndex: 1 }}>
+        <Outlet />
+      </Box>
 
       {/* Bottom Navigation Bar */}
       <BottomNavigation
         value={currentIndex >= 0 ? currentIndex : 0}
         onChange={(_, newValue) => navigate(visibleNavItems[newValue].path)}
         showLabels
-        sx={{
-          position: 'fixed',
-          bottom: 0,
-          paddingBottom: 'env(safe-area-inset-bottom)',
-          left: 0,
-          right: 0,
-          zIndex: 1200,
-          height: 'calc(68px + env(safe-area-inset-bottom))',
-          bgcolor: isDark
-            ? 'rgba(22, 27, 22, 0.96)'
-            : 'rgba(255, 255, 255, 0.97)',
-          backdropFilter: 'blur(24px)',
-          WebkitBackdropFilter: 'blur(24px)',
-          borderTop: isDark
-            ? '1px solid rgba(200, 192, 176, 0.1)'
-            : '1px solid rgba(74, 93, 74, 0.08)',
-          boxShadow: isDark
-            ? '0 -8px 32px rgba(0, 0, 0, 0.4)'
-            : '0 -4px 24px rgba(74, 93, 74, 0.08)',
-
-          '& .MuiBottomNavigationAction-root': {
-            minWidth: 'auto',
-            py: 1,
-            px: 0.5,
-            gap: '4px',
-            color: isDark
-              ? 'rgba(200, 192, 176, 0.4)'
-              : 'rgba(74, 93, 74, 0.38)',
-            transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-            borderRadius: '12px',
-            mx: 0.25,
-            position: 'relative',
-
-            '& .MuiBottomNavigationAction-label': {
-              fontSize: '0.63rem',
-              fontWeight: 600,
-              fontFamily: "'Tajawal', 'Cairo', sans-serif !important",
-              transition: 'all 0.25s ease',
-              '&.Mui-selected': {
-                fontSize: '0.67rem',
-                fontWeight: 800,
-              },
-            },
-
-            '& .MuiSvgIcon-root': {
-              fontSize: 22,
-              transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
-            },
-
-            '&.Mui-selected': {
-              color: isDark ? '#9ab89a' : '#4a5d4a',
-
-              '& .MuiSvgIcon-root': {
-                fontSize: 25,
-                filter: isDark
-                  ? 'drop-shadow(0 3px 6px rgba(122,154,122,0.45))'
-                  : 'drop-shadow(0 3px 6px rgba(74, 93, 74, 0.35))',
-                transform: 'translateY(-2px)',
-              },
-
-              '&::before': {
-                content: '""',
-                position: 'absolute',
-                top: '8px',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                width: '32px',
-                height: '32px',
-                borderRadius: '10px',
-                backgroundColor: isDark
-                  ? 'rgba(122, 154, 122, 0.18)'
-                  : 'rgba(74, 93, 74, 0.1)',
-                transition: 'all 0.3s ease',
-              },
-            },
-
-            '&:hover:not(.Mui-selected)': {
-              color: isDark
-                ? 'rgba(200, 192, 176, 0.7)'
-                : 'rgba(74, 93, 74, 0.65)',
-              '& .MuiSvgIcon-root': {
-                transform: 'translateY(-1px) scale(1.08)',
-              },
-            },
-          },
-        }}
       >
         {visibleNavItems.map((item, index) => (
           <BottomNavigationAction

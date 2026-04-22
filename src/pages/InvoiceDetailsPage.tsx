@@ -2,12 +2,12 @@
 import { useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-  Box, Button, Container, Stack, Typography, IconButton,
+  Box, Button, Stack, Typography,
   Chip, Menu, MenuItem, CircularProgress, Dialog, DialogTitle,
   DialogContent, DialogContentText, DialogActions, alpha,
 } from '@mui/material';
 import {
-  ArrowBack, Print, MoreVert, CheckCircle, Cancel, Email,
+  Print, MoreVert, CheckCircle, Cancel, Email,
   Delete, PictureAsPdf, Share, Download, Edit
 } from '@mui/icons-material';
 import { useAuthStore } from '../store/useAuthStore';
@@ -18,6 +18,7 @@ import { downloadPdf, sharePdf } from '../utils/pdfService';
 import { getStatusLabel } from '../utils/formatters';
 import toast from 'react-hot-toast';
 import React from 'react';
+import { PageScaffold } from '../components/layout/PageScaffold';
 
 export const InvoiceDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -99,38 +100,23 @@ export const InvoiceDetailsPage = () => {
 
   return (
     <Box sx={{
-      pb: 4, minHeight: '100dvh', bgcolor: '#f5f3ef',
-      '@media print': { bgcolor: 'white', pb: 0, minHeight: 'auto' },
+      minHeight: '100dvh', bgcolor: 'background.default',
+      '@media print': { bgcolor: 'white', minHeight: 'auto' },
     }}>
-      {/* Header */}
-      <Box
-        sx={{
-          background: 'linear-gradient(160deg, #364036 0%, #4a5d4a 100%)',
-          pt: 'calc(env(safe-area-inset-top) + 16px)', pb: 3, px: 2, color: 'white',
-          '@media print': { display: 'none' },
-        }}
-      >
-        <Container maxWidth="sm">
-          <Stack direction="row" alignItems="center" spacing={1} mb={2}>
-            <IconButton onClick={() => navigate('/invoices')} sx={{ color: 'rgba(255,255,255,0.9)' }}>
-              <ArrowBack />
-            </IconButton>
-            <Box sx={{ flex: 1 }}>
-              <Typography fontWeight={800} sx={{ fontSize: '1.1rem' }}>
-                فاتورة #{invoice.invoiceNumber}
-              </Typography>
-              <Stack direction="row" spacing={1} alignItems="center">
-                <Chip
-                  label={getStatusLabel(invoice.status)}
-                  color={invoice.status === 'paid' ? 'success' : invoice.status === 'overdue' ? 'error' : 'default'}
-                  size="small"
-                  sx={{ fontWeight: 600, borderRadius: 1.5, height: 22, fontSize: '0.65rem' }}
-                />
-              </Stack>
-            </Box>
-          </Stack>
-          
-          {/* Action Buttons */}
+      <PageScaffold
+        title={`فاتورة #${invoice.invoiceNumber}`}
+        backTo="/invoices"
+        headerSx={{ '@media print': { display: 'none' } }}
+        headerExtra={(
+          <Stack spacing={1.5}>
+            <Stack direction="row" justifyContent="flex-end">
+              <Chip
+                label={getStatusLabel(invoice.status)}
+                color={invoice.status === 'paid' ? 'success' : invoice.status === 'overdue' ? 'error' : 'default'}
+                size="small"
+                sx={{ fontWeight: 600, borderRadius: 1.5, height: 22, fontSize: '0.65rem' }}
+              />
+            </Stack>
           <Stack direction="row" spacing={1}>
             {/* PDF Download */}
             <Button
@@ -218,27 +204,27 @@ export const InvoiceDetailsPage = () => {
               <Delete fontSize="small" sx={{ mr: 1, color: 'error.main' }} /> حذف الفاتورة
             </MenuItem>
           </Menu>
-        </Container>
-      </Box>
-
-      {/* Printable Invoice Preview */}
-      <Container 
-        maxWidth="sm" 
-        sx={{ 
-          mt: 2, px: { xs: 0.5, sm: 2 },
-          '@media print': { maxWidth: 'none', mt: 0, px: 0 },
-        }}
+          </Stack>
+        )}
       >
+
         <Box
           sx={{
-            boxShadow: { xs: 'none', sm: '0 4px 20px rgba(0,0,0,0.08)' },
-            borderRadius: { xs: 0, sm: 1 },
-            overflow: 'hidden',
+            mt: 0.5,
+            '@media print': { maxWidth: 'none', mt: 0, p: 0, width: '100%' },
           }}
         >
-          <PrintableInvoice ref={componentRef} invoice={invoice} client={client} />
+          <Box
+            sx={{
+              boxShadow: { xs: 'none', sm: '0 4px 20px rgba(0,0,0,0.08)' },
+              borderRadius: { xs: 0, sm: 1 },
+              overflow: 'hidden',
+            }}
+          >
+            <PrintableInvoice ref={componentRef} invoice={invoice} client={client} />
+          </Box>
         </Box>
-      </Container>
+      </PageScaffold>
 
       {/* ═══ Delete Confirmation Dialog ═══ */}
       <Dialog

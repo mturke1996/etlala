@@ -3,12 +3,10 @@ import { useState, useMemo } from 'react';
 import {
   Box,
   Button,
-  Card,
   CardContent,
   Typography,
   TextField,
   InputAdornment,
-  Container,
   Stack,
   useTheme,
   Dialog,
@@ -19,7 +17,6 @@ import {
   Avatar,
   Paper,
   alpha,
-  IconButton,
   Grid as MuiGrid,
 } from '@mui/material';
 import {
@@ -29,12 +26,12 @@ import {
   CalendarToday,
   Person,
   Business,
-  ArrowBack,
 } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
 import { useDataStore } from '../store/useDataStore';
 import { useAuthStore } from '../store/useAuthStore';
 import { formatCurrency, formatDate } from '../utils/formatters';
+import { PageScaffold } from '../components/layout/PageScaffold';
+import { EtlalaAccentSurface, EtlalaEmptyState, EtlalaSectionTitle, etlalaContentFieldSx } from '../components/etlala/EtlalaMobileUi';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -45,7 +42,6 @@ const Grid = MuiGrid as any;
 
 export const DebtsPage = () => {
   const theme = useTheme();
-  const navigate = useNavigate();
   const { standaloneDebts, clients, addStandaloneDebt, updateStandaloneDebt } = useDataStore();
   const { user } = useAuthStore();
 
@@ -118,90 +114,80 @@ export const DebtsPage = () => {
   };
 
   return (
-    <Box sx={{ pb: 8, minHeight: '100dvh' }}>
-      {/* Header */}
-      <Box
-        sx={{
-          background: theme.palette.mode === 'light'
-            ? 'linear-gradient(160deg, #364036 0%, #4a5d4a 100%)'
-            : 'linear-gradient(160deg, #2a3a2a 0%, #364036 100%)',
-          pt: 'calc(env(safe-area-inset-top) + 16px)',
-          pb: 5,
-          px: 2,
-          position: 'relative',
-          overflow: 'hidden',
-          color: 'white',
-        }}
-      >
-        <Box sx={{
-          position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'radial-gradient(ellipse at 70% 20%, rgba(200,192,176,0.08) 0%, transparent 50%)',
-          pointerEvents: 'none',
-        }} />
-
-        <Container maxWidth="sm" sx={{ position: 'relative', zIndex: 1 }}>
-          <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
-            <Stack direction="row" alignItems="center" spacing={1.5}>
-              <IconButton onClick={() => navigate('/')} sx={{ color: 'rgba(255,255,255,0.9)', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
-                <ArrowBack />
-              </IconButton>
-              <Typography variant="h5" fontWeight={800} sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>الديون</Typography>
-            </Stack>
-            <Button
-              variant="contained"
-              startIcon={<Add />}
-              onClick={() => setDialogOpen(true)}
-              sx={{
-                bgcolor: 'rgba(200,192,176,0.9)',
-                color: '#2a3a2a',
-                fontWeight: 700,
-                borderRadius: 2.5,
-                px: 2.5,
-                boxShadow: '0 4px 14px -3px rgba(200,192,176,0.4)',
-                '&:hover': { bgcolor: '#c8c0b0', transform: 'scale(1.04)' },
-                transition: 'all 0.25s ease',
-              }}
-            >
-              جديد
-            </Button>
-          </Stack>
-
-          {/* Stats */}
-          <Paper sx={{ p: 2, borderRadius: 2.5, bgcolor: 'rgba(255,255,255,0.1)', boxShadow: 'none', border: '1px solid rgba(255,255,255,0.08)' }}>
-            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', display: 'block' }}>إجمالي الديون المتبقية</Typography>
-            <Typography variant="body1" fontWeight={800} color="white">
-              {formatCurrency(standaloneDebts.reduce((sum, d) => sum + d.remainingAmount, 0))}
-            </Typography>
-          </Paper>
-        </Container>
-      </Box>
-
-      <Container maxWidth="sm" sx={{ mt: -2 }}>
-        {/* Search */}
+    <>
+    <PageScaffold
+      title="الديون"
+      subtitle="الديون الاستقالية"
+      backTo="/"
+      rightAction={(
+        <Button
+          variant="contained"
+          size="small"
+          startIcon={<Add />}
+          onClick={() => setDialogOpen(true)}
+          sx={{
+            bgcolor: 'rgba(200,192,176,0.95)',
+            color: '#2d3a2d',
+            fontWeight: 700,
+            borderRadius: 2.5,
+            px: 2,
+            boxShadow: '0 4px 14px -3px rgba(0,0,0,0.12)',
+            '&:hover': { bgcolor: '#c8c0b0' },
+          }}
+        >
+          جديد
+        </Button>
+      )}
+      headerExtra={(
+        <Grid container spacing={1}>
+          <Grid size={{ xs: 6 }}>
+            <Paper sx={{ p: 1.5, borderRadius: 2.5, bgcolor: 'rgba(255,255,255,0.1)', boxShadow: 'none', border: '1px solid rgba(255,255,255,0.1)', height: '100%' }}>
+              <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.65)', display: 'block' }}>المتبقي</Typography>
+              <Typography variant="body2" fontWeight={800} color="white" sx={{ fontFamily: 'Outfit, sans-serif' }}>
+                {formatCurrency(standaloneDebts.reduce((sum, d) => sum + d.remainingAmount, 0))}
+              </Typography>
+            </Paper>
+          </Grid>
+          <Grid size={{ xs: 6 }}>
+            <Paper sx={{ p: 1.5, borderRadius: 2.5, bgcolor: 'rgba(255,255,255,0.1)', boxShadow: 'none', border: '1px solid rgba(255,255,255,0.1)', height: '100%' }}>
+              <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.65)', display: 'block' }}>السجلات</Typography>
+              <Typography variant="body2" fontWeight={800} color="white">{standaloneDebts.length}</Typography>
+            </Paper>
+          </Grid>
+        </Grid>
+      )}
+    >
+        <EtlalaSectionTitle title="سجل الديون" subtitle="طرف خارجي أو مرتبط بعميل" />
         <TextField
           fullWidth
           placeholder="بحث عن دين أو اسم..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           InputProps={{
-            startAdornment: <InputAdornment position="start"><Search /></InputAdornment>,
+            startAdornment: <InputAdornment position="start"><Search sx={{ opacity: 0.5 }} /></InputAdornment>,
           }}
-          sx={{ mb: 3, '& .MuiOutlinedInput-root': { borderRadius: '14px', bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', '& fieldset': { border: 'none' } } }}
+          sx={[
+            etlalaContentFieldSx,
+            { mb: 2, '& .MuiOutlinedInput-root': { borderRadius: '14px', border: '1px solid', borderColor: 'divider', '& fieldset': { border: 'none' } } },
+          ]}
         />
 
-        {/* Debts Grid */}
         <Grid container spacing={2}>
           {filteredDebts.length === 0 ? (
             <Grid size={{ xs: 12 }}>
-              <Box textAlign="center" py={8} bgcolor="background.paper" borderRadius="20px" border="1px solid" borderColor="divider">
-                <AccountBalanceWallet sx={{ fontSize: 56, color: 'text.secondary', opacity: 0.15, mb: 2 }} />
-                <Typography variant="h6" color="text.secondary">لا توجد ديون مسجلة</Typography>
-              </Box>
+              <EtlalaEmptyState
+                icon={<AccountBalanceWallet />}
+                title={searchQuery ? 'لا نتائج' : 'لا توجد ديون مسجلة'}
+                hint={searchQuery ? 'عدّل البحث أو امسحه' : 'أضف ديناً جديداً من الزر أعلاه'}
+              />
             </Grid>
           ) : (
             filteredDebts.map((debt) => (
               <Grid size={{ xs: 12, md: 6, lg: 4 }} key={debt.id}>
-                <Card sx={{ borderRadius: '18px', border: '1px solid', borderColor: 'divider', boxShadow: 'none', height: '100%' }}>
+                <EtlalaAccentSurface
+                  accent={debt.status === 'paid' ? theme.palette.success.main : theme.palette.warning.main}
+                  sx={{ height: '100%' }}
+                >
                   <CardContent sx={{ p: 3 }}>
                     <Stack spacing={2}>
                       {/* Status */}
@@ -266,12 +252,12 @@ export const DebtsPage = () => {
                       </Stack>
                     </Stack>
                   </CardContent>
-                </Card>
+                </EtlalaAccentSurface>
               </Grid>
             ))
           )}
         </Grid>
-      </Container>
+    </PageScaffold>
 
       {/* Add Debt Dialog */}
       <Dialog 
@@ -373,6 +359,6 @@ export const DebtsPage = () => {
           </Button>
         </Box>
       </Dialog>
-    </Box>
+    </>
   );
 };

@@ -49,18 +49,59 @@ export const LoginPage = () => {
         direction: 'rtl',
       }}
     >
-      {/* Background */}
+      {/* خلفية v2: تدرجات محلية فقط — أداء + هوية (بدون صور خارجية) */}
       <Box
         sx={{
           position: 'absolute',
           top: 0, left: 0, right: 0, bottom: 0,
-          background: `
-            linear-gradient(180deg, rgba(26,42,26,0.4) 0%, rgba(15,26,15,0.97) 65%),
-            url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1200&q=80')
-          `,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
           zIndex: 0,
+          background: `
+            radial-gradient(ellipse 120% 80% at 80% 10%, rgba(90, 130, 95, 0.25) 0%, transparent 50%),
+            radial-gradient(ellipse 90% 60% at 10% 90%, rgba(200, 192, 176, 0.12) 0%, transparent 45%),
+            linear-gradient(168deg, #0c120c 0%, #152218 38%, #1a2a1c 72%, #0e1410 100%)
+          `,
+        }}
+      />
+      <Box
+        className="etlala-hero-orb"
+        aria-hidden
+        sx={{
+          position: 'absolute',
+          zIndex: 0,
+          top: '8%',
+          left: '5%',
+          width: 220,
+          height: 220,
+          bgcolor: 'rgba(200, 192, 176, 0.12)',
+        }}
+      />
+      <Box
+        className="etlala-hero-orb"
+        aria-hidden
+        sx={{
+          position: 'absolute',
+          zIndex: 0,
+          bottom: '20%',
+          right: '-5%',
+          width: 280,
+          height: 280,
+          bgcolor: 'rgba(74, 93, 74, 0.18)',
+          animation: 'etlala-blob-float 18s var(--ease-smooth) infinite',
+          animationDelay: '-4s',
+        }}
+      />
+      <Box
+        className="etlala-hero-orb"
+        aria-hidden
+        sx={{
+          position: 'absolute',
+          zIndex: 0,
+          top: '40%',
+          right: '20%',
+          width: 120,
+          height: 120,
+          bgcolor: 'rgba(255, 255, 255, 0.04)',
+          animationDuration: '12s',
         }}
       />
 
@@ -117,14 +158,16 @@ export const LoginPage = () => {
             </motion.div>
           </Box>
 
-          {/* Login Form */}
+          {/* Login Form — زجاج محسّن + حد كريمي */}
           <Box
             sx={{
-              borderRadius: { xs: '28px 28px 0 0', sm: '24px' },
-              bgcolor: alpha('#1a2a1a', 0.65),
-              backdropFilter: 'blur(30px)',
-              border: '1px solid rgba(255,255,255,0.06)',
-              borderBottom: { xs: 'none', sm: '1px solid rgba(255,255,255,0.06)' },
+              borderRadius: { xs: '28px 28px 0 0', sm: '22px' },
+              bgcolor: alpha('#0f1a12', 0.72),
+              backdropFilter: 'blur(28px) saturate(1.15)',
+              WebkitBackdropFilter: 'blur(28px) saturate(1.15)',
+              border: '1px solid rgba(200, 192, 176, 0.14)',
+              boxShadow: '0 24px 80px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06)',
+              borderBottom: { xs: 'none', sm: '1px solid rgba(200, 192, 176, 0.12)' },
               p: { xs: 3.5, sm: 4.5 },
             }}
           >
@@ -192,16 +235,14 @@ export const LoginPage = () => {
                 />
 
                 <Button
-                  type="submit" fullWidth variant="contained" disabled={loading}
+                  type="submit"
+                  fullWidth
+                  variant="contained"
+                  color="primary"
+                  size="large"
+                  disabled={loading}
                   endIcon={!loading && <LoginIcon sx={{ mr: 1, fontSize: 18 }} />}
-                  sx={{
-                    py: 1.5, borderRadius: 3, fontSize: '0.95rem', fontWeight: 800,
-                    background: 'linear-gradient(135deg, #4a5d4a 0%, #364036 100%)',
-                    boxShadow: '0 6px 20px rgba(74,93,74,0.35)',
-                    '&:hover': { boxShadow: '0 8px 28px rgba(74,93,74,0.5)' },
-                    transition: 'all 0.3s ease',
-                    mt: 1,
-                  }}
+                  sx={{ py: 1.5, mt: 1, fontSize: '0.95rem', fontWeight: 800 }}
                 >
                   {loading ? 'جاري التحقق...' : 'دخول'}
                 </Button>

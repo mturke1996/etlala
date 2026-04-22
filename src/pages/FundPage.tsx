@@ -1,8 +1,7 @@
 // @ts-nocheck
 import { useState, useMemo, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
-  Box, Button, Typography, Stack, Container,
+  Box, Button, Typography, Stack,
   IconButton, Dialog, TextField, Avatar, Divider, Collapse, useTheme,
 } from '@mui/material';
 import {
@@ -22,6 +21,7 @@ import 'dayjs/locale/ar';
 import toast from 'react-hot-toast';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
+import { PageScaffold } from '../components/layout/PageScaffold';
 
 gsap.registerPlugin(useGSAP);
 
@@ -33,7 +33,6 @@ const F = "'Cairo', sans-serif";
 const FN = "'Outfit', monospace";
 
 export const FundPage = () => {
-  const navigate = useNavigate();
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
   const { user } = useAuthStore();
@@ -51,7 +50,6 @@ export const FundPage = () => {
 
   // ── GSAP Refs ──────────────────────────────────────────────────────────────
   const pageRef = useRef<HTMLDivElement>(null);
-  const headerRef = useRef<HTMLDivElement>(null);
   const balanceCardRef = useRef<HTMLDivElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
 
@@ -239,14 +237,6 @@ export const FundPage = () => {
     
     const mm = gsap.matchMedia();
     mm.add('(prefers-reduced-motion: no-preference)', () => {
-        // ── Header Nav ──
-        gsap.from('.fund-nav', {
-          opacity: 0,
-          y: -15,
-          duration: 0.6,
-          ease: 'power3.out',
-        });
-
         // ── Balance Card ──
         if (balanceCardRef.current) {
           gsap.from(balanceCardRef.current, {
@@ -285,67 +275,32 @@ export const FundPage = () => {
   }, { scope: pageRef });
 
   return (
-    <Box ref={pageRef} sx={{ minHeight: '100dvh', bgcolor: BG, pb: 10, fontFamily: F }}>
+    <Box ref={pageRef} sx={{ minHeight: '100dvh', bgcolor: BG, fontFamily: F }}>
 
-      {/* ══ STUNNING HEADER (LINEAR / STRIPE STYLE) ════════════════════════════════════ */}
-      <Box sx={{ 
-        background: isDark 
-          ? 'radial-gradient(120% 120% at 50% 0%, #152219 0%, #0a110c 50%, #050806 100%)' 
-          : 'radial-gradient(120% 120% at 50% 0%, #213526 0%, #132217 50%, #0b140e 100%)', 
-        pt: 'calc(env(safe-area-inset-top) + 32px)', 
-        pb: 8, 
-        px: 0, 
-        position: 'relative', 
-        overflow: 'hidden', 
-        borderBottom: isDark ? '1px solid rgba(200, 192, 176, 0.1)' : 'none',
-        boxShadow: '0 10px 40px -10px rgba(74,93,74,0.4)',
-        borderBottomLeftRadius: 32,
-        borderBottomRightRadius: 32,
-        mb: 2,
-        '&::after': { 
-            content: '""', 
-            position: 'absolute', 
-            top: '-50%', right: '-30%', 
-            width: '70%', height: '180%', 
-            background: 'radial-gradient(ellipse, rgba(255,255,255,0.08) 0%, transparent 60%)', 
-            pointerEvents: 'none' 
-        } 
-      }}>
-        <Container maxWidth="sm">
-
-          {/* Nav Bar */}
-          <Stack className="fund-nav" direction="row" alignItems="center" justifyContent="space-between" mb={3.5}>
-            <Stack direction="row" alignItems="center" spacing={1.5}>
-              <IconButton onClick={() => navigate('/')}
-                sx={{ color: '#fff', p: 0.5 }}>
-                <ArrowBack />
-              </IconButton>
-              <Box>
-                <Typography sx={{ color: '#fff', fontWeight: 800, fontSize: '1.1rem', lineHeight: 1.1, fontFamily: F }}>
-                  صندوق العهد
-                </Typography>
-                <Typography sx={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.68rem', fontFamily: F }}>
-                  إدارة رصيد العهدات
-                </Typography>
-              </Box>
-            </Stack>
-            {isAdmin && (
+      <PageScaffold
+        title="صندوق العهد"
+        subtitle="إدارة رصيد العهدات"
+        backTo="/"
+        contentOffset={2}
+        rightAction={isAdmin ? (
               <Button onClick={openAdd}
-                startIcon={<Add />}
+                size="small"
+                startIcon={<Add sx={{ ml: 0.5, mr: -0.5 }} />}
                 sx={{
-                  bgcolor: '#10b981', color: '#fff', fontWeight: 800, borderRadius: 2,
-                  px: 2.2, py: 1, fontFamily: F, fontSize: '0.85rem',
-                  '&:hover': { bgcolor: '#059669' },
-                  '&:active': { transform: 'scale(0.97)' },
-                  boxShadow: '0 4px 20px rgba(16,185,129,0.4)',
-                  transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+                  bgcolor: 'rgba(200, 192, 176, 0.95)',
+                  color: '#1f291f',
+                  fontWeight: 800,
+                  borderRadius: 2.5,
+                  px: 2,
+                  fontSize: '0.8rem',
+                  fontFamily: F,
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                  '&:hover': { bgcolor: '#c8c0b0' },
                 }}>
                 عهدة جديدة
               </Button>
-            )}
-          </Stack>
-
-          {/* Balance Card - Revolut/Stripe Glassmorphism */}
+        ) : undefined}
+        headerExtra={(
           <Box ref={balanceCardRef} sx={{ 
               bgcolor: 'rgba(255,255,255,0.1)', 
               backdropFilter: 'blur(24px)', 
@@ -400,11 +355,10 @@ export const FundPage = () => {
               );
             })()}
           </Box>
-        </Container>
-      </Box>
+        )}
+      >
 
       {/* ══ BODY ═════════════════════════════════════════════════════════════ */}
-      <Container maxWidth="sm" sx={{ mt: 2 }}>
         {perUser.length === 0 ? (
           <Box sx={{ textAlign: 'center', py: 10 }}>
             <AccountBalanceWallet sx={{ fontSize: 60, color: 'text.disabled', opacity: 0.2, mb: 2 }} />
@@ -747,7 +701,7 @@ export const FundPage = () => {
             ))}
           </Stack>
         )}
-      </Container>
+      </PageScaffold>
 
       {/* ══ ADD/EDIT DIALOG ══════════════════════════════════════════════════ */}
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} fullScreen

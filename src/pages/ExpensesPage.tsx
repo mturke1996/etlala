@@ -8,7 +8,6 @@ import {
   Typography,
   TextField,
   InputAdornment,
-  Container,
   Stack,
   useTheme,
   Dialog,
@@ -26,7 +25,6 @@ import {
   Search,
   AttachMoney,
   CalendarToday,
-  ArrowBack,
   TrendingDown,
   Person,
   Description,
@@ -35,8 +33,9 @@ import {
   NoteAlt,
   BusinessCenter,
 } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
 import { useDataStore } from '../store/useDataStore';
+import { PageScaffold } from '../components/layout/PageScaffold';
+import { EtlalaAccentSurface, EtlalaEmptyState, EtlalaSectionTitle, etlalaContentFieldSx } from '../components/etlala/EtlalaMobileUi';
 import { useAuthStore } from '../store/useAuthStore';
 import { useGlobalFundStore } from '../store/useGlobalFundStore';
 import { formatCurrency, formatDate, getExpenseCategoryLabel, expenseCategories } from '../utils/formatters';
@@ -56,7 +55,6 @@ import 'dayjs/locale/ar';
 export const ExpensesPage = () => {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
-  const navigate = useNavigate();
   const { expenses, addExpense, clients } = useDataStore();
   const { user } = useAuthStore();
   const { transactions, getUserStats, initialize: initFund } = useGlobalFundStore();
@@ -192,57 +190,39 @@ export const ExpensesPage = () => {
   };
 
   const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
-  const headerGradient = isDark
-    ? 'linear-gradient(160deg, #1a221a 0%, #2a3a2a 100%)'
-    : 'linear-gradient(160deg, #2a3a2a 0%, #364036 60%, #4a5d4a 100%)';
 
   return (
-    <Box sx={{ minHeight: '100dvh', background: isDark ? '#161b16' : '#f5f3ef', pb: 10 }}>
-
-      {/* ── Header ── */}
-      <Box sx={{ background: headerGradient, pt: 'calc(env(safe-area-inset-top) + 24px)', pb: 5, px: 2, position: 'relative', overflow: 'hidden' }}>
-        {/* Decorative glow */}
-        <Box sx={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'radial-gradient(ellipse at 80% 0%, rgba(200,192,176,0.1) 0%, transparent 55%)', pointerEvents: 'none' }} />
-
-        <Container maxWidth="sm" sx={{ position: 'relative', zIndex: 1 }}>
-          {/* Nav row */}
-          <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
-            <Stack direction="row" alignItems="center" spacing={1.5}>
-              <IconButton
-                onClick={() => navigate('/')}
-                sx={{ color: 'rgba(255,255,255,0.85)', bgcolor: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)', '&:hover': { bgcolor: 'rgba(255,255,255,0.15)', color: 'white' } }}
-              >
-                <ArrowBack />
-              </IconButton>
-              <Box>
-                <Typography variant="h5" fontWeight={900} sx={{ color: 'white', lineHeight: 1.1 }}>المصروفات العامة</Typography>
-                <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.55)', fontWeight: 500 }}>{expenses.length} سجل مصروف</Typography>
-              </Box>
-            </Stack>
+    <>
+    <PageScaffold
+      title="المصروفات العامة"
+      subtitle={`${expenses.length} سجل مصروف`}
+      backTo="/"
+      contentOffset={3}
+      rightAction={(
             <Button
               variant="contained"
-              startIcon={<Add sx={{ ml: 1 }} />}
+              size="small"
+              startIcon={<Add sx={{ ml: 0.5, mr: -0.5 }} />}
               onClick={() => {
                 setExpenseForm(prev => ({ ...prev, clientId: clients.length > 0 ? clients[0].id : '' }));
                 setDialogOpen(true);
               }}
               sx={{
-                bgcolor: 'rgba(200,192,176,0.9)',
-                color: '#ffffffff',
+                bgcolor: 'rgba(200, 192, 176, 0.95)',
+                color: '#1f291f',
                 fontWeight: 800,
-                px: 2.5,
-                py: 1.1,
-                borderRadius: 2,
-                boxShadow: '0 4px 16px rgba(0,0,0,0.2)',
-                '&:hover': { bgcolor: '#d4cabb', transform: 'translateY(-2px)', boxShadow: '0 6px 20px rgba(0,0,0,0.25)' },
-                transition: 'all 0.22s ease',
+                px: 2,
+                py: 0.75,
+                borderRadius: 2.5,
+                fontSize: '0.8rem',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                '&:hover': { bgcolor: '#c8c0b0' },
               }}
             >
               مصروف جديد
             </Button>
-          </Stack>
-
-          {/* Stats cards */}
+      )}
+      headerExtra={(
           <Stack spacing={1.5}>
             {/* ─── Fund Balance Banner (Premium) ─── */}
             {myFundStats ? (
@@ -367,19 +347,15 @@ export const ExpensesPage = () => {
               </Stack>
             </Box>
           </Stack>
-        </Container>
-      </Box>
-
-      <Container maxWidth="sm" sx={{ mt: 3 }}>
+      )}
+    >
 
         {/* ── Pie Chart ── */}
         {chartData.length > 0 && (
           <Card sx={{ mb: 3, overflow: 'hidden', borderRadius: 2 }}>
             <CardContent sx={{ p: 0 }}>
-              {/* Chart header */}
-              <Box sx={{ px: 2.5, pt: 2.5, pb: 1 }}>
-                <Typography variant="subtitle1" fontWeight={800} color="text.primary">توزيع المصروفات</Typography>
-                <Typography variant="caption" color="text.secondary">حسب التصنيف</Typography>
+              <Box sx={{ px: 2.5, pt: 2.5, pb: 0.5 }}>
+                <EtlalaSectionTitle title="توزيع المصروفات" subtitle="حسب التصنيف" />
               </Box>
               <Divider />
 
@@ -434,6 +410,7 @@ export const ExpensesPage = () => {
         )}
 
         {/* ── Search & Filter ── */}
+        <EtlalaSectionTitle title="سجل المصروفات" subtitle="فلترة حسب التصنيف والبحث" />
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ mb: 3 }}>
           <TextField
             fullWidth
@@ -443,13 +420,15 @@ export const ExpensesPage = () => {
             InputProps={{
               startAdornment: <InputAdornment position="start"><Search fontSize="small" sx={{ color: 'text.secondary', opacity: 0.7 }} /></InputAdornment>,
             }}
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                borderRadius: 2,
-                bgcolor: 'background.paper',
-                '& fieldset': { borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' },
+            sx={[
+              etlalaContentFieldSx,
+              {
+                flex: 1,
+                '& .MuiOutlinedInput-root': {
+                  '& fieldset': { borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' },
+                },
               },
-            }}
+            ]}
           />
           <FormControl sx={{ minWidth: { xs: '100%', sm: 220 } }}>
             <Select
@@ -479,36 +458,24 @@ export const ExpensesPage = () => {
         )}
 
         {/* ── Expenses List ── */}
-        <Stack spacing={0} sx={{ mb: 6 }}>
+        <Stack spacing={1.25} sx={{ mb: 6 }}>
           {filteredExpenses.length === 0 ? (
-            <Card sx={{ textAlign: 'center', py: 8, borderRadius: 2 }}>
-              <TrendingDown sx={{ fontSize: 56, color: 'text.secondary', opacity: 0.2, mb: 2 }} />
-              <Typography variant="h6" color="text.secondary" fontWeight={600}>لا توجد مصروفات</Typography>
-              <Typography variant="caption" color="text.secondary">اضغط على زر "مصروف جديد" لإضافة مصروف</Typography>
-            </Card>
+            <EtlalaEmptyState
+              icon={<TrendingDown />}
+              title={searchQuery || categoryFilter !== 'all' ? 'لا نتائج' : 'لا توجد مصروفات'}
+              hint={searchQuery || categoryFilter !== 'all' ? 'عدّل البحث أو أعد «كل التصنيفات»' : 'اضغط «مصروف جديد» لإضافة أول سجل'}
+              actionLabel={!searchQuery && categoryFilter === 'all' ? 'مصروف جديد' : undefined}
+              onAction={!searchQuery && categoryFilter === 'all' ? () => {
+                setExpenseForm(prev => ({ ...prev, clientId: clients.length > 0 ? clients[0].id : '' }));
+                setDialogOpen(true);
+              } : undefined}
+            />
           ) : (
-            filteredExpenses.map((exp, index) => {
+            filteredExpenses.map((exp) => {
               const clientName = clients.find(c => c.id === exp.clientId)?.name || 'مجهول';
-              const isLast = index === filteredExpenses.length - 1;
               return (
-                <Box
-                  key={exp.id}
-                  sx={{
-                    bgcolor: 'background.paper',
-                    borderRight: '3px solid #d64545',
-                    borderTop: '1px solid',
-                    borderBottom: isLast ? '1px solid' : 'none',
-                    borderLeft: '1px solid',
-                    borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
-                    borderRightColor: '#d64545',
-                    px: 2.5,
-                    py: 2,
-                    transition: 'background 0.18s ease',
-                    '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(214,69,69,0.015)' },
-                    '&:first-of-type': { borderRadius: '4px 4px 0 0' },
-                    '&:last-of-type': { borderRadius: '0 0 4px 4px' },
-                  }}
-                >
+                <EtlalaAccentSurface key={exp.id} accent="#d64545">
+                  <Box sx={{ px: 2.5, py: 2 }}>
                   <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={2}>
                     {/* Left: icon + info */}
                     <Stack direction="row" spacing={2} alignItems="flex-start" sx={{ flex: 1, minWidth: 0 }}>
@@ -553,12 +520,13 @@ export const ExpensesPage = () => {
                       )}
                     </Box>
                   </Stack>
-                </Box>
+                  </Box>
+                </EtlalaAccentSurface>
               );
             })
           )}
         </Stack>
-      </Container>
+    </PageScaffold>
 
       {/* ── Add Expense Dialog ── */}
       <Dialog
@@ -670,6 +638,6 @@ export const ExpensesPage = () => {
           </Button>
         </Box>
       </Dialog>
-    </Box>
+    </>
   );
 };

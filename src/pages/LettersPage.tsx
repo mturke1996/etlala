@@ -1,20 +1,20 @@
 // @ts-nocheck
 import { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
   Box, Button, Typography, Stack, Container,
   IconButton, Dialog, TextField,
   useTheme, Chip, MenuItem, Select, FormControl,
-  InputLabel, Divider, Collapse, Fab, Autocomplete,
+  InputLabel, Divider, Collapse, Autocomplete,
 } from '@mui/material';
 import {
-  ArrowForward, Add, Download, Share, Delete,
+  Add, Download, Share, Delete,
   Edit, ExpandMore, ExpandLess, Description,
   Close, AddCircleOutline, RemoveCircleOutline,
   Person, PersonAdd,
 } from '@mui/icons-material';
 import { useAuthStore } from '../store/useAuthStore';
 import { useDataStore } from '../store/useDataStore';
+import { PageScaffold } from '../components/layout/PageScaffold';
 import { downloadPdf, sharePdf } from '../utils/pdfService';
 import { LetterPDF } from '../components/pdf/LetterPDF';
 import type { Letter, LetterType } from '../types';
@@ -66,7 +66,6 @@ const createDefault = (): Partial<Letter> => ({
 });
 
 export const LettersPage = () => {
-  const navigate = useNavigate();
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
   const { user } = useAuthStore();
@@ -152,44 +151,43 @@ export const LettersPage = () => {
   const handleShare = (l: Letter) => withPdf(() => sharePdf(React.createElement(LetterPDF, { letter: l }), `${typeLabels[l.type]}-${l.refNumber}`, `${typeLabels[l.type]} - ${l.subject}`));
 
   return (
-    <Box sx={{ minHeight: '100dvh', background: isDark ? 'linear-gradient(180deg,#1a1f1a,#151a15)' : 'linear-gradient(180deg,#f5f3ef,#ede9e3)', pb: 10 }}>
-
-      {/* ── Header ── */}
-      <Box sx={{
-        background: 'linear-gradient(160deg,#1a1f1a 0%,#2f3e2f 50%,#3a4a3a 100%)',
-        pt: 'calc(env(safe-area-inset-top) + 24px)', pb: 4, px: 2.5, borderRadius: '0 0 32px 32px',
-        boxShadow: '0 12px 40px rgba(0,0,0,0.35)', position: 'relative', overflow: 'hidden',
-      }}>
-        <Container maxWidth="sm" sx={{ position: 'relative', zIndex: 1 }}>
-          <Stack direction="row" justifyContent="space-between" alignItems="center">
-            <IconButton onClick={() => navigate('/')} sx={{ color: '#fff', bgcolor: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)' }}>
-              <ArrowForward />
-            </IconButton>
-            <Stack direction="row" alignItems="center" gap={1.5}>
-              <Box>
-                <Typography variant="h6" sx={{ color: '#fff', fontWeight: 800, textAlign: 'right' }}>الرسائل الرسمية</Typography>
-                <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', fontWeight: 600, textAlign: 'right', display: 'block' }}>
-                  خطابات وعروض أسعار ومستخلصات
-                </Typography>
-              </Box>
-              <Box sx={{ width: 44, height: 44, borderRadius: '12px', background: 'linear-gradient(135deg,rgba(200,192,176,0.2),rgba(200,192,176,0.08))', border: '1px solid rgba(200,192,176,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Description sx={{ fontSize: 22, color: '#c8c0b0' }} />
-              </Box>
-            </Stack>
-          </Stack>
-          <Stack direction="row" spacing={1} sx={{ mt: 2.5 }}>
-            {(['official', 'offer', 'entitlement'] as LetterType[]).map(t => (
-              <Box key={t} sx={{ flex: 1, textAlign: 'center', bgcolor: 'rgba(255,255,255,0.06)', borderRadius: 2, py: 1 }}>
-                <Typography sx={{ fontSize: '1.2rem', fontWeight: 900, color: typeColors[t], fontFamily: 'Outfit' }}>{letters.filter(l => l.type === t).length}</Typography>
-                <Typography sx={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>{typeLabels[t]}</Typography>
-              </Box>
-            ))}
-          </Stack>
-        </Container>
-      </Box>
-
-      {/* ── Content ── */}
-      <Container maxWidth="sm" sx={{ mt: -1.5, position: 'relative', zIndex: 1 }}>
+    <>
+    <PageScaffold
+      title="الرسائل الرسمية"
+      subtitle="خطابات وعروض أسعار ومستخلصات"
+      backTo="/"
+      contentOffset={-1.5}
+      rightAction={(
+        <Button
+          variant="contained"
+          size="small"
+          startIcon={<Add sx={{ ml: 0.5, mr: -0.5 }} />}
+          onClick={openAdd}
+          sx={{
+            bgcolor: 'rgba(200, 192, 176, 0.95)',
+            color: '#1f291f',
+            fontWeight: 800,
+            borderRadius: 2.5,
+            px: 2,
+            fontSize: '0.8rem',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+            '&:hover': { bgcolor: '#c8c0b0' },
+          }}
+        >
+          جديد
+        </Button>
+      )}
+      headerExtra={(
+        <Stack direction="row" spacing={1} sx={{ mt: 0.5 }}>
+          {(['official', 'offer', 'entitlement'] as LetterType[]).map(t => (
+            <Box key={t} sx={{ flex: 1, textAlign: 'center', bgcolor: 'rgba(255,255,255,0.06)', borderRadius: 2, py: 1 }}>
+              <Typography sx={{ fontSize: '1.2rem', fontWeight: 900, color: typeColors[t], fontFamily: 'Outfit' }}>{letters.filter(l => l.type === t).length}</Typography>
+              <Typography sx={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>{typeLabels[t]}</Typography>
+            </Box>
+          ))}
+        </Stack>
+      )}
+    >
         {letters.length === 0 ? (
           <Box sx={{ textAlign: 'center', py: 8, px: 3, bgcolor: cardBg, borderRadius: 0, border: `1px solid ${cardBorder}`, mt: 3 }}>
             <Description sx={{ fontSize: 48, color: 'text.secondary', opacity: 0.3, mb: 2 }} />
@@ -301,17 +299,7 @@ export const LettersPage = () => {
             })}
           </Stack>
         )}
-      </Container>
-
-      {/* ── FAB ── */}
-      <Fab onClick={openAdd} size="medium" sx={{
-        position: 'fixed', bottom: 'calc(env(safe-area-inset-bottom) + 96px)', left: '50%', transform: 'translateX(-50%)',
-        bgcolor: isDark ? '#5a7a5a' : '#4a5d4a', color: '#fff', zIndex: 999,
-        boxShadow: '0 6px 20px rgba(74,93,74,0.5)',
-        '&:hover': { bgcolor: isDark ? '#6b8f6b' : '#364036' },
-      }}>
-        <Add />
-      </Fab>
+    </PageScaffold>
 
       {/* ═══ DIALOG ═══ */}
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} fullScreen
@@ -443,6 +431,6 @@ export const LettersPage = () => {
           </Container>
         </Box>
       </Dialog>
-    </Box>
+    </>
   );
 };

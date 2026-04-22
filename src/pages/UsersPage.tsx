@@ -16,6 +16,7 @@ import { db, auth } from '../config/firebase';
 import { firebaseConfig } from '../config/firebase';
 import { toast } from 'react-hot-toast';
 import { forwardRef } from 'react';
+import { PageScaffold } from '../components/layout/PageScaffold';
 import { TransitionProps } from '@mui/material/transitions';
 
 const Transition = forwardRef(function Transition(
@@ -199,111 +200,71 @@ export const UsersPage = () => {
   );
 
   return (
-    <Box sx={{ minHeight: '100dvh', bgcolor: '#f4f6f4', pb: 10, fontFamily: 'Tajawal, sans-serif' }}>
-      
-      {/* ── Ultra Premium Header ── */}
-      <Box
-        sx={{
-          background: theme.palette.mode === 'light'
-            ? 'linear-gradient(145deg, #2a3a2a 0%, #1f291f 100%)'
-            : 'linear-gradient(145deg, #151a15 0%, #1a221a 100%)',
-          /* Safari/PWA Safe Area Fix for iPhone 16 Pro Max */
-          pt: 'calc(max(env(safe-area-inset-top), 60px) + 16px)',
-          pb: 4,
-          px: 2.5,
-          position: 'relative',
-          overflow: 'hidden',
-          borderBottomLeftRadius: 36,
-          borderBottomRightRadius: 36,
-          boxShadow: '0 12px 32px rgba(42,58,42,0.15)',
-        }}
-      >
-        {/* Subtle glowing orb in background */}
-        <Box sx={{
-          position: 'absolute', top: -40, right: -40, width: 200, height: 200,
-          background: 'radial-gradient(circle, rgba(200,192,176,0.15) 0%, transparent 70%)',
-          pointerEvents: 'none',
-        }} />
-
-        <Container maxWidth="sm" sx={{ position: 'relative', zIndex: 1, px: 0 }}>
-          
-          {/* Top Navigation Row */}
-          <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3.5}>
-            <Stack direction="row" alignItems="center" spacing={1.5}>
-              <IconButton 
-                onClick={() => navigate('/')} 
-                sx={{ 
-                  bgcolor: 'rgba(255,255,255,0.08)', color: 'white', 
-                  backdropFilter: 'blur(10px)', width: 42, height: 42,
-                  '&:hover': { bgcolor: 'rgba(255,255,255,0.15)', transform: 'scale(1.05)' },
-                  transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
-                }}
-              >
-                <ArrowBack fontSize="small" />
-              </IconButton>
-              <Typography variant="h5" fontWeight={900} sx={{ color: 'white', letterSpacing: '-0.3px', fontSize: '1.35rem' }}>
-                الموظفين
-              </Typography>
-            </Stack>
-
-            <Button
-              variant="contained"
-              startIcon={<Add sx={{ ml: 0.5, mr: -0.5 }} />}
-              onClick={() => {
-                setEditingUserId(null);
-                setFormData({ name: '', email: '', password: '', newPassword: '', role: 'editor' });
-                setDialogOpen(true);
-              }}
-              sx={{
-                bgcolor: '#c8c0b0', color: '#1f291f', fontWeight: 800, borderRadius: 3, 
-                px: 2.5, py: 1, fontSize: '0.85rem', boxShadow: '0 4px 12px rgba(200,192,176,0.3)',
-                '&:hover': { bgcolor: '#e0d8c8', transform: 'translateY(-2px)' },
-              }}
-            >
-              موظف جديد
-            </Button>
-          </Stack>
-
-          {/* Quick Stats Row (Compact) */}
-          <Grid container spacing={1.5}>
-            <Grid size={{ xs: 6 }}>
-              <Box sx={{ 
-                p: 2, borderRadius: 3, bgcolor: 'rgba(255,255,255,0.06)', 
-                border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(16px)',
-                display: 'flex', alignItems: 'center', gap: 1.5 
-              }}>
-                <Box sx={{ width: 36, height: 36, borderRadius: 2, bgcolor: 'rgba(200,192,176,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <SupervisedUserCircle sx={{ color: '#c8c0b0', fontSize: 20 }} />
-                </Box>
-                <Box>
-                  <Typography sx={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>إجمالي الحسابات</Typography>
-                  <Typography sx={{ fontSize: '1.1rem', color: 'white', fontWeight: 900, lineHeight: 1.2 }}>{users.length}</Typography>
-                </Box>
+    <>
+    <PageScaffold
+      title="الموظفون"
+      subtitle="إدارة الحسابات والصلاحيات"
+      backTo="/"
+      rightAction={(
+        <Button
+          variant="contained"
+          size="small"
+          startIcon={<Add sx={{ ml: 0.5, mr: -0.5 }} />}
+          onClick={() => {
+            setEditingUserId(null);
+            setFormData({ name: '', email: '', password: '', newPassword: '', role: 'editor' });
+            setDialogOpen(true);
+          }}
+          sx={{
+            bgcolor: 'rgba(200, 192, 176, 0.95)',
+            color: '#1f291f',
+            fontWeight: 800,
+            borderRadius: 3,
+            px: 2,
+            fontSize: '0.8rem',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+            '&:hover': { bgcolor: '#c8c0b0' },
+          }}
+        >
+          موظف جديد
+        </Button>
+      )}
+      headerExtra={(
+        <Grid container spacing={1.5}>
+          <Grid size={{ xs: 6 }}>
+            <Box sx={{ 
+              p: 1.5, borderRadius: 3, bgcolor: 'rgba(255,255,255,0.08)', 
+              border: '1px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(12px)',
+              display: 'flex', alignItems: 'center', gap: 1.5 
+            }}>
+              <Box sx={{ width: 36, height: 36, borderRadius: 2, bgcolor: 'rgba(200,192,176,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <SupervisedUserCircle sx={{ color: '#c8c0b0', fontSize: 20 }} />
               </Box>
-            </Grid>
-            <Grid size={{ xs: 6 }}>
-              <Box sx={{ 
-                p: 2, borderRadius: 3, bgcolor: 'rgba(255,255,255,0.06)', 
-                border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(16px)',
-                display: 'flex', alignItems: 'center', gap: 1.5 
-              }}>
-                <Box sx={{ width: 36, height: 36, borderRadius: 2, bgcolor: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <VerifiedUser sx={{ color: '#fff', fontSize: 18 }} />
-                </Box>
-                <Box>
-                  <Typography sx={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>المدراء (Admin)</Typography>
-                  <Typography sx={{ fontSize: '1.1rem', color: 'white', fontWeight: 900, lineHeight: 1.2 }}>{users.filter(u => u.role === 'admin').length}</Typography>
-                </Box>
+              <Box>
+                <Typography sx={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.65)', fontWeight: 600 }}>إجمالي الحسابات</Typography>
+                <Typography sx={{ fontSize: '1.05rem', color: 'white', fontWeight: 900, lineHeight: 1.2 }}>{users.length}</Typography>
               </Box>
-            </Grid>
+            </Box>
           </Grid>
-        </Container>
-      </Box>
-
-      <Container maxWidth="sm" sx={{ mt: -3.5, position: 'relative', zIndex: 2, px: 2 }}>
-        
-        {/* Ultra Sleek Search Bar */}
-        <Box sx={{ mb: 3 }}>
+          <Grid size={{ xs: 6 }}>
+            <Box sx={{ 
+              p: 1.5, borderRadius: 3, bgcolor: 'rgba(255,255,255,0.08)', 
+              border: '1px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(12px)',
+              display: 'flex', alignItems: 'center', gap: 1.5 
+            }}>
+              <Box sx={{ width: 36, height: 36, borderRadius: 2, bgcolor: 'rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <VerifiedUser sx={{ color: '#fff', fontSize: 18 }} />
+              </Box>
+              <Box>
+                <Typography sx={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.65)', fontWeight: 600 }}>المدراء</Typography>
+                <Typography sx={{ fontSize: '1.05rem', color: 'white', fontWeight: 900, lineHeight: 1.2 }}>{users.filter((u) => u.role === 'admin').length}</Typography>
+              </Box>
+            </Box>
+          </Grid>
+        </Grid>
+      )}
+    >
+        <Box sx={{ mb: 2.5, fontFamily: 'Tajawal, sans-serif' }}>
           <TextField
             fullWidth
             placeholder="البحث الطريع بالاسم أو الإيميل..."
@@ -324,7 +285,6 @@ export const UsersPage = () => {
           />
         </Box>
 
-        {/* Users List */}
         <Stack spacing={1.5}>
           {filteredUsers.map((user) => (
             <Box
@@ -398,7 +358,7 @@ export const UsersPage = () => {
             </Fade>
           )}
         </Stack>
-      </Container>
+    </PageScaffold>
 
       {/* ── Add / Edit Dialog (Ultra Premium Modal) ── */}
       <Dialog
@@ -524,7 +484,7 @@ export const UsersPage = () => {
           </Stack>
         </Box>
       </Dialog>
-    </Box>
+    </>
   );
 };
 

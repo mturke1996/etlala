@@ -3,11 +3,13 @@ import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box, Button, Typography, TextField, InputAdornment, Chip,
-  IconButton, Stack, Container, useTheme, Paper, alpha, Grid as MuiGrid,
+  Stack, Paper, Grid as MuiGrid, useTheme,
 } from '@mui/material';
-import { Add, Search, Description, ArrowBack } from '@mui/icons-material';
+import { Add, Search, Description } from '@mui/icons-material';
 import { useDataStore } from '../store/useDataStore';
 import { formatCurrency, formatDate, getStatusLabel } from '../utils/formatters';
+import { PageScaffold } from '../components/layout/PageScaffold';
+import { EtlalaAccentSurface, EtlalaEmptyState, EtlalaSectionTitle } from '../components/etlala/EtlalaMobileUi';
 
 const Grid = MuiGrid as any;
 
@@ -48,69 +50,60 @@ export const InvoicesPage = () => {
   };
 
   return (
-    <Box sx={{ pb: 8, minHeight: '100dvh', bgcolor: theme.palette.mode === 'dark' ? '#121812' : '#f5f3ef' }}>
-      {/* Header */}
-      <Box
-        sx={{
-          background: 'linear-gradient(160deg, #364036 0%, #4a5d4a 100%)',
-          pt: 'calc(env(safe-area-inset-top) + 16px)', pb: 4, px: 2,
-          color: 'white',
-        }}
-      >
-        <Container maxWidth="sm">
-          <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2.5}>
-            <Stack direction="row" alignItems="center" spacing={1}>
-              <IconButton onClick={() => navigate('/')} sx={{ color: 'rgba(255,255,255,0.9)' }}>
-                <ArrowBack />
-              </IconButton>
-              <Typography fontWeight={800} sx={{ fontSize: '1.2rem' }}>الفواتير</Typography>
-            </Stack>
-            <Button
-              variant="contained"
-              startIcon={<Add />}
-              onClick={() => navigate('/invoices/new')}
-              sx={{
-                bgcolor: '#c8c0b0',
-                color: '#ffffffff',
-                fontWeight: 800,
-                borderRadius: 2.5,
-                px: 3,
-                py: 1,
-                fontSize: '0.9rem',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                '&:hover': { bgcolor: '#e6dec8', transform: 'translateY(-2px)' },
-                transition: 'all 0.2s',
-              }}
-            >
-              إنشاء فاتورة
-            </Button>
-          </Stack>
-
-          {/* Stats - 3 columns */}
-          <Grid container spacing={1} mb={2}>
+    <PageScaffold
+      title="الفواتير"
+      subtitle="متابعة الفواتير والحالات"
+      backTo="/"
+      rightAction={(
+        <Button
+          variant="contained"
+          color="primary"
+          size="small"
+          startIcon={<Add />}
+          onClick={() => navigate('/invoices/new')}
+          sx={{
+            fontWeight: 800,
+            color: '#ffffff',
+            borderRadius: 2.5,
+            px: 2,
+            fontSize: '0.8rem',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+            transition: 'background 0.2s ease, box-shadow 0.2s ease',
+            '&:hover': {
+              color: '#ffffff',
+              boxShadow: '0 6px 16px rgba(0,0,0,0.28)',
+            },
+            '& .MuiButton-startIcon': { color: '#ffffff' },
+          }}
+        >
+          إنشاء
+        </Button>
+      )}
+      headerExtra={(
+        <Stack spacing={1.5}>
+          <Grid container spacing={1}>
             {[
               { label: 'المفوتر', value: formatCurrency(stats.total) },
               { label: 'المحصل', value: formatCurrency(stats.paid) },
               { label: 'المستحق', value: formatCurrency(stats.pending) },
             ].map((stat, i) => (
               <Grid size={{ xs: 4 }} key={i}>
-                <Paper sx={{ p: 1.2, borderRadius: 2, bgcolor: 'rgba(255,255,255,0.08)', boxShadow: 'none' }}>
-                  <Typography sx={{ color: 'rgba(255,255,255,0.55)', fontSize: '0.6rem', mb: 0.3 }}>{stat.label}</Typography>
-                  <Typography fontWeight={800} color="white" sx={{ fontSize: '0.78rem' }}>{stat.value}</Typography>
+                <Paper sx={{ p: 1.2, borderRadius: 2, bgcolor: 'rgba(255,255,255,0.1)', boxShadow: 'none', border: '1px solid rgba(255,255,255,0.1)' }}>
+                  <Typography sx={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.6rem', mb: 0.3 }}>{stat.label}</Typography>
+                  <Typography fontWeight={800} color="white" sx={{ fontSize: '0.75rem' }}>{stat.value}</Typography>
                 </Paper>
               </Grid>
             ))}
           </Grid>
-
-          {/* Search */}
           <TextField
-            fullWidth size="small"
+            fullWidth
+            size="small"
             placeholder="بحث..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             sx={{
               '& .MuiOutlinedInput-root': {
-                bgcolor: 'rgba(255,255,255,0.92)', borderRadius: 2.5,
+                bgcolor: 'rgba(255,255,255,0.95)', borderRadius: 2.5,
                 height: 40, fontSize: '0.85rem',
                 '& fieldset': { border: 'none' },
               },
@@ -119,12 +112,12 @@ export const InvoicesPage = () => {
               startAdornment: <InputAdornment position="start"><Search sx={{ color: '#4a5d4a', fontSize: 20 }} /></InputAdornment>,
             }}
           />
-        </Container>
-      </Box>
-
-      {/* Filter Chips */}
-      <Container maxWidth="sm" sx={{ mt: 1.5, mb: 2 }}>
-        <Stack direction="row" spacing={0.8} sx={{ overflowX: 'auto', pb: 1, '::-webkit-scrollbar': { display: 'none' } }}>
+        </Stack>
+      )}
+    >
+        <Stack spacing={1.5}>
+        <EtlalaSectionTitle title="قائمة الفواتير" subtitle="رقم الفاتورة، العميل، والحالة" />
+        <Stack direction="row" spacing={0.8} sx={{ overflowX: 'auto', pb: 0.5, '::-webkit-scrollbar': { display: 'none' } }}>
           {['all', 'paid', 'partially_paid', 'draft', 'overdue'].map((status) => (
             <Chip
               key={status}
@@ -136,58 +129,53 @@ export const InvoicesPage = () => {
             />
           ))}
         </Stack>
-      </Container>
 
-      {/* Invoices List */}
-      <Container maxWidth="sm">
-        <Stack spacing={1}>
+        <Stack spacing={1.25}>
           {filteredInvoices.length === 0 ? (
-            <Box textAlign="center" py={6}>
-              <Description sx={{ fontSize: 48, color: 'text.secondary', opacity: 0.15, mb: 1 }} />
-              <Typography color="text.secondary">لا توجد فواتير</Typography>
-            </Box>
+            <EtlalaEmptyState
+              icon={<Description />}
+              title="لا توجد فواتير مطابقة"
+              hint="غيّر الحالة، أو أضف فاتورة جديدة"
+            />
           ) : (
             filteredInvoices.map((inv) => {
               const client = clients.find(c => c.id === inv.clientId);
               const isPaid = inv.status === 'paid';
               return (
-                <Box
+                <EtlalaAccentSurface
                   key={inv.id}
+                  accent={isPaid ? theme.palette.success.main : theme.palette.warning.main}
                   onClick={() => navigate(`/invoices/${inv.id}`)}
-                  sx={{
-                    bgcolor: 'background.paper',
-                    borderRight: `3px solid ${isPaid ? '#0d9668' : '#e6a817'}`,
-                    p: 2, cursor: 'pointer',
-                    '&:active': { bgcolor: alpha('#4a5d4a', 0.04) },
-                  }}
                 >
-                  <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
-                    <Box sx={{ flex: 1, minWidth: 0 }}>
-                      <Typography fontWeight={700} sx={{ fontSize: '0.9rem' }}>
-                        #{inv.invoiceNumber}
-                      </Typography>
-                      <Typography color="text.secondary" sx={{ fontSize: '0.75rem', mt: 0.3 }}>
-                        {client?.name || inv.tempClientName || 'عميل غير معروف'} • {formatDate(inv.issueDate)}
-                      </Typography>
-                    </Box>
-                    <Stack alignItems="flex-end" spacing={0.3}>
-                      <Typography fontWeight={800} sx={{ fontSize: '0.9rem', color: '#4a5d4a' }}>
-                        {formatCurrency(inv.total)}
-                      </Typography>
-                      <Chip
-                        label={getStatusLabel(inv.status)}
-                        color={getStatusColor(inv.status) as any}
-                        size="small"
-                        sx={{ fontWeight: 600, borderRadius: 1.5, height: 20, fontSize: '0.6rem' }}
-                      />
+                  <Box sx={{ p: 2 }}>
+                    <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography fontWeight={800} sx={{ fontSize: '0.9rem' }}>
+                          #{inv.invoiceNumber}
+                        </Typography>
+                        <Typography color="text.secondary" sx={{ fontSize: '0.75rem', mt: 0.3 }}>
+                          {client?.name || inv.tempClientName || 'عميل غير معروف'} • {formatDate(inv.issueDate)}
+                        </Typography>
+                      </Box>
+                      <Stack alignItems="flex-end" spacing={0.3}>
+                        <Typography fontWeight={800} sx={{ fontSize: '0.9rem', color: 'primary.main', fontFamily: 'Outfit, sans-serif' }}>
+                          {formatCurrency(inv.total)}
+                        </Typography>
+                        <Chip
+                          label={getStatusLabel(inv.status)}
+                          color={getStatusColor(inv.status) as any}
+                          size="small"
+                          sx={{ fontWeight: 600, borderRadius: 1.5, height: 20, fontSize: '0.6rem' }}
+                        />
+                      </Stack>
                     </Stack>
-                  </Stack>
-                </Box>
+                  </Box>
+                </EtlalaAccentSurface>
               );
             })
           )}
         </Stack>
-      </Container>
-    </Box>
+        </Stack>
+    </PageScaffold>
   );
 };

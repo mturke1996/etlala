@@ -27,6 +27,27 @@ import toast from 'react-hot-toast';
 import { collection, query, onSnapshot } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useGlobalFundStore } from '../store/useGlobalFundStore';
+import { PageScaffold } from '../components/layout/PageScaffold';
+import { EtlalaSectionTitle, EtlalaAccentSurface, EtlalaEmptyState } from '../components/etlala/EtlalaMobileUi';
+import { ClientProfileHero } from '../components/client/ClientProfileHero';
+import {
+  ProfileListSessionHeader,
+  profileHeroAddIconButtonSx,
+  profileHeroPdfButtonSx,
+  profileHeroPrimaryButtonSx,
+} from '../components/client/ProfileListSessionHeader';
+import {
+  ProfileSessionListShell,
+  ProfileSessionSearch,
+  ProfileSessionSearchBar,
+  ProfileSessionScroll,
+  ProfileSessionTotalBar,
+  ProfileSessionRowMeta,
+  ProfileSessionRecordListItem,
+  ProfileSessionRecordCardContent,
+} from '../components/client/ProfileSessionUi';
+import { PROFILE_MODULE } from '../components/client/profileSessionTokens';
+import { motion, useReducedMotion } from 'framer-motion';
 
 const Grid = MuiGrid as any;
 import type { Payment as PaymentType, Expense, StandaloneDebt, Worker, UserBalance } from '../types';
@@ -93,6 +114,7 @@ export const ClientProfilePage = () => {
   const [systemUsers, setSystemUsers] = useState<any[]>([]);
 
   const client = clients.find((c) => c.id === clientId);
+  const reduceMotion = useReducedMotion();
 
   // Forms
   const { control: clientControl, handleSubmit: handleClientSubmit, reset: resetClient } = useForm<z.infer<typeof clientSchema>>({
@@ -292,6 +314,22 @@ export const ClientProfilePage = () => {
     return clientPayments.filter((p) => formatCurrency(p.amount).includes(q) || p.paymentMethod.includes(q));
   }, [clientPayments, paySearch]);
 
+  const clientInvoicesCount = useMemo(
+    () => (clientId ? invoices.filter((i) => i.clientId === clientId).length : 0),
+    [invoices, clientId],
+  );
+
+  const clientActivitySummary = useMemo(() => {
+    if (!clientId) return '';
+    const parts: string[] = [];
+    if (clientInvoicesCount) parts.push(`${clientInvoicesCount} فاتورة`);
+    if (clientPayments.length) parts.push(`${clientPayments.length} دفعة`);
+    if (clientExpenses.length) parts.push(`${clientExpenses.length} مصروف`);
+    if (clientWorkers.length) parts.push(`${clientWorkers.length} عامل`);
+    if (clientDebts.length) parts.push(`${clientDebts.length} بند دين`);
+    return parts.length ? `مرجع النشاط: ${parts.join(' · ')}` : 'لا توجد حركات مسجّلة بعد';
+  }, [clientId, clientInvoicesCount, clientPayments.length, clientExpenses.length, clientWorkers.length, clientDebts.length]);
+
   const summary = useMemo(() => {
     const totalExpenses = clientExpenses.reduce((s, e) => s + e.amount, 0);
     const totalDebts = clientDebts.reduce((s, d) => s + d.remainingAmount, 0);
@@ -406,8 +444,8 @@ export const ClientProfilePage = () => {
     { title: 'العمال', icon: PersonAdd, color: '#4a5d4a', bgColor: 'rgba(74,93,74,0.08)', borderColor: 'rgba(74,93,74,0.12)', module: 'workers', onClick: () => setWorkersListOpen(true) },
     { title: 'إضافة رصيد (العهد)', icon: AccountBalanceWallet, color: '#f59e0b', bgColor: 'rgba(245,158,11,0.08)', borderColor: 'rgba(245,158,11,0.12)', module: 'balances', onClick: () => setBalancesListOpen(true) },
     { title: 'حساب الأرباح', icon: TrendingUp, color: '#5a8fc4', bgColor: 'rgba(90,143,196,0.08)', borderColor: 'rgba(90,143,196,0.12)', module: 'stats', onClick: () => setProfitDialogOpen(true) },
-    { title: 'تحميل التقرير الشامل', icon: Business, color: '#8b5cf6', bgColor: 'rgba(139,92,246,0.08)', borderColor: 'rgba(139,92,246,0.12)', module: 'stats', onClick: () => handleGeneratePDF() },
-    { title: 'مشاركة التقرير الشامل', icon: Share, color: '#8b5cf6', bgColor: 'rgba(139,92,246,0.06)', borderColor: 'rgba(139,92,246,0.1)', module: 'stats', onClick: () => handleShareFullReport() },
+    { title: 'تحميل التقرير الشامل', icon: Business, color: '#4a5d4a', bgColor: 'rgba(74,93,74,0.1)', borderColor: 'rgba(74,93,74,0.16)', module: 'stats', onClick: () => handleGeneratePDF() },
+    { title: 'مشاركة التقرير الشامل', icon: Share, color: '#3d4f3d', bgColor: 'rgba(61,79,61,0.08)', borderColor: 'rgba(61,79,61,0.12)', module: 'stats', onClick: () => handleShareFullReport() },
   ].filter(item => canAccess(item.module as any));
 
   // Handlers
@@ -513,23 +551,30 @@ export const ClientProfilePage = () => {
 
   return (
     <Box sx={{ minHeight: '100dvh', background: pageBg, pb: 8 }}>
-      {/* Header */}
-      <Box sx={{ background: headerGradient, pt: 'calc(max(env(safe-area-inset-top), 50px) + 16px)', pb: 4, px: 2, position: 'relative', overflow: 'hidden', '&::before': { content: '""', position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'radial-gradient(ellipse at 70% 20%, rgba(200,192,176,0.08) 0%, transparent 50%)', pointerEvents: 'none' } }}>
-        <Container maxWidth="sm">
-          <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 3 }}>
-            <IconButton onClick={() => navigate('/clients')} sx={{ color: 'rgba(255,255,255,0.9)' }}><ArrowBack /></IconButton>
-            <Box sx={{ flexGrow: 1, minWidth: 0, mr: 1 }}>
-              <Typography variant="h5" fontWeight={800} sx={{ color: 'white', fontSize: { xs: '1.25rem', sm: '1.5rem' }, mb: 0.5 }}>{client.name}</Typography>
-              <Stack direction="row" spacing={1} alignItems="center" sx={{ bgcolor: 'rgba(200,192,176,0.15)', px: 1.5, py: 0.75, borderRadius: 2.5, border: '1px solid rgba(200,192,176,0.2)', width: 'fit-content' }}>
-                <Phone sx={{ fontSize: 16, color: 'white', opacity: 0.95 }} />
-                <Typography variant="body2" sx={{ color: 'white', fontWeight: 600 }}>{client.phone}</Typography>
-              </Stack>
-            </Box>
-            <IconButton onClick={() => setEditClientOpen(true)} sx={{ color: 'white', bgcolor: 'rgba(200,192,176,0.12)', border: '1px solid rgba(200,192,176,0.2)', width: 44, height: 44, '&:hover': { bgcolor: 'rgba(200,192,176,0.2)' } }}>
+      <PageScaffold
+        headerVariant="profile"
+        title={client.name}
+        backTo="/clients"
+        rightAction={(
+            <IconButton
+              onClick={() => setEditClientOpen(true)}
+              aria-label="تعديل بيانات العميل"
+              sx={{
+                color: 'white',
+                bgcolor: 'rgba(255,255,255,0.08)',
+                border: '1px solid rgba(255,255,255,0.16)',
+                width: 46,
+                height: 46,
+                backdropFilter: 'blur(8px)',
+                '&:hover': { bgcolor: 'rgba(255,255,255,0.15)', borderColor: 'rgba(200,192,176,0.4)' },
+              }}
+            >
               <Edit sx={{ fontSize: 20 }} />
             </IconButton>
-          </Stack>
-
+        )}
+        headerExtra={(
+        <>
+          <ClientProfileHero client={client} activitySummary={clientActivitySummary} />
           {/* Financial Alerts */}
           {canAccess('stats') && (summary.totalExpenses > summary.totalPaid || summary.remaining < 0) && (
             <Stack spacing={1.5} sx={{ mt: 3, mb: 1 }}>
@@ -592,338 +637,516 @@ export const ClientProfilePage = () => {
             </Alert>
           ))}
 
-          {/* Financial Summary - Professional Design */}
+          {/* Financial Summary — لوحة واحدة أنيقة */}
           {canAccess('stats') && (
-          <Box sx={{ mt: 2 }}>
-            {/* Main Balance Card */}
-            <Card sx={{ borderRadius: 3, background: 'linear-gradient(135deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.04) 100%)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.15)', mb: 1.5, overflow: 'hidden', position: 'relative' }}>
-              <Box sx={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'radial-gradient(circle at 100% 0%, rgba(212,197,163,0.12) 0%, transparent 50%)', pointerEvents: 'none' }} />
-              <CardContent sx={{ p: '18px 20px !important', position: 'relative' }}>
-                <Stack direction="row" justifyContent="space-between" alignItems="center">
-                  <Box>
-                    <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.65)', fontWeight: 600, letterSpacing: 0.5, display: 'block', mb: 0.5 }}>إجمالي المدفوعات</Typography>
-                    <Typography variant="h4" sx={{ color: '#ffffff', fontWeight: 900, textShadow: '0 2px 8px rgba(0,0,0,0.15)' }}>{formatCurrency(summary.totalPaid)}</Typography>
+          <Box sx={{ mt: 2.5 }}>
+            <Box
+              sx={{
+                borderRadius: 3,
+                overflow: 'hidden',
+                position: 'relative',
+                border: '1px solid rgba(255,255,255,0.16)',
+                background: 'linear-gradient(160deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.04) 45%, rgba(0,0,0,0.08) 100%)',
+                backdropFilter: 'blur(24px)',
+                boxShadow: '0 12px 40px -8px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.1)',
+                '&::before': {
+                  content: '""',
+                  position: 'absolute',
+                  top: 0,
+                  right: 0,
+                  width: '55%',
+                  height: '100%',
+                  background: 'radial-gradient(ellipse 80% 100% at 100% 0%, rgba(212, 197, 163, 0.1) 0%, transparent 55%)',
+                  pointerEvents: 'none',
+                },
+              }}
+            >
+              <Box sx={{ p: 2.25, position: 'relative', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={2}>
+                  <Box sx={{ minWidth: 0 }}>
+                    <Typography variant="overline" sx={{ color: 'rgba(255,255,255,0.55)', fontWeight: 700, letterSpacing: 1.2, fontSize: '0.62rem' }}>
+                      إجمالي المدفوعات
+                    </Typography>
+                    <Typography
+                      variant="h4"
+                      sx={{
+                        color: '#fff',
+                        fontWeight: 900,
+                        lineHeight: 1.1,
+                        mt: 0.5,
+                        fontSize: { xs: '1.5rem', sm: '1.75rem' },
+                        fontFamily: 'Outfit, sans-serif',
+                        textShadow: '0 2px 20px rgba(0,0,0,0.2)',
+                      }}
+                    >
+                      {formatCurrency(summary.totalPaid)}
+                    </Typography>
                   </Box>
-                  <Box sx={{ width: 52, height: 52, borderRadius: '50%', background: 'linear-gradient(135deg, #d4c5a3 0%, #a3967a 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 6px 16px rgba(212,197,163,0.3)', color: '#2a3a2a' }}>
-                    <Payment sx={{ fontSize: 28 }} />
+                  <Box
+                    sx={{
+                      width: 56,
+                      height: 56,
+                      borderRadius: 2.5,
+                      background: 'linear-gradient(140deg, #e4d5b8 0%, #9a8b72 100%)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#1a1f1a',
+                      boxShadow: '0 8px 24px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.35)',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <Payment sx={{ fontSize: 30 }} />
                   </Box>
                 </Stack>
-              </CardContent>
-            </Card>
-
-            {/* Detail Cards Grid */}
-            <Grid container spacing={1}>
-              {[
-                { label: 'الربح', value: formatCurrency(summary.profit), sub: summary.profitPercentage > 0 ? `${summary.profitPercentage}%` : '-', gradient: 'linear-gradient(135deg, rgba(90,143,196,0.3) 0%, rgba(90,143,196,0.1) 100%)', border: 'rgba(90,143,196,0.4)' },
-                { label: 'المصروفات', value: formatCurrency(summary.totalExpenses), sub: `${clientExpenses.length} سجل`, gradient: 'linear-gradient(135deg, rgba(214,69,69,0.3) 0%, rgba(214,69,69,0.1) 100%)', border: 'rgba(214,69,69,0.4)' },
-                { label: 'الديون', value: formatCurrency(summary.totalDebts), sub: `${clientDebts.length} دين`, gradient: 'linear-gradient(135deg, rgba(201,165,78,0.3) 0%, rgba(201,165,78,0.1) 100%)', border: 'rgba(201,165,78,0.4)' },
-                { label: 'المتبقي', value: formatCurrency(summary.remaining), sub: summary.remaining >= 0 ? 'رصيد' : 'عجز', gradient: summary.remaining >= 0 ? 'linear-gradient(135deg, rgba(13,150,104,0.3) 0%, rgba(13,150,104,0.1) 100%)' : 'linear-gradient(135deg, rgba(214,69,69,0.35) 0%, rgba(214,69,69,0.15) 100%)', border: summary.remaining >= 0 ? 'rgba(13,150,104,0.4)' : 'rgba(214,69,69,0.5)' },
-              ].map((c, i) => (
-                <Grid size={{ xs: 6 }} key={i}>
-                  <Card sx={{ borderRadius: 2.5, background: c.gradient, backdropFilter: 'blur(20px)', color: 'white', border: `1px solid ${c.border}`, height: '100%' }}>
-                    <CardContent sx={{ p: '12px 14px !important' }}>
-                      <Typography variant="caption" sx={{ opacity: 0.85, display: 'block', fontSize: '0.65rem', fontWeight: 600, mb: 0.5 }}>{c.label}</Typography>
-                      <Typography variant="body2" fontWeight={800} sx={{ fontSize: { xs: '0.85rem', sm: '0.92rem' }, mb: 0.3 }}>{c.value}</Typography>
-                      <Typography variant="caption" sx={{ opacity: 0.6, fontSize: '0.6rem' }}>{c.sub}</Typography>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              ))}
-            </Grid>
+              </Box>
+              <Grid container sx={{ position: 'relative' }}>
+                {[
+                  { label: 'الربح', value: formatCurrency(summary.profit), sub: summary.profitPercentage > 0 ? `${summary.profitPercentage}%` : '—' },
+                  { label: 'المصروفات', value: formatCurrency(summary.totalExpenses), sub: `${clientExpenses.length} سجل` },
+                  { label: 'الديون', value: formatCurrency(summary.totalDebts), sub: `${clientDebts.length} بند` },
+                  { label: 'المتبقي', value: formatCurrency(summary.remaining), sub: summary.remaining >= 0 ? 'رصيد' : 'عجز' },
+                ].map((c, i) => (
+                  <Grid
+                    size={{ xs: 6 }}
+                    key={c.label}
+                    sx={{
+                      borderInlineStart: i % 2 === 1 ? '1px solid rgba(255,255,255,0.1)' : 'none',
+                      borderTop: i >= 2 ? '1px solid rgba(255,255,255,0.1)' : 'none',
+                    }}
+                  >
+                    <Box sx={{ p: 1.75, height: '100%' }}>
+                      <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', fontWeight: 700, fontSize: '0.6rem', letterSpacing: 0.6, display: 'block', mb: 0.4 }}>
+                        {c.label}
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        fontWeight={800}
+                        sx={{
+                          color: c.label === 'المتبقي' && summary.remaining < 0 ? '#fda4a4' : '#fff',
+                          fontSize: { xs: '0.8rem', sm: '0.88rem' },
+                          fontFamily: 'Outfit, sans-serif',
+                          lineHeight: 1.25,
+                        }}
+                      >
+                        {c.value}
+                      </Typography>
+                      <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.58rem', mt: 0.25, display: 'block' }}>
+                        {c.sub}
+                      </Typography>
+                    </Box>
+                  </Grid>
+                ))}
+              </Grid>
+            </Box>
           </Box>
           )}
-        </Container>
-      </Box>
-
-      {/* Menu Items */}
-      <Container maxWidth="sm" sx={{ mt: 1, pt: 1 }}>
-        <Typography variant="h6" fontWeight={700} sx={{ mb: 3, px: 0.5, mt: 4 }}>القوائم السريعة</Typography>
-        <Stack spacing={2} sx={{ mb: 5 }}>
+        </>
+        )}
+        contentOffset={1}
+      >
+        <EtlalaSectionTitle title="الإجراءات" subtitle="فواتير، مصروفات، مدفوعات، عمال، عهود، وتقارير" />
+        <Stack spacing={1.25} sx={{ mb: 5 }}>
           {menuItems.map((item, i) => (
-            <Card key={i} onClick={item.onClick} sx={{ borderRadius: 3, boxShadow: '0 2px 8px rgba(0,0,0,0.06)', cursor: 'pointer', transition: 'all 0.2s', border: theme.palette.mode === 'dark' ? '1px solid rgba(255,255,255,0.1)' : 'none', '&:hover': { transform: 'translateY(-2px)' }, '&:active': { transform: 'scale(0.98)' } }}>
-              <CardContent sx={{ p: 3 }}>
-                <Stack direction="row" justifyContent="space-between" alignItems="center">
-                  <Stack direction="row" alignItems="center" spacing={0}>
-                    <Box sx={{ width: 52, height: 52, borderRadius: 2.5, bgcolor: item.bgColor, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginLeft: '20px' }}>
-                      <item.icon sx={{ fontSize: 26, color: item.color }} />
-                    </Box>
-                    <Box><Typography variant="body1" fontWeight={700}>{item.title}</Typography><Typography variant="caption" color="text.secondary">اضغط للدخول</Typography></Box>
+            <Box
+              key={i}
+              component={motion.div}
+              initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: reduceMotion ? 0 : 0.03 * i, duration: 0.35, ease: [0.2, 0.8, 0.2, 1] }}
+              whileHover={reduceMotion ? undefined : { y: -2 }}
+            >
+              <EtlalaAccentSurface accent={item.color} onClick={item.onClick}>
+                <CardContent sx={{ p: 2.5, '&:last-child': { pb: 2.5 } }}>
+                  <Stack direction="row" justifyContent="space-between" alignItems="center">
+                    <Stack direction="row" alignItems="center" spacing={0}>
+                      <Box
+                        sx={{
+                          width: 48,
+                          height: 48,
+                          borderRadius: 2.25,
+                          bgcolor: item.bgColor,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0,
+                          marginLeft: '16px',
+                          border: '1px solid',
+                          borderColor: (t) => (t.palette.mode === 'dark' ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.04)'),
+                          boxShadow: (t) => (t.palette.mode === 'light' ? '0 1px 4px rgba(0,0,0,0.04)' : 'none'),
+                        }}
+                      >
+                        <item.icon sx={{ fontSize: 24, color: item.color }} />
+                      </Box>
+                      <Box>
+                        <Typography variant="body1" fontWeight={800} sx={{ fontSize: '0.95rem', letterSpacing: 0.12, lineHeight: 1.35 }}>
+                          {item.title}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500, fontSize: '0.7rem', opacity: 0.9 }}>
+                          فتح
+                        </Typography>
+                      </Box>
+                    </Stack>
+                    <ChevronLeft sx={{ color: 'text.secondary', fontSize: 20, opacity: 0.4 }} />
                   </Stack>
-                  <ChevronLeft sx={{ color: 'text.secondary', fontSize: 24 }} />
-                </Stack>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </EtlalaAccentSurface>
+            </Box>
           ))}
         </Stack>
-      </Container>
+      </PageScaffold>
 
       {/* ===== EXPENSES LIST DIALOG ===== */}
-      <Dialog open={expensesListOpen} onClose={() => setExpensesListOpen(false)} fullScreen sx={{ '& .MuiDialog-paper': { bgcolor: theme.palette.mode === 'dark' ? '#1a1f1a' : '#f5f3ef' } }}>
-        <Box sx={{ background: headerGradient, color: 'white', p: 2, pt: 'calc(max(env(safe-area-inset-top), 50px) + 16px)' }}>
-          <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.5 }}>
-            <Stack direction="row" alignItems="center" spacing={1.5}>
-              <IconButton onClick={() => setExpensesListOpen(false)} sx={{ color: 'white' }}><ArrowBack /></IconButton>
-              <Typography variant="h5" fontWeight={800}>المصروفات ({clientExpenses.length})</Typography>
-            </Stack>
-            <IconButton onClick={() => { setEditingExpense(null); resetExp(); setExpenseDialogOpen(true); }} sx={{ color: 'white', bgcolor: 'rgba(200,192,176,0.15)', border: '1px solid rgba(200,192,176,0.3)', '&:hover': { bgcolor: 'rgba(200,192,176,0.25)' } }}><Add sx={{ fontSize: 22 }} /></IconButton>
-          </Stack>
-          {/* PDF Buttons - like invoice page */}
-          <Stack direction="row" spacing={1}>
-            <Button size="small" startIcon={pdfLoading ? <CircularProgress size={14} color="inherit" /> : <PictureAsPdf />} onClick={handleDownloadExpenses} disabled={pdfLoading}
-              sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white', borderRadius: 2, fontSize: '0.72rem', fontWeight: 700, flex: 1, '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' } }}>
-              تحميل PDF
-            </Button>
-            <Button size="small" startIcon={<Share />} onClick={handleShareExpenses} disabled={pdfLoading}
-              sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white', borderRadius: 2, fontSize: '0.72rem', fontWeight: 700, flex: 1, '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' } }}>
-              مشاركة
-            </Button>
-          </Stack>
-        </Box>
-        <Box sx={{ px: 0, pt: 0 }}>
-
-          {/* ─── رصيد العهدة (بسيط) ─── */}
+      <Dialog open={expensesListOpen} onClose={() => setExpensesListOpen(false)} fullScreen sx={{ '& .MuiDialog-paper': { bgcolor: 'transparent', boxShadow: 'none' } }}>
+        <ProfileSessionListShell module="expenses">
+          <ProfileListSessionHeader
+            module="expenses"
+            title="المصروفات"
+            subtitle="سجلات مرتبطة بالمشروع"
+            onBack={() => setExpensesListOpen(false)}
+            headerGradient={headerGradient}
+            primaryAction={(
+              <IconButton
+                onClick={() => { setEditingExpense(null); resetExp(); setExpenseDialogOpen(true); }}
+                aria-label="إضافة مصروف"
+                sx={profileHeroAddIconButtonSx}
+              >
+                <Add sx={{ fontSize: 22 }} />
+              </IconButton>
+            )}
+            pdfRow={(
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} useFlexGap sx={{ width: 1 }}>
+                <Button
+                  size="medium"
+                  startIcon={pdfLoading ? <CircularProgress size={14} color="inherit" /> : <PictureAsPdf />}
+                  onClick={handleDownloadExpenses}
+                  disabled={pdfLoading}
+                  sx={profileHeroPdfButtonSx}
+                >
+                  تحميل PDF
+                </Button>
+                <Button
+                  size="medium"
+                  startIcon={<Share />}
+                  onClick={handleShareExpenses}
+                  disabled={pdfLoading}
+                  sx={profileHeroPdfButtonSx}
+                >
+                  مشاركة
+                </Button>
+              </Stack>
+            )}
+          />
           {globalFundStats && (
             <Box sx={{
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              px: 2.5, py: 1.4,
-              bgcolor: globalFundStats.remaining > 0
-                ? 'rgba(13,150,104,0.12)'
-                : 'rgba(214,69,69,0.12)',
-              borderBottom: '1px solid',
-              borderColor: globalFundStats.remaining > 0 ? 'rgba(13,150,104,0.2)' : 'rgba(214,69,69,0.2)',
+              px: 2.5, py: 1.35,
+              bgcolor: globalFundStats.remaining > 0 ? 'rgba(13,150,104,0.1)' : 'rgba(214,69,69,0.1)',
+              borderBottom: '1px solid', borderColor: 'divider',
             }}>
               <Stack direction="row" alignItems="center" spacing={1}>
                 <AccountBalanceWallet sx={{ fontSize: 20, color: globalFundStats.remaining > 0 ? '#34d399' : '#f87171' }} />
-                <Typography sx={{ fontSize: '0.8rem', fontWeight: 700, color: 'text.secondary' }}>رصيد العهدة المتاح</Typography>
+                <Typography sx={{ fontSize: '0.78rem', fontWeight: 700, color: 'text.secondary' }}>رصيد العهدة العام</Typography>
               </Stack>
-              <Typography sx={{ fontSize: '1.15rem', fontWeight: 900, fontFamily: 'Outfit, sans-serif', color: globalFundStats.remaining > 0 ? '#34d399' : '#f87171' }}>
+              <Typography sx={{ fontSize: '1.05rem', fontWeight: 900, fontFamily: 'Outfit, sans-serif', color: globalFundStats.remaining > 0 ? '#34d399' : '#f87171' }}>
                 {formatCurrency(globalFundStats.remaining)}
               </Typography>
             </Box>
           )}
-
           {currentUserBalanceInfo && (
             <Box>
-              {/* Main Balance Banner - MD3 */}
               <Box sx={{
                 background: currentUserBalanceInfo.remaining > 0
                   ? 'linear-gradient(135deg, #0d9668 0%, #059652 100%)'
                   : 'linear-gradient(135deg, #d64545 0%, #b83b3b 100%)',
                 color: 'white',
-                px: 3, py: 2.5,
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+                px: 2.5, py: 2,
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               }}>
                 <Box>
-                  <Typography variant="caption" sx={{ opacity: 0.85, fontWeight: 700, display: 'block', mb: 0.5, letterSpacing: 1 }}>
-                    رصيد العهدة المتاح — {user?.displayName || currentUserBalanceInfo.name}
+                  <Typography variant="caption" sx={{ opacity: 0.9, fontWeight: 700, display: 'block', mb: 0.5, letterSpacing: 0.5 }}>
+                    عهدتي — {user?.displayName || currentUserBalanceInfo.name}
                   </Typography>
-                  <Typography sx={{ fontSize: '2rem', fontWeight: 900, lineHeight: 1 }}>
+                  <Typography sx={{ fontSize: '1.75rem', fontWeight: 900, lineHeight: 1, fontFamily: "'Outfit', sans-serif" }}>
                     {formatCurrency(currentUserBalanceInfo.remaining)}
                   </Typography>
                 </Box>
-                <AccountBalanceWallet sx={{ fontSize: 44, opacity: 0.35 }} />
+                <AccountBalanceWallet sx={{ fontSize: 40, opacity: 0.35 }} />
               </Box>
-              {/* Stats Row */}
               <Box sx={{ display: 'flex', borderBottom: '1px solid', borderColor: 'divider' }}>
                 {[
                   { label: 'إجمالي العهدة', value: currentUserBalanceInfo.given, color: '#4a5d4a' },
                   { label: 'المصروف منها', value: currentUserBalanceInfo.spent, color: '#d64545' },
                 ].map((s, i) => (
-                  <Box key={i} sx={{ flex: 1, p: 1.5, textAlign: 'center', borderRight: i === 0 ? '1px solid' : 'none', borderColor: 'divider' }}>
-                    <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, display: 'block', mb: 0.3 }}>{s.label}</Typography>
-                    <Typography variant="body2" fontWeight={900} sx={{ color: s.color }}>{formatCurrency(s.value)}</Typography>
+                  <Box key={i} sx={{ flex: 1, p: 1.35, textAlign: 'center', borderRight: i === 0 ? '1px solid' : 'none', borderColor: 'divider' }}>
+                    <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, display: 'block', mb: 0.3, fontSize: '0.65rem' }}>{s.label}</Typography>
+                    <Typography variant="body2" fontWeight={900} sx={{ color: s.color, fontFamily: "'Outfit', sans-serif" }}>{formatCurrency(s.value)}</Typography>
                   </Box>
                 ))}
               </Box>
-              {/* Alert if depleted */}
               {currentUserBalanceInfo.remaining <= 0 && currentUserBalanceInfo.given > 0 && (
-                <Box sx={{ bgcolor: '#7f1d1d', color: '#fff', px: 2, py: 1.2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Box sx={{ bgcolor: '#7f1d1d', color: '#fff', px: 2, py: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
                   <WarningAmber sx={{ fontSize: 18 }} />
-                  <Typography variant="body2" fontWeight={800}>تحذير: رصيد العهدة نفد بالكامل!</Typography>
+                  <Typography variant="body2" fontWeight={800} fontSize="0.8rem">رصيد العهدة نفد</Typography>
                 </Box>
               )}
-              <Box sx={{ height: 8 }} />
             </Box>
           )}
-          <TextField fullWidth placeholder="ابحث..." size="small" value={expSearch} onChange={(e) => setExpSearch(e.target.value)} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2.5, bgcolor: 'background.paper', '& fieldset': { border: 'none' } } }} InputProps={{ startAdornment: <InputAdornment position="start"><Search /></InputAdornment> }} />
-        </Box>
-        <Box sx={{ flex: 1, overflowY: 'auto', pb: 2 }}>
-          <Container maxWidth="sm" sx={{ mt: 2 }}>
-            {filteredExp.length === 0 ? <Card sx={{ borderRadius: 2.5, textAlign: 'center', py: 6 }}><TrendingDown sx={{ fontSize: 60, color: 'text.secondary', opacity: 0.3, mb: 2 }} /><Typography variant="h6" color="text.secondary">لا توجد مصروفات</Typography></Card> : (
-              <Stack spacing={2}>{filteredExp.map((exp) => (
-                <Card key={exp.id} sx={{ borderRadius: 2, borderRight: '3px solid #d64545', bgcolor: 'background.paper' }}>
-                  <CardContent sx={{ p: 2.5 }}>
-                    <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
-                      <Box sx={{ flex: 1 }}>
-                        <Typography fontWeight={700}>{exp.description}</Typography>
-                        <Typography variant="caption" color="text.secondary">{getCategoryLabel(exp.category)} • {formatDate(exp.date)} {exp.invoiceNumber && `• فاتورة: ${exp.invoiceNumber}`}</Typography>
-                        {exp.createdBy && <Typography variant="caption" display="block" sx={{ color: 'primary.main', fontWeight: 600 }}>بواسطة: {exp.createdBy}</Typography>}
-                        {exp.notes && <Typography variant="caption" display="block" color="text.secondary" sx={{ mt: 0.5 }}>{exp.notes}</Typography>}
-                      </Box>
-                      <Stack alignItems="flex-end" spacing={0.5}>
-                        <Typography fontWeight={800} color="error.main">{formatCurrency(exp.amount)}</Typography>
-                        <Stack direction="row" spacing={0.5}>
-                          <IconButton size="small" onClick={() => { setEditingExpense(exp); setExpVal('description', exp.description); setExpVal('amount', exp.amount); setExpVal('category', exp.category); setExpVal('date', exp.date); setExpVal('invoiceNumber', exp.invoiceNumber || ''); setExpVal('notes', exp.notes || ''); setExpVal('userId', exp.userId || ''); setExpenseDialogOpen(true); }}><Edit sx={{ fontSize: 16 }} /></IconButton>
-                          <IconButton size="small" onClick={() => { if (window.confirm('حذف؟')) deleteExpense(exp.id).then(() => msg('تم الحذف')); }}><Delete sx={{ fontSize: 16, color: 'error.main' }} /></IconButton>
+          <ProfileSessionSearchBar>
+            <ProfileSessionSearch value={expSearch} onChange={setExpSearch} placeholder="ابحث في الوصف، التصنيف، رقم الفاتورة…" />
+          </ProfileSessionSearchBar>
+          <ProfileSessionScroll>
+            {filteredExp.length === 0 ? (
+              <EtlalaEmptyState
+                icon={<TrendingDown />}
+                title={expSearch ? 'لا نتائج للبحث' : 'لا توجد مصروفات'}
+                hint={expSearch ? 'امسح البحث أو غيّر الكلمات' : 'سجّل أول مصروف من الزر +'}
+              />
+            ) : (
+              <Stack spacing={1.1}>
+                {filteredExp.map((exp, i) => (
+                  <ProfileSessionRecordListItem key={exp.id} accent={PROFILE_MODULE.expenses.listAccent} index={i}>
+                    <ProfileSessionRecordCardContent>
+                      <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={1.5}>
+                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                          <Typography fontWeight={800} sx={{ fontSize: '0.92rem', lineHeight: 1.35 }}>{exp.description}</Typography>
+                          <ProfileSessionRowMeta>
+                            {getCategoryLabel(exp.category)} · {formatDate(exp.date)}
+                            {exp.invoiceNumber ? ` · فات.${exp.invoiceNumber}` : ''}
+                          </ProfileSessionRowMeta>
+                          {exp.createdBy ? (
+                            <Typography variant="caption" display="block" sx={{ color: 'primary.main', fontWeight: 600, mt: 0.35, fontSize: '0.68rem' }}>بواسطة {exp.createdBy}</Typography>
+                          ) : null}
+                          {exp.notes ? (
+                            <Typography variant="caption" display="block" color="text.secondary" sx={{ mt: 0.5, lineHeight: 1.4 }}>{exp.notes}</Typography>
+                          ) : null}
+                        </Box>
+                        <Stack alignItems="flex-end" spacing={0.5} sx={{ flexShrink: 0 }}>
+                          <Typography fontWeight={900} color="error.main" sx={{ fontFamily: "'Outfit', sans-serif", fontSize: '0.95rem' }}>{formatCurrency(exp.amount)}</Typography>
+                          <Stack direction="row" spacing={0.25}>
+                            <IconButton size="small" onClick={() => { setEditingExpense(exp); setExpVal('description', exp.description); setExpVal('amount', exp.amount); setExpVal('category', exp.category); setExpVal('date', exp.date); setExpVal('invoiceNumber', exp.invoiceNumber || ''); setExpVal('notes', exp.notes || ''); setExpVal('userId', exp.userId || ''); setExpenseDialogOpen(true); }}><Edit sx={{ fontSize: 16 }} /></IconButton>
+                            <IconButton size="small" onClick={() => { if (window.confirm('حذف؟')) deleteExpense(exp.id).then(() => msg('تم الحذف')); }}><Delete sx={{ fontSize: 16, color: 'error.main' }} /></IconButton>
+                          </Stack>
                         </Stack>
                       </Stack>
-                    </Stack>
-                  </CardContent>
-                </Card>
-              ))}</Stack>
+                    </ProfileSessionRecordCardContent>
+                  </ProfileSessionRecordListItem>
+                ))}
+              </Stack>
             )}
-            {/* Total */}
-            <Card sx={{ borderRadius: 2, mt: 2, bgcolor: '#364036', color: 'white' }}>
-              <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-                <Box onClick={() => setExpensesPerUserOpen(!expensesPerUserOpen)} sx={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Stack direction="row" alignItems="center" spacing={1}>
-                    <Typography fontWeight={800}>إجمالي المصروفات</Typography>
-                    <IconButton size="small" sx={{ color: 'white', p: 0, '&:hover': { bgcolor: 'transparent' } }}>
-                      {expensesPerUserOpen ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
-                    </IconButton>
-                  </Stack>
-                  <Typography fontWeight={900} variant="h6">{formatCurrency(summary.totalExpenses)}</Typography>
-                </Box>
-                <Collapse in={expensesPerUserOpen}>
-                  <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-                    <Typography variant="caption" sx={{ opacity: 0.7, mb: 1.5, display: 'block' }}>إجمالي المصروفات حسب كل مستخدم:</Typography>
-                    <Stack spacing={1.5}>
-                      {expensesByUser.map(([userName, total]) => {
-                        const pct = summary.totalExpenses > 0 ? (total / summary.totalExpenses) * 100 : 0;
-                        return (
-                          <Box key={userName} sx={{ bgcolor: 'rgba(255,255,255,0.05)', p: 1.5, borderRadius: 2 }}>
-                            <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 0.8 }}>
-                              <Stack direction="row" alignItems="center" spacing={1.5}>
-                                <Avatar sx={{ width: 32, height: 32, bgcolor: 'rgba(214,69,69,0.35)', fontSize: '0.9rem', fontWeight: 'bold', color: '#fff' }}>
-                                  {userName.charAt(0)}
-                                </Avatar>
-                                <Box>
-                                  <Typography fontWeight={700} fontSize="0.9rem" sx={{ lineHeight: 1.2 }}>{userName}</Typography>
-                                  <Typography variant="caption" sx={{ opacity: 0.6, fontSize: '0.68rem' }}>{pct.toFixed(1)}% من الإجمالي</Typography>
-                                </Box>
-                              </Stack>
-                              <Typography fontWeight={900} fontSize="0.98rem" sx={{ color: '#ff8a8a' }}>{formatCurrency(total)}</Typography>
+            <ProfileSessionTotalBar
+              module="expenses"
+              tone="danger"
+              onClick={() => setExpensesPerUserOpen(!expensesPerUserOpen)}
+              label="إجمالي المصروفات"
+              amount={formatCurrency(summary.totalExpenses)}
+              titleAdornment={expensesPerUserOpen ? <KeyboardArrowUp sx={{ color: 'rgba(255,255,255,0.85)', fontSize: 22 }} /> : <KeyboardArrowDown sx={{ color: 'rgba(255,255,255,0.85)', fontSize: 22 }} />}
+            >
+              <Collapse in={expensesPerUserOpen}>
+                <Box sx={{ mt: 1.5, pt: 1.5, borderTop: '1px solid rgba(255,255,255,0.12)' }}>
+                  <Typography variant="caption" sx={{ opacity: 0.8, mb: 1, display: 'block', fontWeight: 600 }}>حسب المستخدم</Typography>
+                  <Stack spacing={1}>
+                    {expensesByUser.map(([userName, total]) => {
+                      const pct = summary.totalExpenses > 0 ? (total / summary.totalExpenses) * 100 : 0;
+                      return (
+                        <Box key={userName} sx={{ bgcolor: 'rgba(255,255,255,0.08)', p: 1.25, borderRadius: 1.5 }}>
+                          <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 0.6 }}>
+                            <Stack direction="row" alignItems="center" spacing={1}>
+                              <Avatar sx={{ width: 28, height: 28, bgcolor: 'rgba(255,255,255,0.2)', fontSize: '0.8rem', color: '#fff' }}>{userName.charAt(0)}</Avatar>
+                              <Box>
+                                <Typography fontWeight={700} fontSize="0.82rem">{userName}</Typography>
+                                <Typography variant="caption" sx={{ opacity: 0.75, fontSize: '0.65rem' }}>{pct.toFixed(0)}٪</Typography>
+                              </Box>
                             </Stack>
-                            {/* Progress bar */}
-                            <Box sx={{ height: 4, borderRadius: 2, bgcolor: 'rgba(255,255,255,0.1)', overflow: 'hidden' }}>
-                              <Box sx={{ height: '100%', width: `${pct}%`, borderRadius: 2, background: 'linear-gradient(90deg, #d64545, #ff6b6b)', transition: 'width 0.4s ease' }} />
-                            </Box>
+                            <Typography fontWeight={900} fontSize="0.88rem" sx={{ color: '#fecaca' }}>{formatCurrency(total)}</Typography>
+                          </Stack>
+                          <Box sx={{ height: 3, borderRadius: 1.5, bgcolor: 'rgba(255,255,255,0.1)', overflow: 'hidden' }}>
+                            <Box sx={{ height: '100%', width: `${pct}%`, borderRadius: 1.5, background: 'linear-gradient(90deg, #fca5a5, #f87171)' }} />
                           </Box>
-                        );
-                      })}
-                      {expensesByUser.length === 0 && (
-                        <Typography variant="caption" sx={{ opacity: 0.5, textAlign: 'center', display: 'block', py: 1 }}>لا توجد مصروفات مسجلة</Typography>
-                      )}
-                    </Stack>
-                  </Box>
-                </Collapse>
-              </CardContent>
-            </Card>
-          </Container>
-        </Box>
+                        </Box>
+                      );
+                    })}
+                    {expensesByUser.length === 0 && (
+                      <Typography variant="caption" sx={{ opacity: 0.6, textAlign: 'center', py: 1, display: 'block' }}>لا يوجد تفصيل</Typography>
+                    )}
+                  </Stack>
+                </Box>
+              </Collapse>
+            </ProfileSessionTotalBar>
+          </ProfileSessionScroll>
+        </ProfileSessionListShell>
       </Dialog>
 
       {/* ===== PAYMENTS LIST DIALOG ===== */}
-      <Dialog open={paymentsListOpen} onClose={() => setPaymentsListOpen(false)} fullScreen sx={{ '& .MuiDialog-paper': { bgcolor: theme.palette.mode === 'dark' ? '#1a1f1a' : '#f5f3ef' } }}>
-        <Box sx={{ background: headerGradient, color: 'white', p: 2, pt: 'calc(max(env(safe-area-inset-top), 50px) + 16px)' }}>
-          <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.5 }}>
-            <Stack direction="row" alignItems="center" spacing={1.5}>
-              <IconButton onClick={() => setPaymentsListOpen(false)} sx={{ color: 'white' }}><ArrowBack /></IconButton>
-              <Typography variant="h5" fontWeight={800}>المدفوعات ({clientPayments.length})</Typography>
-            </Stack>
-            <Button variant="contained" startIcon={<Add />} onClick={() => { setEditingPayment(null); resetPay(); setPaymentDialogOpen(true); }} sx={{ bgcolor: 'rgba(200,192,176,0.15)', color: '#c8c0b0', fontWeight: 700, border: '1px solid rgba(200,192,176,0.3)', '&:hover': { bgcolor: 'rgba(200,192,176,0.25)' }, borderRadius: 2.5, boxShadow: 'none' }}>دفعة جديدة</Button>
-          </Stack>
-          {/* PDF Buttons */}
-          <Stack direction="row" spacing={1}>
-            <Button size="small" startIcon={pdfLoading ? <CircularProgress size={14} color="inherit" /> : <PictureAsPdf />} onClick={handleDownloadPayments} disabled={pdfLoading}
-              sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white', borderRadius: 2, fontSize: '0.72rem', fontWeight: 700, flex: 1, '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' } }}>
-              تحميل PDF
-            </Button>
-            <Button size="small" startIcon={<Share />} onClick={handleSharePayments} disabled={pdfLoading}
-              sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white', borderRadius: 2, fontSize: '0.72rem', fontWeight: 700, flex: 1, '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' } }}>
-              مشاركة
-            </Button>
-          </Stack>
-        </Box>
-        <Box sx={{ flex: 1, overflowY: 'auto', pb: 2 }}>
-          <Container maxWidth="sm" sx={{ mt: 2 }}>
-            {clientPayments.length === 0 ? <Card sx={{ borderRadius: 2.5, textAlign: 'center', py: 6 }}><Payment sx={{ fontSize: 60, color: 'text.secondary', opacity: 0.3, mb: 2 }} /><Typography variant="h6" color="text.secondary">لا توجد مدفوعات</Typography></Card> : (
-              <Stack spacing={2}>{filteredPay.map((pay) => (
-                <Card key={pay.id} sx={{ borderRadius: 2, borderRight: '3px solid #0d9668', bgcolor: 'background.paper' }}>
-                  <CardContent sx={{ p: 2.5 }}>
-                    <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
-                      <Box>
-                        <Typography fontWeight={800} color="success.main">{formatCurrency(pay.amount)}</Typography>
-                        <Typography variant="caption" color="text.secondary">{getPayMethodLabel(pay.paymentMethod)} • {formatDate(pay.paymentDate)}</Typography>
-                        {pay.createdBy && <Typography variant="caption" display="block" sx={{ color: 'primary.main', fontWeight: 600 }}>بواسطة: {pay.createdBy}</Typography>}
-                        {pay.notes && <Typography variant="caption" display="block" color="text.secondary">{pay.notes}</Typography>}
-                      </Box>
-                      <Stack direction="row" spacing={0.5}>
-                        <IconButton size="small" onClick={() => { setEditingPayment(pay); setPayVal('amount', pay.amount); setPayVal('paymentMethod', pay.paymentMethod as any); setPayVal('paymentDate', pay.paymentDate); setPayVal('notes', pay.notes || ''); setPaymentDialogOpen(true); }}><Edit sx={{ fontSize: 16 }} /></IconButton>
-                        <IconButton size="small" onClick={() => { if (window.confirm('حذف؟')) deletePayment(pay.id).then(() => msg('تم الحذف')); }}><Delete sx={{ fontSize: 16, color: 'error.main' }} /></IconButton>
-                      </Stack>
-                    </Stack>
-                  </CardContent>
-                </Card>
-              ))}</Stack>
+      <Dialog open={paymentsListOpen} onClose={() => setPaymentsListOpen(false)} fullScreen sx={{ '& .MuiDialog-paper': { bgcolor: 'transparent', boxShadow: 'none' } }}>
+        <ProfileSessionListShell module="payments">
+          <ProfileListSessionHeader
+            module="payments"
+            title="المدفوعات"
+            subtitle="تحصيلات ومقبوضات"
+            onBack={() => setPaymentsListOpen(false)}
+            headerGradient={headerGradient}
+            primaryAction={(
+              <Button
+                variant="contained"
+                color="primary"
+                size="medium"
+                startIcon={<Add />}
+                onClick={() => { setEditingPayment(null); resetPay(); setPaymentDialogOpen(true); }}
+                sx={{ ...profileHeroPrimaryButtonSx, color: '#fff', '& .MuiButton-startIcon': { color: '#fff' } }}
+              >
+                دفعة جديدة
+              </Button>
             )}
-            {/* Total */}
-            <Card sx={{ borderRadius: 2, mt: 2, bgcolor: '#364036', color: 'white' }}>
-              <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-                <Stack direction="row" justifyContent="space-between" alignItems="center">
-                  <Typography fontWeight={800}>إجمالي المدفوعات</Typography>
-                  <Typography fontWeight={900} variant="h6">{formatCurrency(summary.totalPaid)}</Typography>
-                </Stack>
-              </CardContent>
-            </Card>
-          </Container>
-        </Box>
+            pdfRow={(
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} useFlexGap sx={{ width: 1 }}>
+                <Button
+                  size="medium"
+                  startIcon={pdfLoading ? <CircularProgress size={14} color="inherit" /> : <PictureAsPdf />}
+                  onClick={handleDownloadPayments}
+                  disabled={pdfLoading}
+                  sx={profileHeroPdfButtonSx}
+                >
+                  تحميل PDF
+                </Button>
+                <Button
+                  size="medium"
+                  startIcon={<Share />}
+                  onClick={handleSharePayments}
+                  disabled={pdfLoading}
+                  sx={profileHeroPdfButtonSx}
+                >
+                  مشاركة
+                </Button>
+              </Stack>
+            )}
+          />
+          <ProfileSessionSearchBar>
+            <ProfileSessionSearch value={paySearch} onChange={setPaySearch} placeholder="ابحث بالمبلغ أو طريقة الدفع…" />
+          </ProfileSessionSearchBar>
+          <ProfileSessionScroll>
+            {clientPayments.length === 0 ? (
+              <EtlalaEmptyState icon={<Payment />} title="لا توجد مدفوعات" hint="سجّل دفعة من الزر أعلاه" />
+            ) : (
+              <Stack spacing={1.1}>
+                {filteredPay.map((pay, i) => (
+                  <ProfileSessionRecordListItem key={pay.id} accent={PROFILE_MODULE.payments.listAccent} index={i}>
+                    <ProfileSessionRecordCardContent>
+                      <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={1.5}>
+                        <Box sx={{ minWidth: 0 }}>
+                          <Typography fontWeight={900} color="success.main" sx={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.05rem' }}>{formatCurrency(pay.amount)}</Typography>
+                          <ProfileSessionRowMeta>{getPayMethodLabel(pay.paymentMethod)} · {formatDate(pay.paymentDate)}</ProfileSessionRowMeta>
+                          {pay.createdBy ? <Typography variant="caption" display="block" sx={{ color: 'primary.main', fontWeight: 600, mt: 0.3, fontSize: '0.68rem' }}>بواسطة {pay.createdBy}</Typography> : null}
+                          {pay.notes ? <Typography variant="caption" display="block" color="text.secondary" sx={{ mt: 0.35, lineHeight: 1.4 }}>{pay.notes}</Typography> : null}
+                        </Box>
+                        <Stack direction="row" spacing={0.25}>
+                          <IconButton size="small" onClick={() => { setEditingPayment(pay); setPayVal('amount', pay.amount); setPayVal('paymentMethod', pay.paymentMethod as any); setPayVal('paymentDate', pay.paymentDate); setPayVal('notes', pay.notes || ''); setPaymentDialogOpen(true); }}><Edit sx={{ fontSize: 16 }} /></IconButton>
+                          <IconButton size="small" onClick={() => { if (window.confirm('حذف؟')) deletePayment(pay.id).then(() => msg('تم الحذف')); }}><Delete sx={{ fontSize: 16, color: 'error.main' }} /></IconButton>
+                        </Stack>
+                      </Stack>
+                    </ProfileSessionRecordCardContent>
+                  </ProfileSessionRecordListItem>
+                ))}
+              </Stack>
+            )}
+            <ProfileSessionTotalBar module="payments" tone="success" label="إجمالي المدفوعات" amount={formatCurrency(summary.totalPaid)} />
+          </ProfileSessionScroll>
+        </ProfileSessionListShell>
       </Dialog>
 
       {/* ===== DEBTS LIST DIALOG ===== */}
-      <Dialog open={debtsListOpen} onClose={() => setDebtsListOpen(false)} fullScreen sx={{ '& .MuiDialog-paper': { bgcolor: theme.palette.mode === 'dark' ? '#1a1f1a' : '#f5f3ef' } }}>
-        <Box sx={{ background: headerGradient, color: 'white', p: 2, pt: 'calc(max(env(safe-area-inset-top), 50px) + 16px)' }}>
-          <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.5 }}>
-            <Stack direction="row" alignItems="center" spacing={1.5}>
-              <IconButton onClick={() => setDebtsListOpen(false)} sx={{ color: 'white' }}><ArrowBack /></IconButton>
-              <Typography variant="h5" fontWeight={800}>الديون ({clientDebts.length})</Typography>
-            </Stack>
-            <Button variant="contained" startIcon={<Add />} onClick={() => { setEditingDebt(null); resetDebt(); setDebtDialogOpen(true); }} sx={{ bgcolor: 'rgba(200,192,176,0.15)', color: '#c8c0b0', fontWeight: 700, border: '1px solid rgba(200,192,176,0.3)', '&:hover': { bgcolor: 'rgba(200,192,176,0.25)' }, borderRadius: 2.5, boxShadow: 'none' }}>دين جديد</Button>
-          </Stack>
-          {/* PDF Buttons */}
-          <Stack direction="row" spacing={1}>
-            <Button size="small" startIcon={pdfLoading ? <CircularProgress size={14} color="inherit" /> : <PictureAsPdf />} onClick={handleDownloadDebts} disabled={pdfLoading}
-              sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white', borderRadius: 2, fontSize: '0.72rem', fontWeight: 700, flex: 1, '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' } }}>
-              تحميل PDF
-            </Button>
-            <Button size="small" startIcon={<Share />} onClick={handleShareDebts} disabled={pdfLoading}
-              sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white', borderRadius: 2, fontSize: '0.72rem', fontWeight: 700, flex: 1, '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' } }}>
-              مشاركة
-            </Button>
-          </Stack>
-        </Box>
-        <Box sx={{ flex: 1, overflowY: 'auto', pb: 2 }}>
-          <Container maxWidth="sm" sx={{ mt: 2 }}>
-            {clientDebts.length === 0 ? <Card sx={{ borderRadius: 2.5, textAlign: 'center', py: 6 }}><CreditCard sx={{ fontSize: 60, color: 'text.secondary', opacity: 0.3, mb: 2 }} /><Typography variant="h6" color="text.secondary">لا توجد ديون</Typography></Card> : (
-              <Stack spacing={2}>{clientDebts.map((debt) => (
-                <Card key={debt.id} sx={{ borderRadius: 3, borderRight: '3px solid #c9a54e', bgcolor: 'background.paper' }}>
-                  <CardContent sx={{ p: 2.5 }}>
-                    <Typography fontWeight={700}>{debt.partyName}</Typography>
-                    <Typography variant="body2" color="text.secondary">{debt.description}</Typography>
-                    <Divider sx={{ my: 1 }} />
-                    <Stack direction="row" justifyContent="space-between"><Typography variant="caption">الإجمالي</Typography><Typography variant="body2" fontWeight={700}>{formatCurrency(debt.amount)}</Typography></Stack>
-                    <Stack direction="row" justifyContent="space-between"><Typography variant="caption">المدفوع</Typography><Typography variant="body2" fontWeight={700} color="success.main">{formatCurrency(debt.paidAmount)}</Typography></Stack>
-                    <Stack direction="row" justifyContent="space-between"><Typography variant="caption">المتبقي</Typography><Typography variant="body2" fontWeight={800} color="error.main">{formatCurrency(debt.remainingAmount)}</Typography></Stack>
-                    <Stack direction="row" spacing={0.5} sx={{ mt: 1 }}>
-                      <IconButton size="small" onClick={() => { setEditingDebt(debt); setDebtVal('partyName', debt.partyName); setDebtVal('description', debt.description); setDebtVal('amount', debt.amount); setDebtVal('date', debt.date); setDebtVal('notes', debt.notes || ''); setDebtDialogOpen(true); }}><Edit sx={{ fontSize: 16 }} /></IconButton>
-                      <IconButton size="small" onClick={() => { if (window.confirm('حذف؟')) deleteStandaloneDebt(debt.id).then(() => msg('تم الحذف')); }}><Delete sx={{ fontSize: 16, color: 'error.main' }} /></IconButton>
-                    </Stack>
-                  </CardContent>
-                </Card>
-              ))}</Stack>
+      <Dialog open={debtsListOpen} onClose={() => setDebtsListOpen(false)} fullScreen sx={{ '& .MuiDialog-paper': { bgcolor: 'transparent', boxShadow: 'none' } }}>
+        <ProfileSessionListShell module="debts">
+          <ProfileListSessionHeader
+            module="debts"
+            title="الديون"
+            subtitle="التزامات على المشروع"
+            onBack={() => setDebtsListOpen(false)}
+            headerGradient={headerGradient}
+            primaryAction={(
+              <Button
+                variant="contained"
+                color="primary"
+                size="medium"
+                startIcon={<Add />}
+                onClick={() => { setEditingDebt(null); resetDebt(); setDebtDialogOpen(true); }}
+                sx={{ ...profileHeroPrimaryButtonSx, color: '#fff', '& .MuiButton-startIcon': { color: '#fff' } }}
+              >
+                دين جديد
+              </Button>
             )}
-          </Container>
-        </Box>
+            pdfRow={(
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} useFlexGap sx={{ width: 1 }}>
+                <Button
+                  size="medium"
+                  startIcon={pdfLoading ? <CircularProgress size={14} color="inherit" /> : <PictureAsPdf />}
+                  onClick={handleDownloadDebts}
+                  disabled={pdfLoading}
+                  sx={profileHeroPdfButtonSx}
+                >
+                  تحميل PDF
+                </Button>
+                <Button
+                  size="medium"
+                  startIcon={<Share />}
+                  onClick={handleShareDebts}
+                  disabled={pdfLoading}
+                  sx={profileHeroPdfButtonSx}
+                >
+                  مشاركة
+                </Button>
+              </Stack>
+            )}
+          />
+          <ProfileSessionScroll>
+            {clientDebts.length === 0 ? (
+              <EtlalaEmptyState icon={<CreditCard />} title="لا توجد ديون" hint="سجّل ديناً من الزر أعلاه" />
+            ) : (
+              <Stack spacing={1.1}>
+                {clientDebts.map((debt, i) => (
+                  <ProfileSessionRecordListItem key={debt.id} accent={PROFILE_MODULE.debts.listAccent} index={i}>
+                    <ProfileSessionRecordCardContent>
+                      <Stack direction="row" justifyContent="space-between" alignItems="flex-start" gap={1}>
+                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                          <Typography fontWeight={800} sx={{ fontSize: '0.95rem' }}>{debt.partyName}</Typography>
+                          {debt.description ? (
+                            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.35, lineHeight: 1.4, fontSize: '0.8rem' }}>{debt.description}</Typography>
+                          ) : null}
+                          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 1, mt: 1.25, pt: 1.25, borderTop: '1px solid', borderColor: 'divider' }}>
+                            <Box>
+                              <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ fontSize: '0.6rem' }}>الإجمالي</Typography>
+                              <Typography display="block" fontWeight={800} fontSize="0.82rem" sx={{ fontFamily: "'Outfit', sans-serif", mt: 0.2 }}>{formatCurrency(debt.amount)}</Typography>
+                            </Box>
+                            <Box>
+                              <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ fontSize: '0.6rem' }}>المدفوع</Typography>
+                              <Typography display="block" fontWeight={800} color="success.main" fontSize="0.82rem" sx={{ fontFamily: "'Outfit', sans-serif", mt: 0.2 }}>{formatCurrency(debt.paidAmount)}</Typography>
+                            </Box>
+                            <Box>
+                              <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ fontSize: '0.6rem' }}>المتبقي</Typography>
+                              <Typography display="block" fontWeight={800} color="error.main" fontSize="0.82rem" sx={{ fontFamily: "'Outfit', sans-serif", mt: 0.2 }}>{formatCurrency(debt.remainingAmount)}</Typography>
+                            </Box>
+                          </Box>
+                        </Box>
+                        <Stack direction="row" spacing={0.25}>
+                          <IconButton size="small" onClick={() => { setEditingDebt(debt); setDebtVal('partyName', debt.partyName); setDebtVal('description', debt.description); setDebtVal('amount', debt.amount); setDebtVal('date', debt.date); setDebtVal('notes', debt.notes || ''); setDebtDialogOpen(true); }}><Edit sx={{ fontSize: 16 }} /></IconButton>
+                          <IconButton size="small" onClick={() => { if (window.confirm('حذف؟')) deleteStandaloneDebt(debt.id).then(() => msg('تم الحذف')); }}><Delete sx={{ fontSize: 16, color: 'error.main' }} /></IconButton>
+                        </Stack>
+                      </Stack>
+                    </ProfileSessionRecordCardContent>
+                  </ProfileSessionRecordListItem>
+                ))}
+              </Stack>
+            )}
+            {clientDebts.length > 0 && (
+              <ProfileSessionTotalBar
+                module="debts"
+                label="إجمالي الديون المستحقة (متبقي)"
+                amount={formatCurrency(clientDebts.reduce((s, d) => s + d.remainingAmount, 0))}
+                tone="default"
+              />
+            )}
+          </ProfileSessionScroll>
+        </ProfileSessionListShell>
       </Dialog>
 
       {/* ===== ADD/EDIT EXPENSE DIALOG ===== */}
@@ -1046,85 +1269,95 @@ export const ClientProfilePage = () => {
       {/* Snackbar */}
 
       {/* ===== WORKERS LIST DIALOG ===== */}
-      <Dialog open={workersListOpen} onClose={() => setWorkersListOpen(false)} fullScreen sx={{ '& .MuiDialog-paper': { bgcolor: theme.palette.mode === 'dark' ? '#0f1410' : '#f5f3ef' } }}>
-        {/* ── Header ── */}
-        <Box sx={{
-          background: theme.palette.mode === 'light'
-            ? 'linear-gradient(160deg, #1e2a1e 0%, #2e4030 50%, #3a5040 100%)'
-            : 'linear-gradient(160deg, #111811 0%, #1a2a1a 100%)',
-          pt: 'calc(max(env(safe-area-inset-top), 50px) + 16px)',
-          pb: 5, px: 2, position: 'relative', overflow: 'hidden',
-          '&::before': { content: '""', position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 80% 0%, rgba(200,192,176,0.1) 0%, transparent 60%)', pointerEvents: 'none' },
-        }}>
-          <Container maxWidth="sm" sx={{ position: 'relative', zIndex: 1 }}>
-            <Stack direction="row" alignItems="center" justifyContent="space-between" mb={2.5}>
-              <Stack direction="row" alignItems="center" spacing={1.5}>
-                <IconButton
-                  onClick={() => setWorkersListOpen(false)}
-                  sx={{ color: 'white', p: 0.5 }}
-                >
-                  <ArrowBack />
-                </IconButton>
-                <Box>
-                  <Typography variant="h5" fontWeight={900} sx={{ color: 'white', lineHeight: 1.1 }}>سجل العمال</Typography>
-                  <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.55)', fontWeight: 600 }}>
-                    {clientWorkers.length} عامل / مقاول
-                  </Typography>
-                </Box>
-              </Stack>
+      <Dialog open={workersListOpen} onClose={() => setWorkersListOpen(false)} fullScreen sx={{ '& .MuiDialog-paper': { bgcolor: 'transparent', boxShadow: 'none' } }}>
+        <ProfileSessionListShell module="workers">
+        <ProfileListSessionHeader
+          module="workers"
+          title="سجل العمال"
+          subtitle="فريق المشروع والمقاولون"
+          onBack={() => setWorkersListOpen(false)}
+          headerGradient={headerGradient}
+          primaryAction={(
+            <Button
+              variant="contained"
+              color="primary"
+              size="medium"
+              startIcon={<Add />}
+              onClick={() => { setEditingWorker(null); resetWork({ name: '', jobType: '', totalAmount: '' as any }); setWorkerDialogOpen(true); }}
+              sx={{ ...profileHeroPrimaryButtonSx, color: '#fff', '& .MuiButton-startIcon': { color: '#fff' } }}
+            >
+              إضافة
+            </Button>
+          )}
+          pdfRow={(
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} useFlexGap sx={{ width: 1 }}>
               <Button
-                variant="contained"
-                startIcon={<Add />}
-                onClick={() => { setEditingWorker(null); resetWork({ name: '', jobType: '', totalAmount: '' as any }); setWorkerDialogOpen(true); }}
-                sx={{
-                  bgcolor: 'rgba(255,255,255,0.15)', color: '#fff',
-                  fontWeight: 800, borderRadius: 2, px: 2,
-                  border: '1px solid rgba(255,255,255,0.25)',
-                  boxShadow: 'none',
-                  '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' },
-                }}
-              >
-                إضافة
-              </Button>
-            </Stack>
-
-            {/* Stats Summary */}
-            {clientWorkers.length > 0 && (
-              <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 1 }}>
-                {[
-                  { label: 'الاتفاقيات', value: formatCurrency(clientWorkers.reduce((s, w) => s + w.totalAmount, 0)), color: '#c8c0b0' },
-                  { label: 'المدفوع', value: formatCurrency(clientWorkers.reduce((s, w) => s + w.paidAmount, 0)), color: '#6ee7b7' },
-                  { label: 'المتبقي', value: formatCurrency(clientWorkers.reduce((s, w) => s + w.remainingAmount, 0)), color: '#fca5a5' },
-                ].map((s, i) => (
-                  <Box key={i} sx={{ textAlign: 'center', bgcolor: 'rgba(255,255,255,0.07)', borderRadius: 2, py: 1, border: '1px solid rgba(255,255,255,0.08)' }}>
-                    <Typography sx={{ color: s.color, fontSize: '0.78rem', fontWeight: 800, lineHeight: 1 }}>{s.value}</Typography>
-                    <Typography sx={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.58rem', fontWeight: 600, mt: 0.3 }}>{s.label}</Typography>
-                  </Box>
-                ))}
-              </Box>
-            )}
-
-            {/* PDF Buttons */}
-            <Stack direction="row" spacing={1} sx={{ mt: 1.5 }}>
-              <Button size="small"
+                size="medium"
                 startIcon={pdfLoading ? <CircularProgress size={14} color="inherit" /> : <PictureAsPdf />}
-                onClick={handleDownloadWorkers} disabled={pdfLoading}
-                sx={{ bgcolor: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.8)', borderRadius: 2, fontSize: '0.72rem', fontWeight: 700, flex: 1, border: '1px solid rgba(255,255,255,0.12)', '&:hover': { bgcolor: 'rgba(255,255,255,0.15)' } }}>
+                onClick={handleDownloadWorkers}
+                disabled={pdfLoading}
+                sx={profileHeroPdfButtonSx}
+              >
                 تحميل PDF
               </Button>
-              <Button size="small" startIcon={<Share />} onClick={handleShareWorkers} disabled={pdfLoading}
-                sx={{ bgcolor: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.8)', borderRadius: 2, fontSize: '0.72rem', fontWeight: 700, flex: 1, border: '1px solid rgba(255,255,255,0.12)', '&:hover': { bgcolor: 'rgba(255,255,255,0.15)' } }}>
+              <Button
+                size="medium"
+                startIcon={<Share />}
+                onClick={handleShareWorkers}
+                disabled={pdfLoading}
+                sx={profileHeroPdfButtonSx}
+              >
                 مشاركة
               </Button>
             </Stack>
-          </Container>
-        </Box>
+          )}
+        />
+        {clientWorkers.length > 0 && (
+          <Box
+            sx={{
+              px: 2,
+              py: 1.75,
+              borderBottom: '1px solid',
+              borderColor: 'divider',
+              background:
+                theme.palette.mode === 'dark'
+                  ? `linear-gradient(180deg, ${alpha(PROFILE_MODULE.workers.listAccent, 0.08)} 0%, rgba(0,0,0,0.12) 100%)`
+                  : `linear-gradient(180deg, ${alpha(PROFILE_MODULE.workers.listAccent, 0.07)} 0%, rgba(255,255,255,0.85) 100%)`,
+            }}
+          >
+            <Container maxWidth="sm" disableGutters>
+              <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 1.25 }}>
+                {[
+                  { label: 'الاتفاقيات', value: formatCurrency(clientWorkers.reduce((s, w) => s + w.totalAmount, 0)), color: theme.palette.mode === 'dark' ? '#c8c0b0' : '#4a5d4a' },
+                  { label: 'المدفوع', value: formatCurrency(clientWorkers.reduce((s, w) => s + w.paidAmount, 0)), color: '#0d9668' },
+                  { label: 'المتبقي', value: formatCurrency(clientWorkers.reduce((s, w) => s + w.remainingAmount, 0)), color: '#d64545' },
+                ].map((s, i) => (
+                  <Box
+                    key={i}
+                    sx={{
+                      textAlign: 'center',
+                      py: 1.15,
+                      px: 0.5,
+                      borderRadius: 2,
+                      border: '1px solid',
+                      borderColor: (t) => alpha(PROFILE_MODULE.workers.listAccent, t.palette.mode === 'dark' ? 0.22 : 0.14),
+                      bgcolor: (t) => (t.palette.mode === 'dark' ? alpha('#fff', 0.04) : alpha('#fff', 0.6)),
+                    }}
+                  >
+                    <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, fontSize: '0.58rem', display: 'block', mb: 0.4 }}>{s.label}</Typography>
+                    <Typography sx={{ color: s.color, fontSize: '0.78rem', fontWeight: 800, fontFamily: "'Outfit', sans-serif" }}>{s.value}</Typography>
+                  </Box>
+                ))}
+              </Box>
+            </Container>
+          </Box>
+        )}
 
         {/* ── Content below header ── */}
         <Box sx={{ flex: 1, overflowY: 'auto', pb: 4, pt: 2 }}>
           <Container maxWidth="sm">
             {clientWorkers.length === 0 ? (
-              <Box sx={{ textAlign: 'center', py: 10, bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', mt: 1 }}>
+              <Box sx={{ textAlign: 'center', py: 10, bgcolor: (t) => (t.palette.mode === 'dark' ? alpha('#fff', 0.04) : alpha('#fff', 0.7)), border: '1px solid', borderColor: (t) => alpha(PROFILE_MODULE.workers.listAccent, t.palette.mode === 'dark' ? 0.2 : 0.15), borderRadius: 2.5, mt: 1, boxShadow: (t) => (t.palette.mode === 'light' ? '0 1px 0 rgba(255,255,255,0.9) inset' : 'none') }}>
                 <PersonAdd sx={{ fontSize: 64, color: alpha('#4a5d4a', 0.2), mb: 2 }} />
                 <Typography variant="h6" fontWeight={800} color="text.secondary">لا يوجد عمال بعد</Typography>
                 <Typography variant="body2" color="text.disabled" sx={{ mt: 1 }}>اضغط على زر الإضافة لتسجيل عمال المشروع</Typography>
@@ -1136,15 +1369,16 @@ export const ClientProfilePage = () => {
                   const done = worker.remainingAmount <= 0;
                   return (
                     <Box key={worker.id} sx={{
-                      bgcolor: 'background.paper',
-                      overflow: 'hidden', border: '1px solid', borderColor: 'divider',
+                      bgcolor: (t) => (t.palette.mode === 'dark' ? alpha('#fff', 0.04) : alpha('#fff', 0.85)),
+                      overflow: 'hidden', border: '1px solid', borderColor: (t) => alpha(PROFILE_MODULE.workers.listAccent, t.palette.mode === 'dark' ? 0.2 : 0.14),
                       borderBottom: 'none',
+                      boxShadow: (t) => (t.palette.mode === 'light' ? '0 1px 0 rgba(255,255,255,0.85) inset' : 'none'),
                       '&:first-of-type': { borderRadius: '12px 12px 0 0' },
-                      '&:last-of-type': { borderBottom: '1px solid', borderColor: 'divider', borderRadius: '0 0 12px 12px' },
+                      '&:last-of-type': { borderBottom: '1px solid', borderColor: (t) => alpha(PROFILE_MODULE.workers.listAccent, t.palette.mode === 'dark' ? 0.2 : 0.14), borderRadius: '0 0 12px 12px' },
                       '&:only-child': { borderRadius: '12px' },
                     }}>
                       {/* Color strip top */}
-                      <Box sx={{ height: 3, background: done ? 'linear-gradient(90deg,#0d9668,#34d399)' : 'linear-gradient(90deg,#c9a54e,#e8c87a)' }} />
+                      <Box sx={{ height: 3, background: done ? 'linear-gradient(90deg,#0d9668,#34d399)' : `linear-gradient(90deg, ${PROFILE_MODULE.workers.listAccent}, ${alpha(PROFILE_MODULE.workers.listAccent, 0.5)})` }} />
 
                       {/* Worker info row */}
                       <Box sx={{ px: 2.5, pt: 2, pb: 1.5, display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -1235,6 +1469,7 @@ export const ClientProfilePage = () => {
             )}
           </Container>
         </Box>
+        </ProfileSessionListShell>
       </Dialog>
 
       {/* ===== ADD/EDIT WORKER DIALOG ===== */}
@@ -1289,29 +1524,28 @@ export const ClientProfilePage = () => {
       </Dialog>
 
       {/* ===== BALANCES LIST DIALOG ===== */}
-      <Dialog open={balancesListOpen} onClose={() => setBalancesListOpen(false)} fullScreen sx={{ '& .MuiDialog-paper': { bgcolor: theme.palette.mode === 'dark' ? '#0a0e14' : '#f0f2f5' } }}>
-        <Box sx={{ 
-          background: theme.palette.mode === 'dark' 
-            ? 'radial-gradient(120% 120% at 50% 0%, #152219 0%, #0a110c 50%, #050806 100%)' 
-            : 'radial-gradient(120% 120% at 50% 0%, #213526 0%, #132217 50%, #0b140e 100%)', 
-          color: 'white', px: 2, pt: 'calc(env(safe-area-inset-top) + 24px)', pb: 3.5, position: 'relative', overflow: 'hidden',
-          borderBottomLeftRadius: 28, borderBottomRightRadius: 28, boxShadow: '0 10px 30px -10px rgba(0,0,0,0.5)'
-        }}>
-          <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ position: 'relative', zIndex: 1 }}>
-            <Stack direction="row" alignItems="center" spacing={1.5}>
-              <IconButton onClick={() => setBalancesListOpen(false)} sx={{ color: '#fff', bgcolor: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.1)', '&:active': { transform: 'scale(0.95)' } }}>
-                <ArrowBack />
-              </IconButton>
-              <Box>
-                 <Typography variant="h6" fontWeight={900} sx={{ lineHeight: 1.2, letterSpacing: '-0.3px' }}>أرصدة العميل (العهد)</Typography>
-                 <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>يوجد {clientUserBalances.length} سجل للعهد والمصروفات</Typography>
-              </Box>
-            </Stack>
-            <IconButton onClick={() => { setEditingBalance(null); resetBal(); setBalanceDialogOpen(true); }} sx={{ bgcolor: '#4a5d4a', color: '#fff', border: '1px solid rgba(255,255,255,0.2)', '&:hover': { bgcolor: '#364036' } }}>
+      <Dialog open={balancesListOpen} onClose={() => setBalancesListOpen(false)} fullScreen sx={{ '& .MuiDialog-paper': { bgcolor: 'transparent', boxShadow: 'none' } }}>
+        <ProfileSessionListShell module="balances">
+        <ProfileListSessionHeader
+          module="balances"
+          title="أرصدة العميل (العهد)"
+          subtitle="عهود مخصصة للمشروع"
+          onBack={() => setBalancesListOpen(false)}
+          headerGradient={
+            theme.palette.mode === 'dark'
+              ? 'radial-gradient(120% 120% at 50% 0%, #152219 0%, #0a110c 50%, #050806 100%)'
+              : 'radial-gradient(120% 120% at 50% 0%, #213526 0%, #132217 50%, #0b140e 100%)'
+          }
+          primaryAction={(
+            <IconButton
+              onClick={() => { setEditingBalance(null); resetBal(); setBalanceDialogOpen(true); }}
+              aria-label="إضافة عهدة"
+              sx={profileHeroAddIconButtonSx}
+            >
               <Add />
             </IconButton>
-          </Stack>
-        </Box>
+          )}
+        />
         <Box sx={{ flex: 1, overflowY: 'auto', pb: 4, pt: 2.5 }}>
           <Container maxWidth="sm">
             {/* Show User Summary Cards first */}
@@ -1325,7 +1559,7 @@ export const ClientProfilePage = () => {
                   {Object.entries(userBalancesSummary).map(([uId, sum]) => (
                     <Grid size={{xs: 12}} key={uId}>
                       <Card sx={{ borderRadius: 3, position: 'relative', overflow: 'hidden', bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', boxShadow: 'none' }}>
-                        <Box sx={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 8, background: sum.remaining > 0 ? '#4a5d4a' : '#d64545' }} />
+                        <Box sx={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 8, background: sum.remaining > 0 ? `linear-gradient(180deg, ${PROFILE_MODULE.balances.listAccent}, ${alpha(PROFILE_MODULE.balances.listAccent, 0.7)})` : 'linear-gradient(180deg, #d64545, #b83b3b)' }} />
                         <CardContent sx={{ p: {xs: 2.5, sm: 3}, pl: {xs: 3, sm: 4}, '&:last-child': { pb: {xs: 2.5, sm: 3} } }}>
                           <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: {xs: 2, sm: 2.5} }}>
                             <Stack direction="row" alignItems="center" spacing={2} sx={{ minWidth: 0 }}>
@@ -1437,6 +1671,7 @@ export const ClientProfilePage = () => {
             )}
           </Container>
         </Box>
+        </ProfileSessionListShell>
       </Dialog>
 
       {/* ===== ADD/EDIT BALANCE DIALOG (MOBILE OPTIMIZED) ===== */}

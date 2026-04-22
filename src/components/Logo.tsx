@@ -3,9 +3,13 @@ import { Box, Typography } from '@mui/material';
 
 interface LogoProps {
   size?: number | string;
-  variant?: 'light' | 'dark' | 'color';
+  /** hero: شعار مضيء للهيرو الداكن + ظل قوي */
+  variant?: 'light' | 'dark' | 'color' | 'hero';
   showSubtitle?: boolean;
 }
+
+const HERO_IMG_FILTER =
+  'drop-shadow(0 8px 24px rgba(0,0,0,0.5)) brightness(0) saturate(100%) invert(90%) sepia(14%) saturate(380%) hue-rotate(350deg) brightness(95%) contrast(90%)';
 
 export const Logo: React.FC<LogoProps> = ({ size = 64, variant = 'color', showSubtitle = false }) => {
   const [imgError, setImgError] = useState(false);
@@ -74,8 +78,13 @@ export const Logo: React.FC<LogoProps> = ({ size = 64, variant = 'color', showSu
           width: safeSize,
           height: safeSize,
           objectFit: 'contain',
-          filter: variant === 'light' ? 'brightness(1.5)' : 'none',
-          transition: 'transform 0.3s ease',
+          filter:
+            variant === 'hero'
+              ? HERO_IMG_FILTER
+              : variant === 'light'
+                ? 'brightness(1.5)'
+                : 'none',
+          transition: 'transform 0.3s ease, filter 0.4s ease',
         }}
       />
       {showSubtitle && !imgError && (

@@ -2,7 +2,6 @@ import { useState, useMemo } from 'react';
 import {
   Box,
   Button,
-  Card,
   CardContent,
   Typography,
   TextField,
@@ -14,7 +13,6 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Container,
   Avatar,
   Stack,
   useTheme,
@@ -29,15 +27,17 @@ import {
   ChevronLeft,
   ArrowBack,
   People,
-  Phone,
 } from '@mui/icons-material';
+import { motion, useReducedMotion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useDataStore } from '../store/useDataStore';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import type { SxProps, Theme } from '@mui/material/styles';
 import type { Client } from '../types';
-import { formatCurrency } from '../utils/formatters';
+import { PageScaffold } from '../components/layout/PageScaffold';
+import { EtlalaEmptyState, EtlalaAccentSurface, etlalaContentFieldSx } from '../components/etlala/EtlalaMobileUi';
 
 const clientSchema = z.object({
   name: z.string().min(2, 'الاسم يجب أن يكون حرفين على الأقل'),
@@ -52,7 +52,8 @@ type ClientFormData = z.infer<typeof clientSchema>;
 export const ClientsPage = () => {
   const navigate = useNavigate();
   const theme = useTheme();
-  const { clients, expenses, standaloneDebts, payments, addClient, updateClient, deleteClient } = useDataStore();
+  const reduceMotion = useReducedMotion();
+  const { clients, addClient, updateClient, deleteClient } = useDataStore();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -80,14 +81,6 @@ export const ClientsPage = () => {
       client.phone.includes(searchQuery)
     );
   }, [clients, searchQuery]);
-
-  const getClientStats = (clientId: string) => {
-    const clientExpenses = expenses.filter((exp) => exp.clientId === clientId);
-    const clientPayments = payments.filter((pay) => pay.clientId === clientId);
-    const totalExpenses = clientExpenses.reduce((sum, exp) => sum + exp.amount, 0);
-    const totalPaid = clientPayments.reduce((sum, pay) => sum + pay.amount, 0);
-    return { totalExpenses, totalPaid, remaining: totalPaid - totalExpenses };
-  };
 
   const handleOpenDialog = (client?: Client) => {
     if (client) {
@@ -130,153 +123,98 @@ export const ClientsPage = () => {
   };
 
   return (
-    <Box
-      sx={{
-        minHeight: '100dvh',
-        background: theme.palette.mode === 'dark'
-          ? 'linear-gradient(180deg, #1a1f1a 0%, #151a15 100%)'
-          : 'linear-gradient(180deg, #f5f3ef 0%, #ede9e3 100%)',
-        pb: 3,
-      }}
-    >
-      {/* Header */}
-      <Box
-        sx={{
-          background: theme.palette.mode === 'light'
-            ? 'linear-gradient(160deg, #364036 0%, #4a5d4a 100%)'
-            : 'linear-gradient(160deg, #2a3a2a 0%, #364036 100%)',
-          pt: 'calc(env(safe-area-inset-top) + 24px)',
-          pb: 4,
-          px: 2,
-          borderRadius: '0 0 28px 28px',
-          boxShadow: theme.palette.mode === 'light'
-            ? '0 8px 32px -8px rgba(74, 93, 74, 0.3)'
-            : '0 8px 32px -8px rgba(0, 0, 0, 0.4)',
-          position: 'relative',
-          overflow: 'hidden',
-          '&::before': {
-            content: '""',
-            position: 'absolute',
-            top: 0, left: 0, right: 0, bottom: 0,
-            background: 'radial-gradient(ellipse at 70% 20%, rgba(200, 192, 176, 0.08) 0%, transparent 50%)',
-            pointerEvents: 'none',
-          },
-        }}
-      >
-        <Container maxWidth="sm" sx={{ position: 'relative', zIndex: 1 }}>
-          <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 2 }}>
-            <IconButton onClick={() => navigate('/')} sx={{ color: 'rgba(255,255,255,0.9)', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
-              <ArrowBack />
-            </IconButton>
-            <Typography variant="h5" fontWeight={800} sx={{ color: 'white', flexGrow: 1, letterSpacing: 0.3 }}>
-              العملاء ({clients.length})
-            </Typography>
-            <Button
-              variant="contained"
-              onClick={() => handleOpenDialog()}
-              sx={{
-                bgcolor: 'rgba(200, 192, 176, 0.9)',
-                color: '#ffffffff',
-                fontWeight: 700,
-                '&:hover': { bgcolor: '#c8c0b0', transform: 'scale(1.04)' },
-                borderRadius: 2.5,
-                px: 2.5,
-                boxShadow: '0 4px 14px -3px rgba(200, 192, 176, 0.4)',
-                transition: 'all 0.25s ease',
-              }}
-              startIcon={<Add />}
-            >
-              جديد
-            </Button>
-          </Stack>
-
-          {/* Search */}
-          <TextField
-            fullWidth
-            placeholder="ابحث بالاسم أو رقم الهاتف..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            sx={{
+    <>
+    <PageScaffold
+      title="العملاء"
+      subtitle="الاسم والنوع فقط — التفاصيل والأرقام داخل ملف العميل"
+      backTo="/"
+      rightAction={
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => handleOpenDialog()}
+          size="small"
+          sx={{
+            fontWeight: 800,
+            color: '#ffffff',
+            borderRadius: 2.5,
+            px: 2.5,
+            boxShadow: '0 4px 14px -3px rgba(0,0,0,0.25)',
+            transition: 'background 0.2s ease, box-shadow 0.2s ease',
+            '&:hover': {
+              color: '#ffffff',
+              boxShadow: '0 6px 18px -4px rgba(0,0,0,0.3)',
+            },
+            '& .MuiButton-startIcon': { color: '#ffffff' },
+          }}
+          startIcon={<Add />}
+        >
+          جديد
+        </Button>
+      }
+      headerExtra={(
+        <Stack spacing={1.5}>
+        <TextField
+          fullWidth
+          placeholder="ابحث بالاسم أو رقم الهاتف..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          sx={[
+            etlalaContentFieldSx,
+            {
               '& .MuiOutlinedInput-root': {
-                bgcolor: 'rgba(255,255,255,0.92)',
-                borderRadius: '10px',
+                bgcolor: 'rgba(255,255,255,0.96)',
+                borderRadius: '12px',
                 '& fieldset': { border: 'none' },
-                '&:hover': { bgcolor: 'white' },
-                '&.Mui-focused': { bgcolor: 'white' },
               },
-            }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Search sx={{ color: 'rgba(0,0,0,0.35)' }} />
-                </InputAdornment>
-              ),
-            }}
-          />
-        </Container>
-      </Box>
-
-      {/* Clients List */}
-      <Container maxWidth="sm" sx={{ mt: 1, pt: 1 }}>
-        <Stack spacing={2}>
+            },
+          ] as SxProps<Theme>}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <Search sx={{ color: 'rgba(0,0,0,0.35)' }} />
+              </InputAdornment>
+            ),
+          }}
+        />
+        </Stack>
+      )}
+    >
+        <Stack spacing={1.25} sx={{ mt: 0.5 }}>
           {filteredClients.length === 0 ? (
-            <Card sx={{ borderRadius: 3, textAlign: 'center', py: 6, bgcolor: 'background.paper' }}>
-              <People sx={{ fontSize: 56, color: 'text.secondary', opacity: 0.2, mb: 2 }} />
-              <Typography variant="h6" color="text.secondary" sx={{ mb: 1, fontWeight: 600 }}>
-                لا يوجد عملاء
-              </Typography>
-              <Button
-                variant="contained"
-                startIcon={<Add />}
-                onClick={() => handleOpenDialog()}
-                sx={{
-                  mt: 2, borderRadius: 2.5,
-                  bgcolor: '#4a5d4a',
-                  '&:hover': { bgcolor: '#364036' },
-                  boxShadow: '0 4px 14px -3px rgba(74, 93, 74, 0.35)',
-                }}
-              >
-                إضافة أول عميل
-              </Button>
-            </Card>
+            <EtlalaEmptyState
+              icon={<People />}
+              title={searchQuery ? 'لا نتائج للبحث' : 'لا يوجد عملاء'}
+              hint={searchQuery ? 'جرّب كلمات أوسع أو امسح البحث' : 'أضف أول عميل للبدء في تتبع المشاريع والمدفوعات'}
+              actionLabel={!searchQuery ? 'إضافة عميل' : undefined}
+              onAction={!searchQuery ? () => handleOpenDialog() : undefined}
+            />
           ) : (
-            filteredClients.map((client) => {
-              const stats = getClientStats(client.id);
-              return (
-                <Card
-                  key={client.id}
+            filteredClients.map((client, index) => (
+              <Box
+                key={client.id}
+                component={motion.div}
+                initial={reduceMotion ? false : { opacity: 0, y: 10 }}
+                animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+                transition={{ delay: reduceMotion ? 0 : Math.min(index * 0.04, 0.35), duration: 0.35, ease: [0.2, 0.8, 0.2, 1] }}
+                whileHover={reduceMotion ? undefined : { y: -2 }}
+              >
+                <EtlalaAccentSurface
+                  accent={theme.palette.primary.main}
                   onClick={() => navigate(`/clients/${client.id}`)}
-                  sx={{
-                    borderRadius: 3,
-                    boxShadow: theme.palette.mode === 'light'
-                      ? '0 2px 12px -2px rgba(74, 93, 74, 0.07)'
-                      : '0 4px 20px rgba(0,0,0,0.35)',
-                    cursor: 'pointer',
-                    transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-                    bgcolor: 'background.paper',
-                    border: theme.palette.mode === 'dark' ? '1px solid rgba(107, 127, 107, 0.08)' : '1px solid rgba(74, 93, 74, 0.04)',
-                    '&:hover': {
-                      boxShadow: theme.palette.mode === 'light'
-                        ? '0 10px 32px -6px rgba(74, 93, 74, 0.12)'
-                        : '0 12px 40px rgba(0,0,0,0.45)',
-                      transform: 'translateY(-3px)',
-                    },
-                    '&:active': { transform: 'scale(0.98)' },
-                  }}
                 >
-                  <CardContent sx={{ p: 2.5 }}>
-                    <Stack direction="row" alignItems="center" spacing={2}>
-                      {/* Avatar */}
+                  <CardContent sx={{ p: 2.25, '&:last-child': { pb: 2.25 } }}>
+                    <Stack direction="row" alignItems="center" spacing={1.75}>
                       <Avatar
                         sx={{
-                          width: 50, height: 50,
+                          width: 48,
+                          height: 48,
                           bgcolor: client.type === 'company'
-                            ? (theme.palette.mode === 'dark' ? 'rgba(107, 127, 107, 0.15)' : 'rgba(74, 93, 74, 0.08)')
-                            : (theme.palette.mode === 'dark' ? 'rgba(200, 192, 176, 0.15)' : 'rgba(200, 192, 176, 0.15)'),
+                            ? (theme.palette.mode === 'dark' ? 'rgba(107, 127, 107, 0.18)' : 'rgba(74, 93, 74, 0.1)')
+                            : (theme.palette.mode === 'dark' ? 'rgba(200, 192, 176, 0.14)' : 'rgba(200, 192, 176, 0.14)'),
                           flexShrink: 0,
-                          border: client.type === 'company'
-                            ? '1.5px solid rgba(107, 127, 107, 0.2)'
-                            : '1.5px solid rgba(200, 192, 176, 0.3)',
+                          border: '1.5px solid',
+                          borderColor: client.type === 'company' ? 'rgba(107, 127, 107, 0.25)' : 'rgba(200, 192, 176, 0.3)',
                         }}
                       >
                         {client.type === 'company' ? (
@@ -285,83 +223,66 @@ export const ClientsPage = () => {
                           <Person sx={{ color: '#c8c0b0', fontSize: 22 }} />
                         )}
                       </Avatar>
-
-                      {/* Client Info */}
-                      <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-                        <Stack
-                          direction={{ xs: 'column', sm: 'row' }}
-                          spacing={{ xs: 0.5, sm: 1.5 }}
-                          alignItems={{ xs: 'flex-start', sm: 'center' }}
-                          sx={{ mb: 0.5 }}
-                        >
-                          <Typography
-                            variant="h6"
-                            fontWeight={700}
-                            sx={{ fontSize: { xs: '0.95rem', sm: '1.15rem' }, wordBreak: 'break-word', letterSpacing: 0.2 }}
-                          >
-                            {client.name}
-                          </Typography>
-                          <Chip
-                            label={client.type === 'company' ? 'شركة' : 'فرد'}
-                            size="small"
-                            sx={{
-                              height: 22, fontSize: '0.7rem', fontWeight: 700, flexShrink: 0,
-                              bgcolor: client.type === 'company'
-                                ? (theme.palette.mode === 'dark' ? 'rgba(107, 127, 107, 0.15)' : 'rgba(74, 93, 74, 0.08)')
-                                : (theme.palette.mode === 'dark' ? 'rgba(200, 192, 176, 0.15)' : 'rgba(200, 192, 176, 0.12)'),
-                              color: client.type === 'company'
-                                ? (theme.palette.mode === 'dark' ? '#6b7f6b' : '#4a5d4a')
-                                : '#8b7e6a',
-                              border: 'none',
-                            }}
-                          />
-                        </Stack>
-
-                        <Stack direction="row" spacing={1} alignItems="center"
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography
+                          fontWeight={800}
                           sx={{
-                            bgcolor: theme.palette.mode === 'dark'
-                              ? 'rgba(255,255,255,0.04)'
-                              : 'rgba(74, 93, 74, 0.03)',
-                            px: 1.5, py: 0.6, borderRadius: 2, mt: 0.5,
+                            fontSize: '1.02rem',
+                            letterSpacing: 0.15,
+                            lineHeight: 1.3,
+                            wordBreak: 'break-word',
                           }}
                         >
-                          <Phone sx={{ fontSize: 15, color: 'text.secondary', opacity: 0.6 }} />
-                          <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600, fontSize: { xs: '0.85rem', sm: '0.9rem' } }}>
-                            {client.phone}
-                          </Typography>
-                        </Stack>
+                          {client.name}
+                        </Typography>
+                        <Chip
+                          label={client.type === 'company' ? 'شركة' : 'فرد'}
+                          size="small"
+                          sx={{
+                            height: 22,
+                            fontSize: '0.65rem',
+                            fontWeight: 800,
+                            mt: 0.75,
+                            bgcolor: client.type === 'company'
+                              ? (theme.palette.mode === 'dark' ? 'rgba(107, 127, 107, 0.12)' : 'rgba(74, 93, 74, 0.08)')
+                              : (theme.palette.mode === 'dark' ? 'rgba(200, 192, 176, 0.1)' : 'rgba(200, 192, 176, 0.1)'),
+                            color: client.type === 'company'
+                              ? (theme.palette.mode === 'dark' ? '#6b7f6b' : '#4a5d4a')
+                              : '#8b7e6a',
+                            border: 'none',
+                          }}
+                        />
                       </Box>
-
-                      {/* Edit button */}
-                      <Stack direction="row" spacing={{ xs: 1, sm: 1.5 }} sx={{ marginLeft: '12px', flexShrink: 0 }}>
+                      <Stack direction="row" alignItems="center" spacing={0.5} sx={{ flexShrink: 0 }}>
                         <IconButton
                           size="small"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleOpenDialog(client);
                           }}
+                          aria-label="تعديل"
                           sx={{
-                            bgcolor: theme.palette.mode === 'dark' ? 'rgba(107, 127, 107, 0.1)' : 'rgba(74, 93, 74, 0.05)',
+                            bgcolor: theme.palette.mode === 'dark' ? 'rgba(107, 127, 107, 0.1)' : 'rgba(74, 93, 74, 0.06)',
                             color: theme.palette.mode === 'dark' ? '#6b7f6b' : '#4a5d4a',
-                            width: 36, height: 36,
+                            width: 38,
+                            height: 38,
                             borderRadius: 2,
-                            border: '1px solid rgba(74, 93, 74, 0.1)',
-                            '&:hover': { bgcolor: 'rgba(74, 93, 74, 0.1)' },
-                            transition: 'all 0.2s ease',
+                            border: '1px solid rgba(74, 93, 74, 0.12)',
+                            '&:hover': { bgcolor: 'rgba(74, 93, 74, 0.12)' },
                           }}
                         >
-                          <Edit sx={{ fontSize: 17 }} />
+                          <Edit sx={{ fontSize: 18 }} />
                         </IconButton>
-
+                        <ChevronLeft sx={{ color: 'text.secondary', opacity: 0.35, fontSize: 22 }} />
                       </Stack>
                     </Stack>
                   </CardContent>
-                </Card>
-              );
-            })
+                </EtlalaAccentSurface>
+              </Box>
+            ))
           )}
         </Stack>
-      </Container>
+    </PageScaffold>
 
       {/* Full-screen Add/Edit Dialog */}
       <Dialog
@@ -544,6 +465,6 @@ export const ClientsPage = () => {
           </Box>
         </form>
       </Dialog>
-    </Box>
+    </>
   );
 };

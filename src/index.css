@@ -6,16 +6,18 @@
    ═══════════════════════════════════════════════════════════ */
 
 :root {
-  --etlala-green: #4a5d4a;
-  --etlala-green-light: #6b7f6b;
-  --etlala-green-dark: #364036;
+  /* v2 — أعمق قليلاً، تباين أوضح (DESIGN.md) */
+  --etlala-green: #3d4f3d;
+  --etlala-green-light: #5a6d5a;
+  --etlala-green-dark: #2a362a;
   --etlala-cream: #c8c0b0;
-  --etlala-cream-light: #f5f3ef;
-  --etlala-taupe: #8b7e6a;
-  --etlala-bg: #f5f3ef;
+  --etlala-cream-light: #f0ece4;
+  --etlala-taupe: #6b5d4d;
+  --etlala-bg: #f4f1ea;
   --etlala-paper: #ffffff;
-  --etlala-text: #2d3a2d;
-  --etlala-text-secondary: #6b7b6b;
+  --etlala-text: #1e2a1e;
+  --etlala-text-secondary: #5c6b5c;
+  --etlala-dot: rgba(61, 79, 61, 0.055);
 
   /* Timing */
   --ease-spring: cubic-bezier(0.4, 0, 0.2, 1);
@@ -42,6 +44,30 @@ html {
   -webkit-text-size-adjust: 100%;
   /* GPU-accelerated scroll */
   scroll-behavior: smooth;
+}
+
+/* صفحات داخلية — خلفية موحّدة (PageScaffold) */
+.etlala-page {
+  -webkit-tap-highlight-color: transparent;
+  /* شبكة نقاط دقيقة — Swiss / editorial (رؤية فقط، بدون تشتيت) */
+  background-image: radial-gradient(var(--etlala-dot) 0.6px, transparent 0.6px);
+  background-size: 18px 18px;
+  background-attachment: fixed;
+}
+
+/* هبوط أخف للنقاط داخل الـ hero الداكن */
+.etlala-home-hero--mesh .etlala-dot-overlay {
+  opacity: 0.35;
+  mix-blend-mode: soft-light;
+}
+
+.etlala-dot-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-size: 22px 22px;
 }
 
 body {
@@ -157,6 +183,22 @@ input, button, textarea, select {
   50%       { transform: translateY(-6px); }
 }
 
+/* دورات بصرية لطيفة — طبقة أجواء + حركات أورب (Etlala) */
+@keyframes etlala-mesh-drift {
+  0%   { transform: translate3d(0, 0, 0) scale(1); opacity: 0.88; }
+  50%  { transform: translate3d(-1.2%, 0.8%, 0) scale(1.02); opacity: 1; }
+  100% { transform: translate3d(0.5%, -0.5%, 0) scale(1); opacity: 0.9; }
+}
+@keyframes etlala-blob-float {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  33%       { transform: translate3d(2%, -3%, 0); }
+  66%       { transform: translate3d(-1%, 2%, 0); }
+}
+@keyframes etlala-hero-sheen {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
 @keyframes glow {
   0%, 100% { box-shadow: 0 0 8px rgba(74,93,74,0.3); }
   50%       { box-shadow: 0 0 20px rgba(74,93,74,0.5); }
@@ -191,6 +233,114 @@ input, button, textarea, select {
 }
 .animate-float {
   animation: float 3s ease-in-out infinite;
+}
+
+/* خلفية تطبيق — غسل لوني خفيف يتنفس */
+.etlala-app-ambient {
+  background:
+    radial-gradient(ellipse 90% 70% at 0% 0%, rgba(74, 93, 74, 0.09) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 50% at 100% 30%, rgba(200, 192, 176, 0.07) 0%, transparent 50%),
+    radial-gradient(ellipse 50% 40% at 50% 100%, rgba(74, 93, 74, 0.04) 0%, transparent 45%);
+  animation: etlala-mesh-drift 36s var(--ease-smooth) infinite alternate;
+}
+.etlala-app-ambient--dark {
+  background:
+    radial-gradient(ellipse 85% 60% at 0% 0%, rgba(122, 154, 122, 0.1) 0%, transparent 55%),
+    radial-gradient(ellipse 55% 45% at 100% 25%, rgba(200, 192, 176, 0.05) 0%, transparent 50%),
+    radial-gradient(ellipse 45% 35% at 40% 100%, rgba(20, 30, 20, 0.5) 0%, transparent 50%);
+  animation: etlala-mesh-drift 40s var(--ease-smooth) infinite alternate;
+}
+
+/* شعار الهيرو — نبض الحلقات */
+.etlala-hero-logo-ring--1 {
+  animation: etlala-hero-logo-ring-pulse 5s var(--ease-smooth) infinite;
+}
+.etlala-hero-logo-ring--2 {
+  animation: etlala-hero-logo-ring-pulse 5s var(--ease-smooth) infinite 0.4s;
+  opacity: 0.85;
+}
+@media (prefers-reduced-motion: reduce) {
+  .etlala-hero-logo-ring--1,
+  .etlala-hero-logo-ring--2 {
+    animation: none;
+  }
+}
+@keyframes etlala-hero-logo-ring-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.04);
+    opacity: 0.9;
+  }
+}
+
+/* شريط ضوئي — هيرو الصفحة الرئيسية */
+.etlala-hero-creative-line {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(200, 192, 176, 0.2),
+    rgba(200, 192, 176, 0.85),
+    rgba(200, 192, 176, 0.2),
+    transparent
+  );
+  box-shadow:
+    0 0 24px rgba(200, 192, 176, 0.35),
+    0 0 60px rgba(100, 140, 100, 0.15);
+  animation: etlala-hero-line-glow 5s var(--ease-smooth) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .etlala-hero-creative-line {
+    animation: none;
+  }
+}
+
+@keyframes etlala-hero-line-glow {
+  0%,
+  100% {
+    opacity: 0.75;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* بقع ضوئية فوق الهيرو */
+.etlala-hero-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(40px);
+  pointer-events: none;
+  will-change: transform;
+  animation: etlala-blob-float 14s var(--ease-smooth) infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .etlala-app-ambient { animation: none; }
+  .etlala-hero-orb { animation: etlala-blob-float 0.01s linear 1; }
+  .etlala-hero-sheen { animation: none !important; }
+}
+
+/* بريق بطيء فوق تدرج الهيرو */
+.etlala-hero-sheen {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    105deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.04) 45%,
+    rgba(200, 192, 176, 0.08) 50%,
+    rgba(255, 255, 255, 0.04) 55%,
+    transparent 100%
+  );
+  background-size: 220% 100%;
+  animation: etlala-hero-sheen 16s var(--ease-smooth) infinite;
+  mix-blend-mode: soft-light;
+  opacity: 0.5;
 }
 .animate-pulse {
   animation: pulse 2s ease-in-out infinite;

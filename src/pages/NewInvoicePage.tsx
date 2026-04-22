@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Box,
@@ -22,6 +22,8 @@ import {
   InputAdornment,
   Divider,
   Chip,
+  List,
+  ListItemButton,
   Grid as MuiGrid,
 } from '@mui/material';
 import {
@@ -36,6 +38,7 @@ import {
   LocationOn,
   Receipt,
   CalendarToday,
+  CheckRounded,
 } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -48,6 +51,7 @@ const Grid = MuiGrid as any;
 import { useDataStore } from '../store/useDataStore';
 import { useAuthStore } from '../store/useAuthStore';
 import { InvoiceItem } from '../types';
+import { PageScaffold } from '../components/layout/PageScaffold';
 
 const inputStyle = {
   '& .MuiOutlinedInput-root': {
@@ -73,6 +77,17 @@ export const NewInvoicePage = () => {
 
   // Form State
   const [clientId, setClientId] = useState(searchParams.get('clientId') || '');
+  const [clientSearch, setClientSearch] = useState('');
+
+  const filteredPickerClients = useMemo(() => {
+    const q = clientSearch.trim().toLowerCase();
+    if (!q) return clients;
+    return clients.filter(
+      (c) =>
+        c.name.toLowerCase().includes(q) ||
+        (c.phone && c.phone.replace(/\s/g, '').includes(q.replace(/\s/g, '')))
+    );
+  }, [clients, clientSearch]);
   const [tempClientName, setTempClientName] = useState('');
   const [tempClientPhone, setTempClientPhone] = useState('');
   const [tempClientAddress, setTempClientAddress] = useState('');
@@ -213,112 +228,192 @@ export const NewInvoicePage = () => {
   };
 
   return (
-    <Box sx={{ pb: 12, minHeight: '100dvh', bgcolor: '#f5f3ef' }}>
-      {/* Header */}
-      <Box sx={{ background: 'linear-gradient(160deg, #364036 0%, #4a5d4a 100%)', pt: 'calc(env(safe-area-inset-top) + 16px)', pb: 3, px: 2, color: 'white' }}>
-        <Container maxWidth="sm">
-          <Stack direction="row" alignItems="center" spacing={1} mb={2}>
-            <IconButton onClick={() => navigate('/invoices')} sx={{ color: 'rgba(255,255,255,0.9)' }}>
-              <ArrowBack />
-            </IconButton>
-            <Typography fontWeight={800} sx={{ fontSize: '1.2rem' }}>
-              {editId ? 'تعديل الفاتورة' : 'فاتورة جديدة'}
-            </Typography>
-          </Stack>
-
-          {/* Summary */}
-          <Paper sx={{ p: 2, borderRadius: 2.5, bgcolor: 'rgba(255,255,255,0.1)', boxShadow: 'none' }}>
+    <Box sx={{ pb: 12, minHeight: '100dvh', bgcolor: 'background.default' }}>
+      <PageScaffold
+        title={editId ? 'تعديل الفاتورة' : 'فاتورة جديدة'}
+        subtitle="بيانات العميل والبنود"
+        backTo="/invoices"
+        contentOffset={-1}
+        headerExtra={(
+          <Paper sx={{ p: 2, borderRadius: 2.5, bgcolor: 'rgba(255,255,255,0.12)', boxShadow: 'none', border: '1px solid rgba(255,255,255,0.1)' }}>
             <Stack direction="row" justifyContent="space-between" alignItems="center">
-              <Typography sx={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.8rem' }}>الإجمالي</Typography>
-              <Typography fontWeight={900} color="white" sx={{ fontSize: '1.3rem' }}>{Math.round(total)} د.ل</Typography>
+              <Typography sx={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.8rem' }}>الإجمالي</Typography>
+              <Typography fontWeight={900} color="white" sx={{ fontSize: '1.25rem' }}>{Math.round(total)} د.ل</Typography>
             </Stack>
           </Paper>
-        </Container>
-      </Box>
+        )}
+      >
+        {/* Client — أسماء فقط، تصميم نظيف */}
+        <Box
+          sx={{
+            mb: 2.5,
+            borderRadius: 3,
+            border: '1px solid',
+            borderColor: (t) => (t.palette.mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'),
+            overflow: 'hidden',
+            bgcolor: (t) => (t.palette.mode === 'dark' ? 'rgba(255,255,255,0.02)' : '#faf9f6'),
+            boxShadow: (t) =>
+              t.palette.mode === 'dark' ? 'inset 0 1px 0 rgba(255,255,255,0.04)' : '0 1px 0 rgba(255,255,255,0.8) inset, 0 8px 32px -12px rgba(20,30,20,0.08)',
+          }}
+        >
+          <Box
+            sx={{
+              px: 2,
+              py: 1.5,
+              borderBottom: '1px solid',
+              borderColor: 'divider',
+              background: (t) =>
+                t.palette.mode === 'dark' ? 'linear-gradient(180deg, rgba(255,255,255,0.04) 0%, transparent 100%)' : 'linear-gradient(180deg, #fff 0%, #f7f5f0 100%)',
+            }}
+          >
+            <Typography variant="overline" sx={{ display: 'block', fontWeight: 800, letterSpacing: 1, color: 'text.secondary', mb: 1.25, fontSize: '0.65rem' }}>
+              العميل
+            </Typography>
+            <TextField
+              fullWidth
+              size="small"
+              placeholder="ابحث بالاسم (أو رقم هاتف للتصفية)…"
+              value={clientSearch}
+              onChange={(e) => setClientSearch(e.target.value)}
+              sx={inputStyle}
+            />
+          </Box>
+          <List disablePadding sx={{ maxHeight: 280, overflow: 'auto', py: 0.5 }}>
+            {filteredPickerClients.length === 0 ? (
+              <Box sx={{ py: 4, textAlign: 'center' }}>
+                <Typography variant="body2" color="text.secondary" fontWeight={600}>
+                  لا يوجد عميل مطابق
+                </Typography>
+                <Button variant="text" size="small" onClick={() => navigate('/clients')} sx={{ mt: 1, fontWeight: 700 }}>
+                  فتح سجل العملاء
+                </Button>
+              </Box>
+            ) : (
+              filteredPickerClients.map((c) => {
+                const selected = clientId === c.id;
+                return (
+                  <ListItemButton
+                    key={c.id}
+                    selected={selected}
+                    onClick={() => setClientId(c.id)}
+                    sx={{
+                      py: 1.5,
+                      px: 2,
+                      minHeight: 52,
+                      borderRadius: 2,
+                      mx: 1,
+                      my: 0.35,
+                      border: '1px solid transparent',
+                      transition: 'background 0.2s, border-color 0.2s, box-shadow 0.2s',
+                      '&.Mui-selected': {
+                        bgcolor: (t) => (t.palette.mode === 'dark' ? 'rgba(90, 120, 90, 0.25)' : 'rgba(61, 79, 61, 0.09)'),
+                        border: (t) => `1px solid ${t.palette.mode === 'dark' ? 'rgba(130,160,130,0.35)' : 'rgba(61, 79, 61, 0.2)'}`,
+                        boxShadow: (t) => (t.palette.mode === 'light' ? '0 2px 12px rgba(61,79,61,0.08)' : 'none'),
+                        borderInlineStart: '3px solid',
+                        borderInlineStartColor: 'primary.main',
+                      },
+                      '&.Mui-selected:hover': {
+                        bgcolor: (t) => (t.palette.mode === 'dark' ? 'rgba(90, 120, 90, 0.32)' : 'rgba(61, 79, 61, 0.12)'),
+                      },
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: 1.5 }}>
+                      <Typography
+                        sx={{
+                          fontWeight: selected ? 800 : 600,
+                          fontSize: '0.95rem',
+                          letterSpacing: 0.2,
+                          color: 'text.primary',
+                          lineHeight: 1.35,
+                        }}
+                      >
+                        {c.name}
+                      </Typography>
+                      {selected && (
+                        <CheckRounded sx={{ fontSize: 22, color: 'primary.main', flexShrink: 0, opacity: 0.95 }} />
+                      )}
+                    </Box>
+                  </ListItemButton>
+                );
+              })
+            )}
+          </List>
+          <Stack
+            direction={{ xs: 'column', sm: 'row' }}
+            spacing={1}
+            sx={{
+              p: 1.5,
+              gap: 1,
+              borderTop: '1px solid',
+              borderColor: 'divider',
+              bgcolor: (t) => (t.palette.mode === 'dark' ? 'rgba(0,0,0,0.15)' : 'rgba(61,79,61,0.03)'),
+            }}
+          >
+            <Button
+              fullWidth
+              variant={clientId === 'temp' ? 'contained' : 'outlined'}
+              onClick={() => setClientId('temp')}
+              sx={{ fontWeight: 800, borderRadius: 2, textTransform: 'none' }}
+            >
+              عميل مؤقت
+            </Button>
+            <Button fullWidth variant="outlined" onClick={() => navigate('/clients')} sx={{ fontWeight: 800, borderRadius: 2, textTransform: 'none' }}>
+              تسجيل عميل دائم
+            </Button>
+          </Stack>
+        </Box>
 
-      <Container maxWidth="sm" sx={{ mt: -2, pb: 4 }}>
-        {/* Client & Invoice Info */}
-        <Paper elevation={0} sx={{ p: { xs: 2.5, sm: 3.5 }, borderRadius: 4, mb: 3, bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', boxShadow: '0 4px 24px rgba(0,0,0,0.02)' }}>
-          <Stack spacing={3}>
-            <Box>
-              <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, mb: 1, display: 'block', ml: 0.5 }}>
-                بيانات العميل
-              </Typography>
+        {clientId === 'temp' && (
+          <Box sx={{ mb: 2.5, p: 2.25, borderRadius: 3, border: '1px dashed', borderColor: 'secondary.main', bgcolor: 'rgba(200, 192, 176, 0.06)' }}>
+            <Typography variant="caption" sx={{ color: 'secondary.main', fontWeight: 800, mb: 1.5, display: 'block' }}>
+              بيانات العميل المؤقت (لا تُحفَظ في سجل العملاء)
+            </Typography>
+            <Stack spacing={2}>
               <TextField
-                select
                 fullWidth
-                label="اختر العميل"
-                value={clientId}
-                onChange={(e) => setClientId(e.target.value)}
+                label="الاسم *"
+                value={tempClientName}
+                onChange={(e) => setTempClientName(e.target.value)}
                 variant="outlined"
                 InputProps={{
-                  startAdornment: <InputAdornment position="start"><Person sx={{ color: '#4a5d4a', opacity: 0.8 }} /></InputAdornment>,
+                  startAdornment: <InputAdornment position="start"><Person sx={{ color: '#888' }} /></InputAdornment>,
                 }}
                 sx={inputStyle}
-              >
-                {clients.map((client) => (
-                  <MenuItem key={client.id} value={client.id}>{client.name}</MenuItem>
-                ))}
-                <MenuItem value="temp">
-                  <Typography color="secondary" fontWeight={700}>+ إضافة عميل مؤقت</Typography>
-                </MenuItem>
-                <MenuItem value="" onClick={() => navigate('/clients')}>
-                  <Typography color="primary" fontWeight={700}>+ عميل جديد ثابت</Typography>
-                </MenuItem>
-              </TextField>
-            </Box>
-
-            {clientId === 'temp' && (
-              <Box sx={{ p: 2.5, bgcolor: '#fdfcfb', borderRadius: 3, border: '1px solid rgba(0,0,0,0.04)' }}>
-                <Typography variant="caption" sx={{ color: 'secondary.main', fontWeight: 800, mb: 2, display: 'block' }}>
-                  تفاصيل العميل المؤقت (لا يتم حفظه بالقائمة)
-                </Typography>
-                <Stack spacing={2}>
+              />
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField
                     fullWidth
-                    label="الاسم *"
-                    value={tempClientName}
-                    onChange={(e) => setTempClientName(e.target.value)}
+                    label="رقم الهاتف (اختياري)"
+                    value={tempClientPhone}
+                    onChange={(e) => setTempClientPhone(e.target.value)}
                     variant="outlined"
                     InputProps={{
-                      startAdornment: <InputAdornment position="start"><Person sx={{ color: '#888' }} /></InputAdornment>,
+                      startAdornment: <InputAdornment position="start"><Phone sx={{ color: '#888' }} /></InputAdornment>,
                     }}
                     sx={inputStyle}
                   />
-                  <Grid container spacing={2}>
-                    <Grid size={{ xs: 12, sm: 6 }}>
-                      <TextField
-                        fullWidth
-                        label="رقم الهاتف (اختياري)"
-                        value={tempClientPhone}
-                        onChange={(e) => setTempClientPhone(e.target.value)}
-                        variant="outlined"
-                        InputProps={{
-                          startAdornment: <InputAdornment position="start"><Phone sx={{ color: '#888' }} /></InputAdornment>,
-                        }}
-                        sx={inputStyle}
-                      />
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 6 }}>
-                      <TextField
-                        fullWidth
-                        label="العنوان (اختياري)"
-                        value={tempClientAddress}
-                        onChange={(e) => setTempClientAddress(e.target.value)}
-                        variant="outlined"
-                        InputProps={{
-                          startAdornment: <InputAdornment position="start"><LocationOn sx={{ color: '#888' }} /></InputAdornment>,
-                        }}
-                        sx={inputStyle}
-                      />
-                    </Grid>
-                  </Grid>
-                </Stack>
-              </Box>
-            )}
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField
+                    fullWidth
+                    label="العنوان (اختياري)"
+                    value={tempClientAddress}
+                    onChange={(e) => setTempClientAddress(e.target.value)}
+                    variant="outlined"
+                    InputProps={{
+                      startAdornment: <InputAdornment position="start"><LocationOn sx={{ color: '#888' }} /></InputAdornment>,
+                    }}
+                    sx={inputStyle}
+                  />
+                </Grid>
+              </Grid>
+            </Stack>
+          </Box>
+        )}
 
-            <Divider sx={{ borderStyle: 'dashed' }} />
-
+        <Paper elevation={0} sx={{ p: { xs: 2.5, sm: 3 }, borderRadius: 3, mb: 3, bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider' }}>
+          <Stack spacing={2.5}>
             <Box>
               <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, mb: 1, display: 'block', ml: 0.5 }}>
                 تفاصيل الفاتورة
@@ -399,34 +494,30 @@ export const NewInvoicePage = () => {
             </Button>
           </Stack>
 
-          <Stack spacing={2}>
-            {items.map((item, idx) => (
-              <Paper 
-                key={item.id} 
-                elevation={0}
-                sx={{ 
-                  p: 2.5, 
-                  borderRadius: 4, 
-                  border: '1px solid', 
-                  borderColor: 'divider',
-                  position: 'relative',
-                  overflow: 'hidden',
-                  transition: 'transform 0.2s',
-                  '&:active': { transform: 'scale(0.99)' }
-                }}
-              >
+          <Paper elevation={0} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider', overflow: 'hidden' }}>
+          {items.map((item, idx) => (
+              <Box key={item.id}>
+                {idx > 0 && <Divider />}
+                <Box
+                  sx={{
+                    p: 2.5,
+                    position: 'relative',
+                    transition: 'background 0.2s',
+                    '&:hover': { bgcolor: (t) => (t.palette.mode === 'dark' ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)') },
+                  }}
+                >
                 {items.length > 1 && (
-                  <IconButton 
-                    size="small" 
-                    color="error" 
+                  <IconButton
+                    size="small"
+                    color="error"
                     onClick={() => handleRemoveItem(item.id)}
-                    sx={{ position: 'absolute', top: 8, left: 8, bgcolor: 'rgba(214,69,69,0.1)' }}
+                    sx={{ position: 'absolute', top: 10, left: 10, bgcolor: 'rgba(214,69,69,0.08)' }}
                   >
                     <Delete fontSize="small" />
                   </IconButton>
                 )}
-                
-                <Stack spacing={2} mt={items.length > 1 ? 2 : 0}>
+
+                <Stack spacing={2} mt={items.length > 1 ? 2.25 : 0}>
                   <TextField 
                     fullWidth 
                     placeholder="وصف البند / الخدمة" 
@@ -490,9 +581,10 @@ export const NewInvoicePage = () => {
                     </Grid>
                   </Grid>
                 </Stack>
-              </Paper>
+                </Box>
+              </Box>
             ))}
-          </Stack>
+          </Paper>
         </Box>
 
         {/* Tax & Notes */}
@@ -540,7 +632,7 @@ export const NewInvoicePage = () => {
             sx={{ '& .MuiFilledInput-root': { borderRadius: 3, bgcolor: 'rgba(0,0,0,0.04)' } }}
           />
         </Paper>
-      </Container>
+      </PageScaffold>
 
       {/* Sticky Save Button */}
       <Box sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, p: 2, pb: 'calc(env(safe-area-inset-bottom) + 16px)', bgcolor: 'background.paper', borderTop: '1px solid', borderColor: 'divider', zIndex: 1300, boxShadow: '0 -4px 10px rgba(0,0,0,0.05)' }}>

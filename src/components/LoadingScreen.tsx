@@ -36,6 +36,7 @@ export const LoadingScreen = () => {
         zIndex: 9999,
         animation: `${fadeIn} 0.4s cubic-bezier(0.4,0,0.2,1)`,
         gap: 4,
+        overflow: 'hidden',
 
         // Subtle radial glow in center
         '&::before': {
@@ -45,13 +46,25 @@ export const LoadingScreen = () => {
           transform: 'translate(-50%, -50%)',
           width: '60vw', height: '60vw',
           maxWidth: 400,
-          background: 'radial-gradient(circle, rgba(74,93,74,0.15) 0%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(61,79,61,0.2) 0%, transparent 70%)',
           pointerEvents: 'none',
+          zIndex: 0,
         },
       }}
     >
+      <Box
+        className="etlala-app-ambient etlala-app-ambient--dark"
+        sx={{
+          position: 'absolute',
+          inset: 0,
+          zIndex: 0,
+          pointerEvents: 'none',
+          opacity: 0.5,
+        }}
+        aria-hidden
+      />
       {/* Brand Name */}
-      <Box sx={{ textAlign: 'center', position: 'relative' }}>
+      <Box sx={{ textAlign: 'center', position: 'relative', zIndex: 1 }}>
         {/* Arabic name */}
         <Box
           sx={{
