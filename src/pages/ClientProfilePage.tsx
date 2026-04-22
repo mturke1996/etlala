@@ -441,11 +441,11 @@ export const ClientProfilePage = () => {
     { title: 'المصروفات', icon: TrendingDown, color: '#d64545', bgColor: 'rgba(214,69,69,0.08)', borderColor: 'rgba(214,69,69,0.12)', module: 'expenses', onClick: () => setExpensesListOpen(true) },
     { title: 'المدفوعات', icon: Payment, color: '#0d9668', bgColor: 'rgba(13,150,104,0.08)', borderColor: 'rgba(13,150,104,0.12)', module: 'payments', onClick: () => setPaymentsListOpen(true) },
     { title: 'الديون', icon: CreditCard, color: '#c9a54e', bgColor: 'rgba(201,165,78,0.08)', borderColor: 'rgba(201,165,78,0.12)', module: 'debts', onClick: () => setDebtsListOpen(true) },
-    { title: 'العمال', icon: PersonAdd, color: '#4a5d4a', bgColor: 'rgba(74,93,74,0.08)', borderColor: 'rgba(74,93,74,0.12)', module: 'workers', onClick: () => setWorkersListOpen(true) },
+    { title: 'العمال', icon: PersonAdd, color: '#4361EE', bgColor: 'rgba(67, 97, 238, 0.08)', borderColor: 'rgba(67, 97, 238, 0.12)', module: 'workers', onClick: () => setWorkersListOpen(true) },
     { title: 'إضافة رصيد (العهد)', icon: AccountBalanceWallet, color: '#f59e0b', bgColor: 'rgba(245,158,11,0.08)', borderColor: 'rgba(245,158,11,0.12)', module: 'balances', onClick: () => setBalancesListOpen(true) },
     { title: 'حساب الأرباح', icon: TrendingUp, color: '#5a8fc4', bgColor: 'rgba(90,143,196,0.08)', borderColor: 'rgba(90,143,196,0.12)', module: 'stats', onClick: () => setProfitDialogOpen(true) },
-    { title: 'تحميل التقرير الشامل', icon: Business, color: '#4a5d4a', bgColor: 'rgba(74,93,74,0.1)', borderColor: 'rgba(74,93,74,0.16)', module: 'stats', onClick: () => handleGeneratePDF() },
-    { title: 'مشاركة التقرير الشامل', icon: Share, color: '#3d4f3d', bgColor: 'rgba(61,79,61,0.08)', borderColor: 'rgba(61,79,61,0.12)', module: 'stats', onClick: () => handleShareFullReport() },
+    { title: 'تحميل التقرير الشامل', icon: Business, color: '#4361EE', bgColor: 'rgba(67, 97, 238, 0.1)', borderColor: 'rgba(67, 97, 238, 0.16)', module: 'stats', onClick: () => handleGeneratePDF() },
+    { title: 'مشاركة التقرير الشامل', icon: Share, color: '#2E44A6', bgColor: 'rgba(46, 68, 166, 0.08)', borderColor: 'rgba(46, 68, 166, 0.12)', module: 'stats', onClick: () => handleShareFullReport() },
   ].filter(item => canAccess(item.module as any));
 
   // Handlers
@@ -539,8 +539,8 @@ export const ClientProfilePage = () => {
   const getPayMethodLabel = (m: string) => ({ cash: 'نقدي', bank_transfer: 'تحويل بنكي', check: 'شيك', credit_card: 'بطاقة', mobile_payment: 'محفظة' }[m] || m);
   const getCategoryLabel = getExpenseCategoryLabel;
 
-  const headerGradient = theme.palette.mode === 'light' ? 'linear-gradient(160deg, #364036 0%, #4a5d4a 100%)' : 'linear-gradient(160deg, #2a3a2a 0%, #364036 100%)';
-  const pageBg = theme.palette.mode === 'dark' ? 'linear-gradient(180deg, #1a1f1a 0%, #151a15 100%)' : 'linear-gradient(180deg, #f5f3ef 0%, #ede9e3 100%)';
+  const headerGradient = theme.palette.mode === 'light' ? 'linear-gradient(160deg, #2E44A6 0%, #4361EE 100%)' : 'linear-gradient(160deg, #111C3A 0%, #0D1528 100%)';
+  const pageBg = theme.palette.mode === 'dark' ? 'linear-gradient(180deg, #0B0F19 0%, #090C14 100%)' : 'linear-gradient(180deg, #F7F9FC 0%, #F1F5F9 100%)';
 
   if (!client) return (
     <Box sx={{ p: 3, textAlign: 'center' }}>
@@ -840,54 +840,58 @@ export const ClientProfilePage = () => {
           {globalFundStats && (
             <Box sx={{
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              px: 2.5, py: 1.35,
-              bgcolor: globalFundStats.remaining > 0 ? 'rgba(13,150,104,0.1)' : 'rgba(214,69,69,0.1)',
-              borderBottom: '1px solid', borderColor: 'divider',
+              px: 2.5, py: 1.5, mx: 2, mt: 2, borderRadius: 3,
+              background: globalFundStats.remaining > 0 ? 'linear-gradient(135deg, rgba(16,185,129,0.1) 0%, rgba(5,150,105,0.05) 100%)' : 'linear-gradient(135deg, rgba(239,68,68,0.1) 0%, rgba(185,28,28,0.05) 100%)',
+              border: '1px solid', borderColor: globalFundStats.remaining > 0 ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)',
             }}>
-              <Stack direction="row" alignItems="center" spacing={1}>
-                <AccountBalanceWallet sx={{ fontSize: 20, color: globalFundStats.remaining > 0 ? '#34d399' : '#f87171' }} />
-                <Typography sx={{ fontSize: '0.78rem', fontWeight: 700, color: 'text.secondary' }}>رصيد العهدة العام</Typography>
+              <Stack direction="row" alignItems="center" spacing={1.5}>
+                <Box sx={{ width: 36, height: 36, borderRadius: '50%', background: globalFundStats.remaining > 0 ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <AccountBalanceWallet sx={{ fontSize: 18, color: globalFundStats.remaining > 0 ? '#10B981' : '#EF4444' }} />
+                </Box>
+                <Typography sx={{ fontSize: '0.8rem', fontWeight: 800, color: 'text.primary' }}>رصيد العهدة العام</Typography>
               </Stack>
-              <Typography sx={{ fontSize: '1.05rem', fontWeight: 900, fontFamily: 'Outfit, sans-serif', color: globalFundStats.remaining > 0 ? '#34d399' : '#f87171' }}>
+              <Typography sx={{ fontSize: '1.2rem', fontWeight: 900, fontFamily: 'Outfit, sans-serif', color: globalFundStats.remaining > 0 ? '#10B981' : '#EF4444' }}>
                 {formatCurrency(globalFundStats.remaining)}
               </Typography>
             </Box>
           )}
           {currentUserBalanceInfo && (
-            <Box>
+            <Box sx={{ mx: 2, mt: 2, mb: 1, borderRadius: 4, overflow: 'hidden', boxShadow: (t) => t.palette.mode === 'dark' ? '0 12px 32px rgba(0,0,0,0.3)' : '0 12px 32px rgba(0,0,0,0.08)', border: '1px solid', borderColor: (t) => t.palette.mode === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)', background: (t) => t.palette.mode === 'dark' ? 'rgba(255,255,255,0.03)' : '#fff' }}>
               <Box sx={{
                 background: currentUserBalanceInfo.remaining > 0
-                  ? 'linear-gradient(135deg, #0d9668 0%, #059652 100%)'
-                  : 'linear-gradient(135deg, #d64545 0%, #b83b3b 100%)',
+                  ? 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
+                  : 'linear-gradient(135deg, #EF4444 0%, #B91C1C 100%)',
                 color: 'white',
-                px: 2.5, py: 2,
+                px: 3, py: 2.5,
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               }}>
                 <Box>
                   <Typography variant="caption" sx={{ opacity: 0.9, fontWeight: 700, display: 'block', mb: 0.5, letterSpacing: 0.5 }}>
                     عهدتي — {user?.displayName || currentUserBalanceInfo.name}
                   </Typography>
-                  <Typography sx={{ fontSize: '1.75rem', fontWeight: 900, lineHeight: 1, fontFamily: "'Outfit', sans-serif" }}>
+                  <Typography sx={{ fontSize: '2rem', fontWeight: 900, lineHeight: 1, fontFamily: "'Outfit', sans-serif" }}>
                     {formatCurrency(currentUserBalanceInfo.remaining)}
                   </Typography>
                 </Box>
-                <AccountBalanceWallet sx={{ fontSize: 40, opacity: 0.35 }} />
+                <Box sx={{ width: 48, height: 48, borderRadius: '50%', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <AccountBalanceWallet sx={{ fontSize: 24, color: '#fff' }} />
+                </Box>
               </Box>
-              <Box sx={{ display: 'flex', borderBottom: '1px solid', borderColor: 'divider' }}>
+              <Box sx={{ display: 'flex', bgcolor: (t) => t.palette.mode === 'dark' ? 'rgba(0,0,0,0.2)' : 'rgba(248,250,252,1)' }}>
                 {[
-                  { label: 'إجمالي العهدة', value: currentUserBalanceInfo.given, color: '#4a5d4a' },
-                  { label: 'المصروف منها', value: currentUserBalanceInfo.spent, color: '#d64545' },
+                  { label: 'إجمالي العهدة', value: currentUserBalanceInfo.given, color: '#4361EE' },
+                  { label: 'المصروف منها', value: currentUserBalanceInfo.spent, color: '#EF4444' },
                 ].map((s, i) => (
-                  <Box key={i} sx={{ flex: 1, p: 1.35, textAlign: 'center', borderRight: i === 0 ? '1px solid' : 'none', borderColor: 'divider' }}>
-                    <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, display: 'block', mb: 0.3, fontSize: '0.65rem' }}>{s.label}</Typography>
-                    <Typography variant="body2" fontWeight={900} sx={{ color: s.color, fontFamily: "'Outfit', sans-serif" }}>{formatCurrency(s.value)}</Typography>
+                  <Box key={i} sx={{ flex: 1, p: 2, textAlign: 'center', borderRight: i === 0 ? '1px solid' : 'none', borderColor: 'divider' }}>
+                    <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, display: 'block', mb: 0.5, fontSize: '0.7rem' }}>{s.label}</Typography>
+                    <Typography variant="body2" fontWeight={900} sx={{ color: s.color, fontFamily: "'Outfit', sans-serif", fontSize: '1rem' }}>{formatCurrency(s.value)}</Typography>
                   </Box>
                 ))}
               </Box>
               {currentUserBalanceInfo.remaining <= 0 && currentUserBalanceInfo.given > 0 && (
-                <Box sx={{ bgcolor: '#7f1d1d', color: '#fff', px: 2, py: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <WarningAmber sx={{ fontSize: 18 }} />
-                  <Typography variant="body2" fontWeight={800} fontSize="0.8rem">رصيد العهدة نفد</Typography>
+                <Box sx={{ background: 'rgba(239,68,68,0.1)', color: '#EF4444', px: 3, py: 1.5, display: 'flex', alignItems: 'center', gap: 1, borderTop: '1px solid rgba(239,68,68,0.2)' }}>
+                  <WarningAmber sx={{ fontSize: 20 }} />
+                  <Typography variant="body2" fontWeight={800} fontSize="0.85rem">رصيد العهدة نفد</Typography>
                 </Box>
               )}
             </Box>

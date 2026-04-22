@@ -103,7 +103,12 @@ function AppContent() {
       <CssBaseline />
       <Toaster position="top-center" toastOptions={toastOptions} />
       
-      <BrowserRouter>
+      <BrowserRouter
+        future={{
+          v7_startTransition: true,
+          v7_relativeSplatPath: true,
+        }}
+      >
         <Routes>
           <Route path="/login" element={!isAuthenticated ? <LoginPage /> : <Navigate to="/" />} />
           

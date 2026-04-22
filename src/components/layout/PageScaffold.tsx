@@ -69,11 +69,11 @@ export function PageScaffold({
           {
             background: isProfile
               ? (isDark
-                ? 'linear-gradient(168deg, #0f1a0f 0%, #1a2a1a 38%, #152018 100%)'
-                : 'linear-gradient(168deg, #3d4f3d 0%, #2d3f2c 45%, #1e2e1e 100%)')
+                ? 'linear-gradient(168deg, #0B1221 0%, #111C3A 38%, #0D1528 100%)'
+                : 'linear-gradient(168deg, #4361EE 0%, #2E44A6 45%, #1B296B 100%)')
               : (isDark
-                ? 'linear-gradient(162deg, #243024 0%, #181f18 52%, #121712 100%)'
-                : 'linear-gradient(162deg, #4a5c4a 0%, #354435 46%, #252f25 100%)'),
+                ? 'linear-gradient(162deg, #111827 0%, #0B0F19 52%, #090C14 100%)'
+                : 'linear-gradient(162deg, #637DFF 0%, #4361EE 46%, #2E44A6 100%)'),
             pt: isProfile ? 'calc(env(safe-area-inset-top) + 16px)' : 'calc(env(safe-area-inset-top) + 12px)',
             pb: isProfile ? 3.5 : 2.75,
             px: 2,
@@ -81,26 +81,26 @@ export function PageScaffold({
             borderRadius: isProfile ? { xs: '0 0 32px 32px', sm: '0 0 40px 40px' } : { xs: '0 0 26px 26px', sm: '0 0 32px 32px' },
             boxShadow: isProfile
               ? (isDark
-                ? '0 28px 80px -12px rgba(0,0,0,0.65), inset 0 0 100px -40px rgba(100, 140, 100, 0.06), inset 0 -1px 0 rgba(200,192,176,0.08)'
-                : '0 24px 64px -14px rgba(15, 40, 15, 0.5), inset 0 0 80px -30px rgba(255,255,255,0.04)')
+                ? '0 28px 80px -12px rgba(0,0,0,0.65), inset 0 0 100px -40px rgba(67, 97, 238, 0.06), inset 0 -1px 0 rgba(226, 232, 240, 0.08)'
+                : '0 24px 64px -14px rgba(15, 25, 60, 0.5), inset 0 0 80px -30px rgba(255,255,255,0.04)')
               : (isDark
-                ? '0 20px 56px rgba(0,0,0,0.55), inset 0 -1px 0 rgba(200,192,176,0.06)'
-                : '0 16px 48px -12px rgba(20, 30, 20, 0.35), inset 0 -1px 0 rgba(255,255,255,0.12)'),
+                ? '0 20px 56px rgba(0,0,0,0.55), inset 0 -1px 0 rgba(226, 232, 240, 0.06)'
+                : '0 16px 48px -12px rgba(20, 25, 45, 0.35), inset 0 -1px 0 rgba(255,255,255,0.12)'),
             position: 'relative',
             overflow: 'hidden',
             borderBottom: isProfile
-              ? `1px solid ${isDark ? 'rgba(200, 192, 176, 0.12)' : 'rgba(200, 192, 176, 0.28)'}`
-              : `2px solid ${isDark ? 'rgba(200, 192, 176, 0.14)' : 'rgba(200, 192, 176, 0.22)'}`,
+              ? `1px solid ${isDark ? 'rgba(226, 232, 240, 0.12)' : 'rgba(226, 232, 240, 0.28)'}`
+              : `2px solid ${isDark ? 'rgba(226, 232, 240, 0.14)' : 'rgba(226, 232, 240, 0.22)'}`,
             '&::before': {
               content: '""',
               position: 'absolute',
               inset: 0,
               background: isProfile
                 ? (isDark
-                  ? 'radial-gradient(ellipse 100% 90% at 100% 0%, rgba(130, 170, 120, 0.18) 0%, transparent 45%), radial-gradient(ellipse 60% 50% at 0% 100%, rgba(200, 192, 176, 0.06) 0%, transparent 50%)'
-                  : 'radial-gradient(ellipse 100% 85% at 0% 0%, rgba(255,255,255,0.2) 0%, transparent 48%), radial-gradient(ellipse 70% 60% at 100% 100%, rgba(200, 192, 176, 0.12) 0%, transparent 55%)')
+                  ? 'radial-gradient(ellipse 100% 90% at 100% 0%, rgba(100, 130, 255, 0.18) 0%, transparent 45%), radial-gradient(ellipse 60% 50% at 0% 100%, rgba(226, 232, 240, 0.06) 0%, transparent 50%)'
+                  : 'radial-gradient(ellipse 100% 85% at 0% 0%, rgba(255,255,255,0.2) 0%, transparent 48%), radial-gradient(ellipse 70% 60% at 100% 100%, rgba(226, 232, 240, 0.12) 0%, transparent 55%)')
                 : (isDark
-                  ? 'radial-gradient(ellipse 90% 70% at 100% 0%, rgba(122, 154, 122, 0.12) 0%, transparent 52%)'
+                  ? 'radial-gradient(ellipse 90% 70% at 100% 0%, rgba(100, 130, 255, 0.12) 0%, transparent 52%)'
                   : 'radial-gradient(ellipse 85% 65% at 0% 0%, rgba(255,255,255,0.22) 0%, transparent 55%)'),
               pointerEvents: 'none',
             },
@@ -113,8 +113,8 @@ export function PageScaffold({
               height: isProfile ? 2 : 1,
               background: isProfile
                 ? (isDark
-                  ? 'linear-gradient(90deg, transparent, rgba(200, 192, 176, 0.25) 20%, rgba(200, 192, 176, 0.45) 50%, rgba(200, 192, 176, 0.25) 80%, transparent)'
-                  : 'linear-gradient(90deg, transparent, rgba(255,255,255,0.5) 30%, rgba(200, 192, 176, 0.4) 50%, rgba(255,255,255,0.4) 70%, transparent)')
+                  ? 'linear-gradient(90deg, transparent, rgba(226, 232, 240, 0.25) 20%, rgba(226, 232, 240, 0.45) 50%, rgba(226, 232, 240, 0.25) 80%, transparent)'
+                  : 'linear-gradient(90deg, transparent, rgba(255,255,255,0.5) 30%, rgba(226, 232, 240, 0.4) 50%, rgba(255,255,255,0.4) 70%, transparent)')
                 : (isDark
                   ? 'linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent)'
                   : 'linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent)'),

@@ -16,6 +16,7 @@
     "@emotion/styled": "^11.11.0",
     "@fontsource/amiri": "^5.2.8",
     "@fontsource/cairo": "^5.2.7",
+    "@fontsource/inter": "^5.2.8",
     "@fontsource/roboto": "^5.0.8",
     "@fontsource/tajawal": "^5.2.7",
     "@gsap/react": "^2.1.2",

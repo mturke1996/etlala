@@ -51,7 +51,7 @@ export function ClientProfileHero({ client, activitySummary }: ClientProfileHero
               height: 56,
               flexShrink: 0,
               borderRadius: 2,
-              bgcolor: isCo ? alpha('#6b7f6b', 0.32) : alpha('#c8c0b0', 0.18),
+              bgcolor: isCo ? alpha('#637DFF', 0.32) : alpha('#E2E8F0', 0.18),
               color: '#fff',
               border: `1px solid ${alpha('#fff', 0.18)}`,
             }}

@@ -42,7 +42,7 @@ export function ProfileSessionListShell({
         bgcolor: theme.palette.mode === 'dark' ? '#0f130f' : '#f0ede6',
         background:
           theme.palette.mode === 'dark'
-            ? `radial-gradient(ellipse 100% 45% at 100% 0%, ${tint} 0%, #0f130f 55%), radial-gradient(ellipse 60% 40% at 0% 100%, rgba(74,93,74,0.05) 0%, transparent 50%)`
+            ? `radial-gradient(ellipse 100% 45% at 100% 0%, ${tint} 0%, #0f130f 55%), radial-gradient(ellipse 60% 40% at 0% 100%, rgba(67, 97, 238, 0.05) 0%, transparent 50%)`
             : `radial-gradient(ellipse 100% 50% at 0% 0%, ${tint} 0%, #f0ede6 50%), linear-gradient(180deg, #faf8f3 0%, #f2efe8 100%)`,
       }}
     >
@@ -57,11 +57,11 @@ const searchFieldSx: SxProps<Theme> = (theme) => ({
     borderRadius: 2.5,
     bgcolor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.07)' : '#fff',
     border: '1px solid',
-    borderColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(61,79,61,0.12)',
+    borderColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(67, 97, 238, 0.12)',
     boxShadow: theme.palette.mode === 'light' ? '0 1px 0 rgba(255,255,255,0.95) inset' : 'none',
     transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
     '&:hover': {
-      borderColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.16)' : 'rgba(61,79,61,0.2)',
+      borderColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.16)' : 'rgba(67, 97, 238, 0.2)',
     },
     '&.Mui-focused': {
       borderColor: 'primary.main',
@@ -104,7 +104,7 @@ export function ProfileSessionSearchBar({ children }: { children: ReactNode }) {
       sx={(theme) => ({
         px: 2,
         py: 1.75,
-        borderBottom: `1px solid ${theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.07)' : 'rgba(61,79,61,0.1)'}`,
+        borderBottom: `1px solid ${theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.07)' : 'rgba(67, 97, 238, 0.1)'}`,
         background:
           theme.palette.mode === 'dark'
             ? 'linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(0,0,0,0.08) 100%)'
@@ -176,7 +176,7 @@ export function ProfileSessionTotalBar({
         ? 'linear-gradient(145deg, #3a1e1e 0%, #2a1212 100%)'
         : theme.palette.mode === 'dark'
           ? 'linear-gradient(145deg, #1c241c 0%, #141a14 100%)'
-          : 'linear-gradient(145deg, #3d4f3d 0%, #2a3a2a 100%)';
+          : 'linear-gradient(145deg, #4361EE 0%, #1E293B 100%)';
 
   return (
     <Box
@@ -289,19 +289,28 @@ export function ProfileSessionRecordListItem({ accent, children, index = 0 }: Pr
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: reduce ? 0 : Math.min(index * 0.04, 0.24), duration: 0.35, ease: easeSmooth }}
     >
-      <EtlalaAccentSurface
-        accent={accent}
-        sx={{
-          borderRadius: 2.5,
-          borderInlineStartWidth: 4,
-          boxShadow: (t) =>
-            t.palette.mode === 'dark'
-              ? '0 4px 24px rgba(0,0,0,0.3)'
-              : '0 2px 0 rgba(255,255,255,0.9) inset, 0 6px 24px rgba(30,40,30,0.07)',
-        }}
-      >
-        {children}
-      </EtlalaAccentSurface>
+      <Box sx={{ mb: 1.5 }}>
+        <EtlalaAccentSurface
+          accent={accent}
+          sx={{
+            borderRadius: 3.5,
+            borderInlineStartWidth: 5,
+            border: '1px solid',
+            borderColor: (t) => t.palette.mode === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
+            background: (t) => t.palette.mode === 'dark' 
+              ? 'linear-gradient(135deg, rgba(30,41,59,0.7) 0%, rgba(15,23,42,0.8) 100%)' 
+              : 'linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(248,250,252,0.9) 100%)',
+            backdropFilter: 'blur(12px)',
+            boxShadow: (t) =>
+              t.palette.mode === 'dark'
+                ? '0 8px 32px -4px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)'
+                : '0 8px 32px -4px rgba(71,85,105,0.08), inset 0 1px 0 rgba(255,255,255,1)',
+            overflow: 'hidden',
+          }}
+        >
+          {children}
+        </EtlalaAccentSurface>
+      </Box>
     </Box>
   );
 }

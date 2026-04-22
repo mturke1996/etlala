@@ -49,7 +49,7 @@ export function EtlalaNavRow(props: {
         boxShadow: isDark ? 'none' : '0 1px 0 rgba(255,255,255,0.9) inset',
         overflow: 'hidden',
         '&:hover': {
-          bgcolor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(61,79,61,0.04)',
+          bgcolor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(67, 97, 238, 0.04)',
           boxShadow: isDark ? '0 0 0 1px rgba(255,255,255,0.06)' : '0 1px 0 rgba(255,255,255,1) inset, 0 4px 18px rgba(20,25,20,0.05)',
         },
         '&:active': { transform: 'scale(0.995)' },
@@ -108,8 +108,8 @@ export function EtlalaSectionTitle({ title, subtitle }: { title: string; subtitl
           mt: 0.4,
           flexShrink: 0,
           background: isDark
-            ? 'linear-gradient(180deg, #8aab8c, #2d3d2c)'
-            : 'linear-gradient(180deg, #3d4f3d, #6b7f6b)',
+            ? 'linear-gradient(180deg, #637DFF, #2E44A6)'
+            : 'linear-gradient(180deg, #4361EE, #7B8DFA)',
         }}
         aria-hidden
       />
@@ -242,7 +242,7 @@ export function EtlalaStatRow(props: { items: { label: string; value: string; co
             px: 1.25,
             py: 0.5,
             borderRadius: 1.5,
-            bgcolor: (t) => (t.palette.mode === 'dark' ? 'rgba(255,255,255,0.04)' : 'rgba(61,79,61,0.04)'),
+            bgcolor: (t) => (t.palette.mode === 'dark' ? 'rgba(255,255,255,0.04)' : 'rgba(67, 97, 238, 0.04)'),
             border: '1px solid',
             borderColor: 'divider',
           }}

@@ -5,6 +5,7 @@ import { Buffer } from 'buffer';
 
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import '@fontsource/inter'; // Added for Premium Soft Modern UI typography
 import App from './App';
 import './index.css';
 

@@ -29,6 +29,13 @@ dayjs.locale('ar');
 const fmt = (d: string) => dayjs(d).format('DD/MM/YYYY');
 const refNum = (n: number) => `EHD-${String(n).padStart(3, '0')}`;
 
+/** تقريب نقدي لتفادي بقايا الفاصلة العائمة التي تمنع ترحيل عجز صغير */
+const round2 = (n: number) => {
+  const x = Number(n);
+  if (Number.isNaN(x) || !Number.isFinite(x)) return 0;
+  return Math.round(x * 100) / 100;
+};
+
 const F = "'Cairo', sans-serif";
 const FN = "'Outfit', monospace";
 
@@ -85,21 +92,20 @@ export const FundPage = () => {
       if (!map[uid]) map[uid] = { name, uid, custodies: [] };
       map[uid].custodies.push({
         id: tx.id, ref: refNum(globalRef++),
-        amount: tx.amount, date: tx.date, createdAt: tx.createdAt,
+        amount: round2(tx.amount), date: tx.date, createdAt: tx.createdAt,
         description: tx.description, notes: tx.notes,
-        spent: 0, remaining: tx.amount, expenses: [],
-        carryOver: 0, // القيمة المنقولة من العهدة السابقة (سالب)
+        spent: 0, remaining: round2(tx.amount), expenses: [],
+        carryOver: 0, // مبلغ عجز مُنقَطع مسبقاً من «المصروف» هنا: خصم من رصيد هذه العهدة (ليست مبالغ مترحّلة من دون تسوية)
+        debtRolledOut: false, // بُلّغ دين منها للعهدة التالية: لا نعيد مزامنة المتبقي من (المبلغ−المصروف)
         _raw: tx,
       });
     });
 
-    // ── ترحيل السالب من العهدة السابقة إلى التالية ──
-    // إذا كانت العهدة السابقة سالبة، يتم خصم المبلغ من العهدة التالية
+    // ترتيب عهدات كل مستخدم زمنيًا (ضروري لترحيل العجز)
     Object.values(map).forEach(userData => {
-      for (let i = 1; i < userData.custodies.length; i++) {
-        const prev = userData.custodies[i - 1];
-        // سيتم تطبيق الترحيل بعد حساب المصروفات
-      }
+      userData.custodies.sort(
+        (a, b) => dayjs(a.createdAt).valueOf() - dayjs(b.createdAt).valueOf()
+      );
     });
 
     const allExp = [...expenses.filter(e => e.userId)]
@@ -150,22 +156,65 @@ export const FundPage = () => {
       }
     });
 
-    // ── ترحيل الرصيد السالب بين العهدات ──
-    // بعد حساب كل المصروفات، إذا كانت عهدة سالبة وهناك عهدة تالية،
-    // يتم نقل السالب إلى العهدة التالية
+    // مزامنة: المتبقي = مبلغ العهدة − المصروف (فصل العجز عن "المصروف" على العهدة التالية)
     Object.values(map).forEach(userData => {
-      for (let i = 0; i < userData.custodies.length - 1; i++) {
-        const current = userData.custodies[i];
-        const next = userData.custodies[i + 1];
-        if (current.remaining < 0) {
-          const deficit = Math.abs(current.remaining);
-          next.carryOver = deficit;
-          next.remaining -= deficit;
-          next.spent += deficit;
-          // تصفير السالب في العهدة الحالية لأنه تم ترحيله
-          current.remaining = 0;
+      userData.custodies.forEach(c => {
+        c.spent = round2(c.spent);
+        c.remaining = round2(c.amount - c.spent);
+      });
+    });
+
+    // ── خصم عجز عهدة سابقة من ميزانية العهدة التالية (حلقات حتى الاستقرار) ──
+    // مهم: لا تقتصر على (next.remaining - deficit) — إن كانت next سالبة مسبقاً فُرَض اقتطاع العجز مرتين.
+    // الصحيح: next.spent += عجز ثم next.remaining = amount − spent (واحدٌ يساوي اقتطاعاً من رصيد تلك العهدة).
+    let moved = true;
+    let pass = 0;
+    while (moved && pass < 32) {
+      moved = false;
+      pass += 1;
+      Object.values(map).forEach(userData => {
+        for (let i = 0; i < userData.custodies.length - 1; i++) {
+          const current = userData.custodies[i];
+          const next = userData.custodies[i + 1];
+          const r = current.remaining;
+          if (r < 0) {
+            const deficit = -r;
+            const ns = round2(next.spent + deficit);
+            next.spent = ns;
+            next.remaining = round2(next.amount - ns);
+            next.carryOver = round2(deficit);
+            current.remaining = 0;
+            current.debtRolledOut = true;
+            moved = true;
+          }
         }
-      }
+      });
+    }
+
+    // إعادة مزامنة العهدات التي لم يُنقل دين منها
+    Object.values(map).forEach(userData => {
+      userData.custodies.forEach(c => {
+        if (!c.debtRolledOut) {
+          c.spent = round2(c.spent);
+          c.remaining = round2(c.amount - c.spent);
+        }
+      });
+    });
+
+    // تكرار نفس مبلغ «خصم عجز سابق» على عدة صفوف: اعرضه على آخر عهدة فقط. إن اختلفت المبالغ فاتركها.
+    Object.values(map).forEach(userData => {
+      const a = userData.custodies;
+      const withCarry = a.map(c => c.carryOver).filter(x => x > 0);
+      if (withCarry.length <= 1) return;
+      const v0 = round2(withCarry[0] ?? 0);
+      if (!withCarry.every(c => round2(c) === v0)) return;
+      let lastI = -1;
+      a.forEach((c, i) => {
+        if (c.carryOver > 0) lastI = i;
+      });
+      a.forEach((c, i) => {
+        if (lastI >= 0 && i !== lastI) c.carryOver = 0;
+      });
     });
 
     return Object.entries(map);
@@ -223,10 +272,12 @@ export const FundPage = () => {
   const USER_HDR = isDark ? '#2d3a2d' : '#fdfdfc';
 
   // ── Status ─────────────────────────────────────────────────────────────────
-  const getStatus = (remaining: number, amount: number) => {
-    if (remaining < 0) return { color: '#dc2626', bg: 'rgba(220,38,38,0.15)', border: 'rgba(220,38,38,0.4)', label: 'متجاوزة' };
-    if (remaining === 0) return { color: '#ef4444', bg: 'rgba(239,68,68,0.12)', border: 'rgba(239,68,68,0.3)', label: 'منتهية' };
-    if (remaining < amount * 0.3) return { color: '#f59e0b', bg: 'rgba(245,158,11,0.12)', border: 'rgba(245,158,11,0.3)', label: 'منخفضة' };
+  const getStatus = (remaining: number, amount: number, carryOver = 0) => {
+    const r = round2(remaining);
+    const net = round2(Math.max(0, round2(amount) - round2(carryOver || 0)));
+    if (r < 0) return { color: '#dc2626', bg: 'rgba(220,38,38,0.15)', border: 'rgba(220,38,38,0.4)', label: 'متجاوزة' };
+    if (r === 0) return { color: '#ef4444', bg: 'rgba(239,68,68,0.12)', border: 'rgba(239,68,68,0.3)', label: 'منتهية' };
+    if (net > 0 && r < net * 0.3) return { color: '#f59e0b', bg: 'rgba(245,158,11,0.12)', border: 'rgba(245,158,11,0.3)', label: 'منخفضة' };
     return { color: '#10b981', bg: 'rgba(16,185,129,0.12)', border: 'rgba(16,185,129,0.3)', label: 'نشطة' };
   };
 
@@ -428,10 +479,10 @@ export const FundPage = () => {
                     boxShadow: isDark ? '0 10px 30px rgba(0,0,0,0.4)' : '0 10px 30px rgba(0,0,0,0.06)' 
                 }}>
                   {[...userData.custodies].reverse().map((c, ci, arr) => {
-                    const st = getStatus(c.remaining, c.amount);
-                    const pct = c.amount > 0 ? Math.min(100, (Math.max(c.spent, 0) / c.amount) * 100) : 0;
+                    const st = getStatus(c.remaining, c.amount, c.carryOver || 0);
+                    const dep = round2(c.amount);
+                    const pct = dep > 0 ? Math.min(100, (Math.max(0, round2(c.spent)) / dep) * 100) : 0;
                     const isOverflow = c.remaining < 0;
-                    const effectiveAmount = c.amount + (c.carryOver || 0);
                     const isOpen = openId === c.id;
 
                     return (
@@ -487,15 +538,19 @@ export const FundPage = () => {
                             </Stack>
                           )}
 
-                          {/* Carry-over badge */}
+                          {/* عجز سابق: مُنقَطع من رصيد هذه العهدة (موجود ضمن «المصروف»/«المتبقي» أعلاه) */}
                           {c.carryOver > 0 && (
                             <Box sx={{
-                              display: 'flex', alignItems: 'center', gap: 0.7,
-                              bgcolor: 'rgba(220,38,38,0.1)', border: '1px solid rgba(220,38,38,0.25)',
-                              borderRadius: 1, px: 1.2, py: 0.4, mb: 1, width: 'fit-content',
+                              display: 'flex', flexDirection: 'column', gap: 0.3,
+                              bgcolor: isDark ? 'rgba(59, 130, 246, 0.12)' : 'rgba(59, 130, 246, 0.08)',
+                              border: '1px solid', borderColor: isDark ? 'rgba(59, 130, 246, 0.35)' : 'rgba(37, 99, 235, 0.25)',
+                              borderRadius: 1, px: 1.2, py: 0.5, mb: 1, width: 'fit-content', maxWidth: '100%',
                             }}>
-                              <Typography sx={{ fontSize: '0.6rem', color: '#dc2626', fontWeight: 800, fontFamily: F }}>
-                                ⚠ مرحّل من العهدة السابقة: {formatCurrency(c.carryOver)} د.ل
+                              <Typography sx={{ fontSize: '0.6rem', color: isDark ? '#93c5fd' : '#1d4ed8', fontWeight: 800, fontFamily: F, lineHeight: 1.35 }}>
+                                مُقتطع من رصيد هذه العهدة: {formatCurrency(c.carryOver)} د.ل
+                              </Typography>
+                              <Typography sx={{ fontSize: '0.55rem', fontWeight: 600, color: isDark ? 'rgba(147,197,253,0.85)' : 'rgba(29,78,216,0.8)', fontFamily: F, lineHeight: 1.35 }}>
+                                (يظهر داخل «المصروف» — تسوية عجز عهدة سابقة)
                               </Typography>
                             </Box>
                           )}
@@ -597,7 +652,7 @@ export const FundPage = () => {
                             ) : (
                               <Box>
                                 {c.expenses.map((exp: any, ei: number) => (
-                                  <Box key={exp.id || ei} sx={{
+                                  <Box key={`${c.id}-exp-${ei}-${String(exp.id ?? '')}`} sx={{
                                     px: 2.5, py: 1.8,
                                     borderBottom: ei < c.expenses.length - 1 ? '1px solid' : 'none',
                                     borderColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.05)',
