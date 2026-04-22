@@ -35,16 +35,16 @@ export const Logo: React.FC<LogoProps> = ({ size = 64, variant = 'color', showSu
             width: safeSize,
             height: safeSize,
             borderRadius: '16px',
-            background: 'linear-gradient(135deg, #4a5d4a 0%, #364036 100%)',
+            background: 'linear-gradient(135deg, #4361EE 0%, #1E293B 100%)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: '#c8c0b0',
+            color: '#fff',
             fontWeight: 900,
             fontSize: fontSize,
-            boxShadow: '0 4px 15px rgba(74, 93, 74, 0.4)',
+            boxShadow: '0 4px 15px rgba(67, 97, 238, 0.4)',
             userSelect: 'none',
-            border: '2px solid rgba(200, 192, 176, 0.2)',
+            border: '2px solid rgba(255, 255, 255, 0.2)',
           }}
         >
           إ
