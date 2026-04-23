@@ -31,7 +31,7 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '../store/useAuthStore';
 import { useDataStore } from '../store/useDataStore';
-import { useAppLockStore } from '../store/useAppLockStore';
+import { useAppLockStore, type AppModule } from '../store/useAppLockStore';
 import { AppLockSettingsDialog } from '../components/AppLockSettingsDialog';
 import { HeroLogo } from '../components/HeroLogo';
 import toast from 'react-hot-toast';
@@ -118,15 +118,40 @@ type MenuItem = {
   subtitle: string;
   path: string;
   icon: any;
+  module: AppModule;
 };
+
+const PRIMARY_MENU: MenuItem[] = [
+  { title: 'العملاء', subtitle: 'إدارة بيانات العملاء', path: '/clients', icon: Users, module: 'clients' },
+  { title: 'الفواتير', subtitle: 'إدارة وإنشاء الفواتير', path: '/invoices', icon: FileText, module: 'invoices' },
+  { title: 'المدفوعات', subtitle: 'متابعة المدفوعات', path: '/payments', icon: CreditCard, module: 'payments' },
+];
+
+const SHORTCUTS_MENU: MenuItem[] = [
+  { title: 'المصروفات', subtitle: 'مصروفات الشركة العامة', path: '/expenses', icon: Receipt, module: 'expenses' },
+  { title: 'الديون', subtitle: 'إدارة الديون والأطراف', path: '/debts', icon: CircleDollarSign, module: 'debts' },
+  { title: 'المستخدمين', subtitle: 'الموظفين والصلاحيات', path: '/users', icon: UserCog, module: 'users' },
+  { title: 'التقارير', subtitle: 'الرسائل الرسمية والتقارير', path: '/letters', icon: FileText, module: 'letters' },
+  { title: 'صندوق العهدة', subtitle: 'الرصيد والحركات المالية', path: '/fund', icon: Wallet, module: 'balances' },
+  { title: 'العهــود', subtitle: 'سجل العقود والعهود', path: '/contracts', icon: Building2, module: 'letters' },
+];
 
 export const DashboardHomePage = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
   const { clients, payments, expenses, isLoading } = useDataStore();
-  const { isLocked, isSessionUnlocked } = useAppLockStore();
+  const { isLocked, isSessionUnlocked, canAccess } = useAppLockStore();
   const [lockSettingsOpen, setLockSettingsOpen] = useState(false);
   const [logoFailed, setLogoFailed] = useState(false);
+
+  const primaryMenuVisible = useMemo(
+    () => PRIMARY_MENU.filter((item) => canAccess(item.module)),
+    [canAccess],
+  );
+  const shortcutsMenuVisible = useMemo(
+    () => SHORTCUTS_MENU.filter((item) => canAccess(item.module)),
+    [canAccess],
+  );
 
   const stats = useMemo(() => {
     const collectedAmount = payments.reduce((sum, item) => sum + (item.amount || 0), 0);
@@ -135,21 +160,6 @@ export const DashboardHomePage = () => {
     const hasData = clients.length > 0 || payments.length > 0 || expenses.length > 0;
     return { collectedAmount, expensesAmount, netProfit, hasData, clientsCount: clients.length };
   }, [clients.length, expenses, payments]);
-
-  const primaryMenu: MenuItem[] = [
-    { title: 'العملاء', subtitle: 'إدارة بيانات العملاء', path: '/clients', icon: Users },
-    { title: 'الفواتير', subtitle: 'إدارة وإنشاء الفواتير', path: '/invoices', icon: FileText },
-    { title: 'المدفوعات', subtitle: 'متابعة المدفوعات', path: '/payments', icon: CreditCard },
-  ];
-
-  const shortcutsMenu: MenuItem[] = [
-    { title: 'المصروفات', subtitle: 'مصروفات الشركة العامة', path: '/expenses', icon: Receipt },
-    { title: 'الديون', subtitle: 'إدارة الديون والأطراف', path: '/debts', icon: CircleDollarSign },
-    { title: 'المستخدمين', subtitle: 'الموظفين والصلاحيات', path: '/users', icon: UserCog },
-    { title: 'التقارير', subtitle: 'الرسائل الرسمية والتقارير', path: '/letters', icon: FileText },
-    { title: 'صندوق العهدة', subtitle: 'الرصيد والحركات المالية', path: '/fund', icon: Wallet },
-    { title: 'العهــود', subtitle: 'سجل العقود والعهود', path: '/contracts', icon: Building2 },
-  ];
 
   const renderMenuList = (menu: MenuItem[]) =>
     menu.map((item, index) => {
@@ -458,191 +468,220 @@ export const DashboardHomePage = () => {
 
         </Box>
 
-        <Card
-          elevation={0}
-          sx={{
-            borderRadius: '22px',
-            p: 2.5,
-            mb: 2,
-            overflow: 'hidden',
-            position: 'relative',
-            background: 'linear-gradient(180deg, #FFFFFF 0%, #F9F9F6 100%)',
-            border: '1px solid rgba(31,61,53,0.09)',
-            boxShadow: '0 2px 0 rgba(31,61,53,0.04) inset, 0 12px 32px -8px rgba(25,34,29,0.1)',
-            '&::before': {
-              content: '""',
-              position: 'absolute',
-              right: 0,
-              top: 0,
-              width: 4,
-              height: '100%',
-              borderRadius: '0 22px 22px 0',
-              background: `linear-gradient(180deg, ${alpha(COLORS.accent, 0.9)} 0%, ${alpha(COLORS.primary, 0.55)} 100%)`,
-            },
-          }}
-        >
-          {isLoading ? (
-            <Box sx={{ pr: 0.5 }}>
-              <Skeleton variant="text" width={100} sx={{ mb: 1 }} />
-              <Skeleton variant="rounded" width={200} height={40} />
-            </Box>
-          ) : (
-            <Box sx={{ pr: 1, textAlign: 'right' }}>
-              <Typography
-                sx={{
-                  color: COLORS.muted,
-                  fontSize: '0.88rem',
-                  fontWeight: 600,
-                  mb: 1,
-                  letterSpacing: 0.02,
-                }}
-              >
-                صافي الأرباح
-              </Typography>
-              <Box
-                dir="rtl"
-                sx={{
-                  display: 'block',
-                  textAlign: 'right',
-                  lineHeight: 1.2,
-                }}
-              >
-                <MoneyLine value={stats.netProfit} size="lg" />
-              </Box>
-            </Box>
-          )}
-        </Card>
-
-        <Stack direction="row" spacing={1.25} sx={{ mb: 2 }}>
-          {(
-            [
-              {
-                key: 'collected',
-                title: 'المحصل',
-                value: stats.collectedAmount,
-                icon: <Wallet size={18} color="#fff" strokeWidth={1.85} />,
-              },
-              {
-                key: 'expenses',
-                title: 'المصروفات',
-                value: stats.expensesAmount,
-                icon: <CreditCard size={18} color="#fff" strokeWidth={1.85} />,
-              },
-            ] as const
-          ).map((item) => (
+        {canAccess('stats') && (
+          <>
             <Card
-              key={item.key}
               elevation={0}
               sx={{
-                flex: 1,
-                minWidth: 0,
-                borderRadius: '20px',
-                p: 1.75,
+                borderRadius: '22px',
+                p: 2.5,
+                mb: 2,
                 overflow: 'hidden',
                 position: 'relative',
-                background: 'linear-gradient(165deg, #FFFFFF 0%, #F6F5F0 100%)',
-                border: '1px solid rgba(31,61,53,0.08)',
-                boxShadow: '0 1px 0 rgba(255,255,255,0.8) inset, 0 10px 24px -10px rgba(25,34,29,0.12)',
-                textAlign: 'right',
-                transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-                '&:hover': { boxShadow: '0 1px 0 rgba(255,255,255,0.9) inset, 0 14px 28px -8px rgba(25,34,29,0.16)' },
+                background: 'linear-gradient(180deg, #FFFFFF 0%, #F9F9F6 100%)',
+                border: '1px solid rgba(31,61,53,0.09)',
+                boxShadow: '0 2px 0 rgba(31,61,53,0.04) inset, 0 12px 32px -8px rgba(25,34,29,0.1)',
+                '&::before': {
+                  content: '""',
+                  position: 'absolute',
+                  right: 0,
+                  top: 0,
+                  width: 4,
+                  height: '100%',
+                  borderRadius: '0 22px 22px 0',
+                  background: `linear-gradient(180deg, ${alpha(COLORS.accent, 0.9)} 0%, ${alpha(COLORS.primary, 0.55)} 100%)`,
+                },
               }}
             >
               {isLoading ? (
-                <Stack spacing={1}>
-                  <Skeleton variant="rounded" width={40} height={40} />
-                  <Skeleton variant="text" width="55%" />
-                  <Skeleton variant="text" width="80%" height={32} />
-                </Stack>
+                <Box sx={{ pr: 0.5 }}>
+                  <Skeleton variant="text" width={100} sx={{ mb: 1 }} />
+                  <Skeleton variant="rounded" width={200} height={40} />
+                </Box>
               ) : (
-                <Box>
+                <Box sx={{ pr: 1, textAlign: 'right' }}>
+                  <Typography
+                    sx={{
+                      color: COLORS.muted,
+                      fontSize: '0.88rem',
+                      fontWeight: 600,
+                      mb: 1,
+                      letterSpacing: 0.02,
+                    }}
+                  >
+                    صافي الأرباح
+                  </Typography>
                   <Box
                     dir="rtl"
                     sx={{
-                      display: 'flex',
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      gap: 1,
-                      mb: 1.25,
+                      display: 'block',
+                      textAlign: 'right',
+                      lineHeight: 1.2,
                     }}
                   >
-                    <Typography
-                      sx={{
-                        color: COLORS.muted,
-                        fontSize: '0.8rem',
-                        fontWeight: 700,
-                        letterSpacing: 0.03,
-                        lineHeight: 1.2,
-                        flex: 1,
-                        minWidth: 0,
-                      }}
-                    >
-                      {item.title}
-                    </Typography>
-                    <Box
-                      sx={{
-                        width: 40,
-                        height: 40,
-                        borderRadius: 2.25,
-                        display: 'grid',
-                        placeItems: 'center',
-                        background: `linear-gradient(145deg, ${COLORS.primary} 0%, ${COLORS.primary2} 100%)`,
-                        boxShadow: '0 6px 16px rgba(31,61,53,0.24)',
-                        flexShrink: 0,
-                      }}
-                    >
-                      {item.icon}
-                    </Box>
-                  </Box>
-                  <Box dir="rtl" sx={{ textAlign: 'right', pr: 0.25, lineHeight: 1.15 }}>
-                    <MoneyLine value={item.value} size="md" />
+                    <MoneyLine value={stats.netProfit} size="lg" />
                   </Box>
                 </Box>
               )}
             </Card>
-          ))}
-        </Stack>
 
-        <Box
-          dir="rtl"
-          sx={{
-            display: 'flex',
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'flex-start',
-            gap: 1,
-            px: 0.6,
-            mb: 1,
-          }}
-        >
-          <Typography sx={{ color: COLORS.text, fontWeight: 700, fontSize: '1.95rem', letterSpacing: 0.2 }}>القوائم الرئيسية</Typography>
-          <Box sx={{ width: 4, height: 24, borderRadius: 2, bgcolor: alpha(COLORS.primary, 0.35), flexShrink: 0 }} />
-        </Box>
-        <Card sx={{ borderRadius: '20px', p: 1, bgcolor: '#fff', border: '1px solid rgba(31,61,53,0.08)', boxShadow: '0 8px 20px rgba(25,34,31,0.06)' }}>
-          {renderMenuList(primaryMenu)}
-        </Card>
+            <Stack direction="row" spacing={1.25} sx={{ mb: 2 }}>
+              {(
+                [
+                  {
+                    key: 'collected',
+                    title: 'المحصل',
+                    value: stats.collectedAmount,
+                    icon: <Wallet size={18} color="#fff" strokeWidth={1.85} />,
+                  },
+                  {
+                    key: 'expenses',
+                    title: 'المصروفات',
+                    value: stats.expensesAmount,
+                    icon: <CreditCard size={18} color="#fff" strokeWidth={1.85} />,
+                  },
+                ] as const
+              ).map((item) => (
+                <Card
+                  key={item.key}
+                  elevation={0}
+                  sx={{
+                    flex: 1,
+                    minWidth: 0,
+                    borderRadius: '20px',
+                    p: 1.75,
+                    overflow: 'hidden',
+                    position: 'relative',
+                    background: 'linear-gradient(165deg, #FFFFFF 0%, #F6F5F0 100%)',
+                    border: '1px solid rgba(31,61,53,0.08)',
+                    boxShadow: '0 1px 0 rgba(255,255,255,0.8) inset, 0 10px 24px -10px rgba(25,34,29,0.12)',
+                    textAlign: 'right',
+                    transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                    '&:hover': { boxShadow: '0 1px 0 rgba(255,255,255,0.9) inset, 0 14px 28px -8px rgba(25,34,29,0.16)' },
+                  }}
+                >
+                  {isLoading ? (
+                    <Stack spacing={1}>
+                      <Skeleton variant="rounded" width={40} height={40} />
+                      <Skeleton variant="text" width="55%" />
+                      <Skeleton variant="text" width="80%" height={32} />
+                    </Stack>
+                  ) : (
+                    <Box>
+                      <Box
+                        dir="rtl"
+                        sx={{
+                          display: 'flex',
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: 1,
+                          mb: 1.25,
+                        }}
+                      >
+                        <Typography
+                          sx={{
+                            color: COLORS.muted,
+                            fontSize: '0.8rem',
+                            fontWeight: 700,
+                            letterSpacing: 0.03,
+                            lineHeight: 1.2,
+                            flex: 1,
+                            minWidth: 0,
+                          }}
+                        >
+                          {item.title}
+                        </Typography>
+                        <Box
+                          sx={{
+                            width: 40,
+                            height: 40,
+                            borderRadius: 2.25,
+                            display: 'grid',
+                            placeItems: 'center',
+                            background: `linear-gradient(145deg, ${COLORS.primary} 0%, ${COLORS.primary2} 100%)`,
+                            boxShadow: '0 6px 16px rgba(31,61,53,0.24)',
+                            flexShrink: 0,
+                          }}
+                        >
+                          {item.icon}
+                        </Box>
+                      </Box>
+                      <Box dir="rtl" sx={{ textAlign: 'right', pr: 0.25, lineHeight: 1.15 }}>
+                        <MoneyLine value={item.value} size="md" />
+                      </Box>
+                    </Box>
+                  )}
+                </Card>
+              ))}
+            </Stack>
+          </>
+        )}
 
-        <Box
-          dir="rtl"
-          sx={{
-            display: 'flex',
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'flex-start',
-            gap: 1,
-            px: 0.6,
-            my: 1.2,
-          }}
-        >
-          <Typography sx={{ color: COLORS.text, fontWeight: 700, fontSize: '1rem', letterSpacing: 0.15 }}>اختصارات إضافية</Typography>
-          <Box sx={{ width: 4, height: 20, borderRadius: 2, bgcolor: alpha(COLORS.accent, 0.7), flexShrink: 0 }} />
-        </Box>
-        <Card sx={{ borderRadius: '20px', p: 1, bgcolor: '#fff', border: '1px solid rgba(31,61,53,0.08)', boxShadow: '0 8px 20px rgba(25,34,31,0.06)' }}>
-          {renderMenuList(shortcutsMenu)}
-        </Card>
+        {primaryMenuVisible.length > 0 && (
+          <>
+            <Box
+              dir="rtl"
+              sx={{
+                display: 'flex',
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'flex-start',
+                gap: 1,
+                px: 0.6,
+                mb: 1,
+              }}
+            >
+              <Typography sx={{ color: COLORS.text, fontWeight: 700, fontSize: '1.95rem', letterSpacing: 0.2 }}>القوائم الرئيسية</Typography>
+              <Box sx={{ width: 4, height: 24, borderRadius: 2, bgcolor: alpha(COLORS.primary, 0.35), flexShrink: 0 }} />
+            </Box>
+            <Card sx={{ borderRadius: '20px', p: 1, bgcolor: '#fff', border: '1px solid rgba(31,61,53,0.08)', boxShadow: '0 8px 20px rgba(25,34,31,0.06)' }}>
+              {renderMenuList(primaryMenuVisible)}
+            </Card>
+          </>
+        )}
 
-        {!isLoading && !stats.hasData && (
+        {shortcutsMenuVisible.length > 0 && (
+          <>
+            <Box
+              dir="rtl"
+              sx={{
+                display: 'flex',
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'flex-start',
+                gap: 1,
+                px: 0.6,
+                my: 1.2,
+              }}
+            >
+              <Typography sx={{ color: COLORS.text, fontWeight: 700, fontSize: '1rem', letterSpacing: 0.15 }}>اختصارات إضافية</Typography>
+              <Box sx={{ width: 4, height: 20, borderRadius: 2, bgcolor: alpha(COLORS.accent, 0.7), flexShrink: 0 }} />
+            </Box>
+            <Card sx={{ borderRadius: '20px', p: 1, bgcolor: '#fff', border: '1px solid rgba(31,61,53,0.08)', boxShadow: '0 8px 20px rgba(25,34,31,0.06)' }}>
+              {renderMenuList(shortcutsMenuVisible)}
+            </Card>
+          </>
+        )}
+
+        {primaryMenuVisible.length === 0 && shortcutsMenuVisible.length === 0 && (
+          <Card
+            sx={{
+              mt: 1,
+              borderRadius: '20px',
+              p: 2.5,
+              bgcolor: '#fff',
+              border: '1px dashed rgba(31,61,53,0.2)',
+              textAlign: 'center',
+            }}
+          >
+            <Typography sx={{ color: COLORS.muted, fontSize: '0.92rem' }}>
+              لا تتوفر اختصارات لهذه الصلاحيات. اطلب من المسؤول تفعيل الأقسام المطلوبة من إعدادات قفل التطبيق.
+            </Typography>
+          </Card>
+        )}
+
+        {canAccess('stats') && !isLoading && !stats.hasData && (
           <Card
             sx={{
               mt: 1.5,
