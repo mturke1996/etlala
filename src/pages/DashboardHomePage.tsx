@@ -12,8 +12,10 @@ import {
   IconButton,
   Skeleton,
   Stack,
+  Tooltip,
   Typography,
   alpha,
+  useTheme,
 } from '@mui/material';
 import {
   AlertTriangle,
@@ -28,15 +30,18 @@ import {
   LockOpen,
   LogOut,
   MapPin,
+  Moon,
   Phone,
   Receipt,
   Shield,
   Sparkles,
+  Sun,
   UserCog,
   Users,
   Wallet,
 } from 'lucide-react';
 import { useAuthStore } from '../store/useAuthStore';
+import { useThemeStore } from '../store/useThemeStore';
 import { useDataStore } from '../store/useDataStore';
 import { useAppLockStore, type AppModule } from '../store/useAppLockStore';
 import { AppLockSettingsDialog } from '../components/AppLockSettingsDialog';
@@ -93,7 +98,7 @@ const MoneyLine = ({
       <Box
         component="span"
         sx={{
-          color: alpha(COLORS.muted, 0.9),
+          color: 'text.secondary',
           fontWeight: 700,
           fontSize: size === 'lg' ? '0.72rem' : '0.66rem',
           lineHeight: 1,
@@ -106,7 +111,7 @@ const MoneyLine = ({
       <Box
         component="span"
         sx={{
-          color: COLORS.text,
+          color: 'text.primary',
           fontWeight: 800,
           fontSize: fs,
           lineHeight: 1.2,
@@ -135,7 +140,6 @@ const CustodyMoneyLine = ({
   const raw = numberFormatter.format(Math.round(Math.abs(value || 0)));
   const fs =
     size === 'lg' ? 'clamp(1.35rem, 6.5vw, 1.95rem)' : 'clamp(1.02rem, 4.2vw, 1.18rem)';
-  const mainColor = neg ? '#C62828' : COLORS.text;
   return (
     <Box
       component="span"
@@ -153,7 +157,7 @@ const CustodyMoneyLine = ({
       <Box
         component="span"
         sx={{
-          color: alpha(COLORS.muted, 0.9),
+          color: 'text.secondary',
           fontWeight: 700,
           fontSize: size === 'lg' ? '0.72rem' : '0.66rem',
           lineHeight: 1,
@@ -166,7 +170,7 @@ const CustodyMoneyLine = ({
       <Box
         component="span"
         sx={{
-          color: mainColor,
+          color: neg ? 'error.main' : 'text.primary',
           fontWeight: 800,
           fontSize: fs,
           lineHeight: 1.2,
@@ -207,6 +211,10 @@ const SHORTCUTS_MENU: MenuItem[] = [
 
 export const DashboardHomePage = () => {
   const navigate = useNavigate();
+  const { mode, toggleTheme } = useThemeStore();
+  const isThemeDark = mode === 'dark';
+  const theme = useTheme();
+  const isMuiDark = theme.palette.mode === 'dark';
   const { user, logout } = useAuthStore();
   const { clients, payments, expenses, isLoading } = useDataStore();
   const { transactions, getUserStats, initialize: initFund, isLoading: fundLoading } = useGlobalFundStore();
@@ -335,79 +343,78 @@ export const DashboardHomePage = () => {
     return { collectedAmount, expensesAmount, netProfit, hasData, clientsCount: clients.length };
   }, [clients.length, expenses, payments]);
 
-  const renderMenuList = (menu: MenuItem[]) =>
-    menu.map((item, index) => {
-      const Icon = item.icon;
-      return (
-        <Box
-          key={item.title}
-          onClick={() => navigate(item.path)}
-          sx={{
-            // Important: do NOT set `direction: rtl` on a flex row here — it mirrors flex item placement
-            // in ways that make icons look "on the wrong side" next to the text.
-            // Visual target (RTL): [chevron (far start)] ... [text] [icon (far end)]
-            minHeight: 60,
-            px: 1.4,
-            py: 1.25,
-            borderRadius: 3,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 1,
-            flexDirection: 'row',
-            direction: 'ltr',
-            cursor: 'pointer',
-            transition: 'all 180ms cubic-bezier(0.2, 0.8, 0.2, 1)',
-            '&:hover': { bgcolor: alpha(COLORS.primary, 0.04) },
-            '&:not(:last-of-type)': {
-              borderBottom: index < menu.length - 1 ? '1px solid rgba(31,61,53,0.08)' : 'none',
-            },
-          }}
-        >
-          <Box sx={{ width: 22, display: 'grid', placeItems: 'center' }}>
-            <ChevronLeft size={16} color={COLORS.muted} />
-          </Box>
-          {/* Box + explicit LTR: MUI `Stack` row follows theme direction (rtl) and flips [text, icon] */}
+  const menuListCardSurface = isMuiDark
+    ? 'linear-gradient(180deg, #1E2620 0%, #1A211C 100%)'
+    : 'linear-gradient(180deg, #FFFFFF 0%, #F9F9F6 100%)';
+
+  const renderMenuList = (menu: MenuItem[]) => (
+    <Stack spacing={1.25} sx={{ width: 1 }} useFlexGap>
+      {menu.map((item) => {
+        const Icon = item.icon;
+        const p = theme.palette;
+        return (
           <Box
-            dir="ltr"
+            key={item.path}
+            onClick={() => navigate(item.path)}
             sx={{
-              minWidth: 0,
-              flex: 1,
+              borderRadius: 2.5,
+              px: 1.5,
+              py: 1.35,
+              minHeight: 64,
               display: 'flex',
               flexDirection: 'row',
               alignItems: 'center',
-              justifyContent: 'flex-end',
-              gap: 1.15,
+              justifyContent: 'space-between',
+              gap: 1.25,
+              direction: 'rtl',
+              cursor: 'pointer',
+              border: `1px solid ${alpha(p.divider, isMuiDark ? 0.45 : 0.14)}`,
+              bgcolor: isMuiDark ? alpha('#C8B27D', 0.06) : alpha(p.primary.main, 0.04),
+              transition: 'background 160ms ease, box-shadow 160ms ease, border-color 160ms ease',
+              '&:hover': {
+                bgcolor: isMuiDark ? alpha('#fff', 0.07) : alpha(p.primary.main, 0.07),
+                boxShadow: isMuiDark ? '0 4px 18px rgba(0,0,0,0.28)' : '0 4px 14px rgba(25,34,29,0.08)',
+                borderColor: alpha(p.primary.main, isMuiDark ? 0.35 : 0.22),
+              },
             }}
           >
-            <Box sx={{ textAlign: 'right', minWidth: 0 }}>
-              <Typography sx={{ color: COLORS.text, fontWeight: 600, fontSize: '0.93rem' }}>{item.title}</Typography>
-              <Typography sx={{ color: COLORS.muted, fontSize: '0.73rem' }}>{item.subtitle}</Typography>
+            <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1.35, minWidth: 0, flex: 1 }}>
+              <Box
+                sx={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 2.25,
+                  display: 'grid',
+                  placeItems: 'center',
+                  background: isMuiDark
+                    ? 'linear-gradient(145deg, rgba(31,61,53,0.5) 0%, rgba(31,45,40,0.85) 100%)'
+                    : `linear-gradient(145deg, ${alpha(p.primary.main, 0.12)} 0%, ${alpha(p.primary.main, 0.2)} 100%)`,
+                  border: `1px solid ${alpha(p.divider, isMuiDark ? 0.35 : 0.2)}`,
+                  flexShrink: 0,
+                }}
+              >
+                <Icon size={20} color={p.primary.main} strokeWidth={1.85} />
+              </Box>
+              <Box sx={{ textAlign: 'right', minWidth: 0, flex: 1 }}>
+                <Typography sx={{ color: 'text.primary', fontWeight: 600, fontSize: '0.95rem' }}>{item.title}</Typography>
+                <Typography sx={{ color: 'text.secondary', fontSize: '0.76rem' }}>{item.subtitle}</Typography>
+              </Box>
             </Box>
-            <Box
-              sx={{
-                width: 38,
-                height: 38,
-                borderRadius: '50%',
-                display: 'grid',
-                placeItems: 'center',
-                bgcolor: alpha(COLORS.primary, 0.1),
-                flexShrink: 0,
-              }}
-            >
-              <Icon size={18} color={COLORS.primary} strokeWidth={1.9} />
+            <Box sx={{ display: 'grid', placeItems: 'center', width: 22, flexShrink: 0 }}>
+              <ChevronLeft size={17} color={p.text.disabled as string} />
             </Box>
           </Box>
-        </Box>
-      );
-    });
+        );
+      })}
+    </Stack>
+  );
 
   return (
     <Box
       dir="rtl"
       sx={{
         minHeight: '100dvh',
-        bgcolor: COLORS.background,
+        bgcolor: 'background.default',
         pb: 4,
         direction: 'rtl',
         textAlign: 'right',
@@ -425,22 +432,32 @@ export const DashboardHomePage = () => {
               sx={{
                 width: 48,
                 height: 48,
-                bgcolor: '#1F2A2A',
+                bgcolor: isMuiDark ? 'primary.dark' : '#1F2A2A',
                 fontWeight: 700,
-                border: '2px solid #fff',
-                boxShadow: '0 10px 18px rgba(31,61,53,0.18)',
+                border: isMuiDark ? '2px solid rgba(255,255,255,0.2)' : '2px solid #fff',
+                boxShadow: isMuiDark ? '0 10px 18px rgba(0,0,0,0.4)' : '0 10px 18px rgba(31,61,53,0.18)',
                 flexShrink: 0,
               }}
             >
               {(user?.displayName || 'محمد').charAt(0)}
             </Avatar>
             <Box sx={{ textAlign: 'right', minWidth: 0 }}>
-              <Typography sx={{ color: COLORS.muted, fontSize: '0.78rem', fontWeight: 500 }}>مرحباً</Typography>
-              <Typography sx={{ color: COLORS.text, fontSize: '1.05rem', fontWeight: 700 }}>م. {user?.displayName || 'محمد'}</Typography>
+              <Typography sx={{ color: 'text.secondary', fontSize: '0.78rem', fontWeight: 500 }}>مرحباً</Typography>
+              <Typography sx={{ color: 'text.primary', fontSize: '1.05rem', fontWeight: 700 }}>م. {user?.displayName || 'محمد'}</Typography>
             </Box>
           </Box>
 
-          <Stack direction="row" spacing={1} sx={{ direction: 'rtl' }}>
+          <Stack
+            direction="row"
+            alignItems="center"
+            spacing={2.5}
+            sx={{
+              direction: 'rtl',
+              flexShrink: 0,
+            }}
+          >
+            {/* مسافة بسيطة جداً بين الإشعارات ووضع الليلي — ثم فراغ أوضح قبل القفل والخروج */}
+            <Stack direction="row" alignItems="center" spacing={0.5} sx={{ flexShrink: 0 }}>
             <IconButton
               onClick={() => setNotifOpen(true)}
               aria-label="الإشعارات"
@@ -448,14 +465,19 @@ export const DashboardHomePage = () => {
                 width: 44,
                 height: 44,
                 borderRadius: 2.5,
-                bgcolor: '#EFEFED',
-                color: '#1F2A2A',
-                border: '1px solid rgba(31,61,53,0.08)',
+                bgcolor: isMuiDark ? 'rgba(255,255,255,0.1)' : '#EFEFED',
+                color: isMuiDark ? 'common.white' : '#1F2A2A',
+                border: `1px solid ${isMuiDark ? 'rgba(255,255,255,0.14)' : 'rgba(31,61,53,0.08)'}`,
                 boxShadow: urgentNotifCount > 0
                   ? '0 0 0 2px rgba(198,40,40,0.2), 0 4px 14px rgba(198,40,40,0.12)'
-                  : '0 2px 10px rgba(24,38,33,0.04)',
+                  : isMuiDark
+                    ? '0 2px 12px rgba(0,0,0,0.35)'
+                    : '0 2px 10px rgba(24,38,33,0.04)',
                 transition: 'all 180ms cubic-bezier(0.2, 0.8, 0.2, 1)',
-                '&:hover': { bgcolor: '#F6F6F4', transform: 'translateY(-1px)' },
+                '&:hover': {
+                  bgcolor: isMuiDark ? 'rgba(255,255,255,0.16)' : '#F6F6F4',
+                  transform: 'translateY(-1px)',
+                },
                 ...(urgentNotifCount > 0 && {
                   '@keyframes notifRing': {
                     '0%, 100%': { boxShadow: '0 0 0 0 rgba(198,40,40,0.35)' },
@@ -481,6 +503,35 @@ export const DashboardHomePage = () => {
                 <Bell size={18} />
               </Badge>
             </IconButton>
+            <Tooltip
+              title={isThemeDark ? 'الوضع الفاتح' : 'الوضع الليلي'}
+              enterTouchDelay={400}
+              placement="bottom"
+            >
+              <span>
+                <IconButton
+                  onClick={toggleTheme}
+                  aria-label={isThemeDark ? 'التبديل إلى الوضع الفاتح' : 'التبديل إلى الوضع الليلي'}
+                  sx={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: 2.5,
+                    bgcolor: isMuiDark ? 'rgba(255,255,255,0.1)' : '#EFEFED',
+                    color: isMuiDark ? 'common.white' : '#1F2A2A',
+                    border: `1px solid ${isMuiDark ? 'rgba(255,255,255,0.14)' : 'rgba(31,61,53,0.08)'}`,
+                    boxShadow: isMuiDark ? '0 2px 12px rgba(0,0,0,0.35)' : '0 2px 10px rgba(24,38,33,0.04)',
+                    transition: 'all 180ms cubic-bezier(0.2, 0.8, 0.2, 1)',
+                    '&:hover': {
+                      bgcolor: isMuiDark ? 'rgba(255,255,255,0.16)' : '#F6F6F4',
+                      transform: 'translateY(-1px)',
+                    },
+                  }}
+                >
+                  {isThemeDark ? <Sun size={18} strokeWidth={1.9} /> : <Moon size={18} strokeWidth={1.9} />}
+                </IconButton>
+              </span>
+            </Tooltip>
+            </Stack>
             {(
               [
                 {
@@ -499,12 +550,15 @@ export const DashboardHomePage = () => {
                   width: 44,
                   height: 44,
                   borderRadius: 2.5,
-                  bgcolor: '#EFEFED',
-                  color: '#1F2A2A',
-                  border: '1px solid rgba(31,61,53,0.08)',
-                  boxShadow: '0 2px 10px rgba(24,38,33,0.04)',
+                  bgcolor: isMuiDark ? 'rgba(255,255,255,0.1)' : '#EFEFED',
+                  color: isMuiDark ? 'common.white' : '#1F2A2A',
+                  border: `1px solid ${isMuiDark ? 'rgba(255,255,255,0.14)' : 'rgba(31,61,53,0.08)'}`,
+                  boxShadow: isMuiDark ? '0 2px 12px rgba(0,0,0,0.35)' : '0 2px 10px rgba(24,38,33,0.04)',
                   transition: 'all 180ms cubic-bezier(0.2, 0.8, 0.2, 1)',
-                  '&:hover': { bgcolor: '#F6F6F4', transform: 'translateY(-1px)' },
+                  '&:hover': {
+                    bgcolor: isMuiDark ? 'rgba(255,255,255,0.16)' : '#F6F6F4',
+                    transform: 'translateY(-1px)',
+                  },
                 }}
               >
                 {item.icon}
@@ -513,7 +567,7 @@ export const DashboardHomePage = () => {
           </Stack>
         </Box>
 
-        <Box sx={{ mb: 2 }}>
+        <Box sx={{ mb: 2.5 }}>
           <Card
             sx={{
               borderRadius: '24px',
@@ -663,19 +717,23 @@ export const DashboardHomePage = () => {
 
         </Box>
 
+        <Stack spacing={3.25} sx={{ width: 1, mt: 1.25 }} useFlexGap>
         {canAccess('stats') && (
-          <>
+          <Stack spacing={2.5} sx={{ width: 1 }} useFlexGap>
             <Card
               elevation={0}
               sx={{
                 borderRadius: '22px',
                 p: 2.5,
-                mb: 2,
                 overflow: 'hidden',
                 position: 'relative',
-                background: 'linear-gradient(180deg, #FFFFFF 0%, #F9F9F6 100%)',
-                border: '1px solid rgba(31,61,53,0.09)',
-                boxShadow: '0 2px 0 rgba(31,61,53,0.04) inset, 0 12px 32px -8px rgba(25,34,29,0.1)',
+                background: isMuiDark
+                  ? 'linear-gradient(180deg, #1E2620 0%, #1A211C 100%)'
+                  : 'linear-gradient(180deg, #FFFFFF 0%, #F9F9F6 100%)',
+                border: `1px solid ${alpha(theme.palette.divider, isMuiDark ? 0.5 : 0.9)}`,
+                boxShadow: isMuiDark
+                  ? '0 2px 0 rgba(255,255,255,0.04) inset, 0 12px 32px -8px rgba(0,0,0,0.4)'
+                  : '0 2px 0 rgba(31,61,53,0.04) inset, 0 12px 32px -8px rgba(25,34,29,0.1)',
                 '&::before': {
                   content: '""',
                   position: 'absolute',
@@ -697,7 +755,7 @@ export const DashboardHomePage = () => {
                 <Box sx={{ pr: 1, textAlign: 'right' }}>
                   <Typography
                     sx={{
-                      color: COLORS.muted,
+                      color: 'text.secondary',
                       fontSize: '0.88rem',
                       fontWeight: 600,
                       mb: 1,
@@ -720,7 +778,7 @@ export const DashboardHomePage = () => {
               )}
             </Card>
 
-            <Stack direction="row" spacing={1.25} sx={{ mb: 2 }}>
+            <Stack direction="row" spacing={2.5} sx={{ width: 1 }} useFlexGap>
               {(
                 [
                   {
@@ -747,12 +805,20 @@ export const DashboardHomePage = () => {
                     p: 1.75,
                     overflow: 'hidden',
                     position: 'relative',
-                    background: 'linear-gradient(165deg, #FFFFFF 0%, #F6F5F0 100%)',
-                    border: '1px solid rgba(31,61,53,0.08)',
-                    boxShadow: '0 1px 0 rgba(255,255,255,0.8) inset, 0 10px 24px -10px rgba(25,34,29,0.12)',
+                    background: isMuiDark
+                      ? 'linear-gradient(165deg, #1C241E 0%, #181F1A 100%)'
+                      : 'linear-gradient(165deg, #FFFFFF 0%, #F6F5F0 100%)',
+                    border: `1px solid ${alpha(theme.palette.divider, 0.85)}`,
+                    boxShadow: isMuiDark
+                      ? '0 1px 0 rgba(255,255,255,0.05) inset, 0 10px 24px -10px rgba(0,0,0,0.45)'
+                      : '0 1px 0 rgba(255,255,255,0.8) inset, 0 10px 24px -10px rgba(25,34,29,0.12)',
                     textAlign: 'right',
                     transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-                    '&:hover': { boxShadow: '0 1px 0 rgba(255,255,255,0.9) inset, 0 14px 28px -8px rgba(25,34,29,0.16)' },
+                    '&:hover': {
+                      boxShadow: isMuiDark
+                        ? '0 1px 0 rgba(255,255,255,0.06) inset, 0 14px 28px -8px rgba(0,0,0,0.5)'
+                        : '0 1px 0 rgba(255,255,255,0.9) inset, 0 14px 28px -8px rgba(25,34,29,0.16)',
+                    },
                   }}
                 >
                   {isLoading ? (
@@ -776,7 +842,7 @@ export const DashboardHomePage = () => {
                       >
                         <Typography
                           sx={{
-                            color: COLORS.muted,
+                            color: 'text.secondary',
                             fontSize: '0.8rem',
                             fontWeight: 700,
                             letterSpacing: 0.03,
@@ -810,7 +876,7 @@ export const DashboardHomePage = () => {
                 </Card>
               ))}
             </Stack>
-          </>
+          </Stack>
         )}
 
         {user && !fundLoading && myCustodyFund && (
@@ -829,16 +895,21 @@ export const DashboardHomePage = () => {
             sx={{
               borderRadius: '22px',
               p: 2.5,
-              mb: 2,
               overflow: 'hidden',
               position: 'relative',
               cursor: 'pointer',
-              background: 'linear-gradient(180deg, #FFFFFF 0%, #F9F9F6 100%)',
-              border: '1px solid rgba(31,61,53,0.09)',
-              boxShadow: '0 2px 0 rgba(31,61,53,0.04) inset, 0 12px 32px -8px rgba(25,34,29,0.1)',
+              background: isMuiDark
+                ? 'linear-gradient(180deg, #1E2620 0%, #1A211C 100%)'
+                : 'linear-gradient(180deg, #FFFFFF 0%, #F9F9F6 100%)',
+              border: `1px solid ${alpha(theme.palette.divider, isMuiDark ? 0.5 : 0.9)}`,
+              boxShadow: isMuiDark
+                ? '0 2px 0 rgba(255,255,255,0.04) inset, 0 12px 32px -8px rgba(0,0,0,0.4)'
+                : '0 2px 0 rgba(31,61,53,0.04) inset, 0 12px 32px -8px rgba(25,34,29,0.1)',
               transition: 'transform 0.2s ease, box-shadow 0.2s ease',
               '&:hover': {
-                boxShadow: '0 2px 0 rgba(31,61,53,0.05) inset, 0 16px 36px -6px rgba(25,34,29,0.14)',
+                boxShadow: isMuiDark
+                  ? '0 2px 0 rgba(255,255,255,0.05) inset, 0 16px 36px -6px rgba(0,0,0,0.5)'
+                  : '0 2px 0 rgba(31,61,53,0.05) inset, 0 16px 36px -6px rgba(25,34,29,0.14)',
                 transform: 'translateY(-1px)',
               },
               '&::before': {
@@ -862,12 +933,12 @@ export const DashboardHomePage = () => {
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   gap: 1.5,
-                  mb: 1,
+                  mb: 1.25,
                 }}
               >
                 <Typography
                   sx={{
-                    color: COLORS.muted,
+                    color: 'text.secondary',
                     fontSize: '0.88rem',
                     fontWeight: 600,
                     letterSpacing: 0.02,
@@ -887,11 +958,11 @@ export const DashboardHomePage = () => {
                     display: 'grid',
                     placeItems: 'center',
                     background: `linear-gradient(145deg, ${alpha(COLORS.accent, 0.25)} 0%, ${alpha(COLORS.primary, 0.2)} 100%)`,
-                    border: '1px solid rgba(31,61,53,0.1)',
+                    border: `1px solid ${alpha(theme.palette.divider, 0.75)}`,
                     flexShrink: 0,
                   }}
                 >
-                  <Wallet size={20} color={COLORS.primary} strokeWidth={1.85} />
+                  <Wallet size={20} color={theme.palette.primary.main} strokeWidth={1.85} />
                 </Box>
               </Box>
               <Box
@@ -904,7 +975,7 @@ export const DashboardHomePage = () => {
               >
                 <CustodyMoneyLine value={myCustodyFund.remaining} size="lg" />
               </Box>
-              <Typography sx={{ color: COLORS.muted, fontSize: '0.72rem', mt: 1.1, fontWeight: 500 }}>
+              <Typography sx={{ color: 'text.secondary', fontSize: '0.72rem', mt: 1.1, fontWeight: 500 }}>
                 {myCustodyFund.remaining >= 0
                   ? canOpenFund
                     ? 'المتبقي لك بعد تخصيص مصروفاتك — اضغط للتفاصيل'
@@ -918,7 +989,7 @@ export const DashboardHomePage = () => {
         )}
 
         {primaryMenuVisible.length > 0 && (
-          <>
+          <Box sx={{ width: 1 }}>
             <Box
               dir="rtl"
               sx={{
@@ -926,22 +997,50 @@ export const DashboardHomePage = () => {
                 flexDirection: 'row',
                 alignItems: 'center',
                 justifyContent: 'flex-start',
-                gap: 1,
-                px: 0.6,
-                mb: 1,
+                gap: 1.25,
+                px: 0.5,
+                mb: 1.75,
               }}
             >
-              <Typography sx={{ color: COLORS.text, fontWeight: 700, fontSize: '1.95rem', letterSpacing: 0.2 }}>القوائم الرئيسية</Typography>
-              <Box sx={{ width: 4, height: 24, borderRadius: 2, bgcolor: alpha(COLORS.primary, 0.35), flexShrink: 0 }} />
+              <Typography
+                sx={{
+                  color: 'text.primary',
+                  fontWeight: 700,
+                  fontSize: '1.35rem',
+                  letterSpacing: 0.12,
+                }}
+              >
+                القوائم الرئيسية
+              </Typography>
+              <Box
+                sx={{
+                  width: 3,
+                  height: 22,
+                  borderRadius: 1.5,
+                  bgcolor: alpha(COLORS.primary, isMuiDark ? 0.5 : 0.28),
+                  flexShrink: 0,
+                }}
+              />
             </Box>
-            <Card sx={{ borderRadius: '20px', p: 1, bgcolor: '#fff', border: '1px solid rgba(31,61,53,0.08)', boxShadow: '0 8px 20px rgba(25,34,31,0.06)' }}>
+            <Card
+              elevation={0}
+              sx={{
+                borderRadius: '22px',
+                p: 1.5,
+                background: menuListCardSurface,
+                border: `1px solid ${alpha(theme.palette.divider, isMuiDark ? 0.5 : 0.88)}`,
+                boxShadow: isMuiDark
+                  ? '0 2px 0 rgba(255,255,255,0.04) inset, 0 12px 32px -8px rgba(0,0,0,0.4)'
+                  : '0 2px 0 rgba(31,61,53,0.04) inset, 0 10px 24px -8px rgba(25,34,29,0.1)',
+              }}
+            >
               {renderMenuList(primaryMenuVisible)}
             </Card>
-          </>
+          </Box>
         )}
 
         {shortcutsMenuVisible.length > 0 && (
-          <>
+          <Box sx={{ width: 1 }}>
             <Box
               dir="rtl"
               sx={{
@@ -949,32 +1048,53 @@ export const DashboardHomePage = () => {
                 flexDirection: 'row',
                 alignItems: 'center',
                 justifyContent: 'flex-start',
-                gap: 1,
-                px: 0.6,
-                my: 1.2,
+                gap: 1.1,
+                px: 0.5,
+                mb: 1.5,
               }}
             >
-              <Typography sx={{ color: COLORS.text, fontWeight: 700, fontSize: '1rem', letterSpacing: 0.15 }}>اختصارات إضافية</Typography>
-              <Box sx={{ width: 4, height: 20, borderRadius: 2, bgcolor: alpha(COLORS.accent, 0.7), flexShrink: 0 }} />
+              <Typography sx={{ color: 'text.primary', fontWeight: 600, fontSize: '1.05rem', letterSpacing: 0.1 }}>
+                اختصارات إضافية
+              </Typography>
+              <Box
+                sx={{
+                  width: 3,
+                  height: 18,
+                  borderRadius: 1.5,
+                  bgcolor: alpha(COLORS.accent, isMuiDark ? 0.55 : 0.4),
+                  flexShrink: 0,
+                }}
+              />
             </Box>
-            <Card sx={{ borderRadius: '20px', p: 1, bgcolor: '#fff', border: '1px solid rgba(31,61,53,0.08)', boxShadow: '0 8px 20px rgba(25,34,31,0.06)' }}>
+            <Card
+              elevation={0}
+              sx={{
+                borderRadius: '22px',
+                p: 1.5,
+                background: menuListCardSurface,
+                border: `1px solid ${alpha(theme.palette.divider, isMuiDark ? 0.5 : 0.88)}`,
+                boxShadow: isMuiDark
+                  ? '0 2px 0 rgba(255,255,255,0.04) inset, 0 12px 32px -8px rgba(0,0,0,0.4)'
+                  : '0 2px 0 rgba(31,61,53,0.04) inset, 0 10px 24px -8px rgba(25,34,29,0.1)',
+              }}
+            >
               {renderMenuList(shortcutsMenuVisible)}
             </Card>
-          </>
+          </Box>
         )}
 
         {primaryMenuVisible.length === 0 && shortcutsMenuVisible.length === 0 && (
           <Card
+            elevation={0}
             sx={{
-              mt: 1,
-              borderRadius: '20px',
+              borderRadius: '22px',
               p: 2.5,
-              bgcolor: '#fff',
-              border: '1px dashed rgba(31,61,53,0.2)',
+              bgcolor: 'background.paper',
+              border: `1px dashed ${alpha(theme.palette.divider, 0.55)}`,
               textAlign: 'center',
             }}
           >
-            <Typography sx={{ color: COLORS.muted, fontSize: '0.92rem' }}>
+            <Typography sx={{ color: 'text.secondary', fontSize: '0.92rem' }}>
               لا تتوفر اختصارات لهذه الصلاحيات. اطلب من المسؤول تفعيل الأقسام المطلوبة من إعدادات قفل التطبيق.
             </Typography>
           </Card>
@@ -982,21 +1102,22 @@ export const DashboardHomePage = () => {
 
         {canAccess('stats') && !isLoading && !stats.hasData && (
           <Card
+            elevation={0}
             sx={{
-              mt: 1.5,
-              borderRadius: '20px',
+              borderRadius: '22px',
               p: 2,
-              bgcolor: '#fff',
-              border: '1px dashed rgba(31,61,53,0.22)',
+              bgcolor: 'background.paper',
+              border: `1px dashed ${alpha(theme.palette.divider, 0.55)}`,
               textAlign: 'center',
             }}
           >
-            <Typography sx={{ color: COLORS.text, fontWeight: 700, mb: 0.4 }}>لا توجد بيانات مالية بعد</Typography>
-            <Typography sx={{ color: COLORS.muted, fontSize: '0.84rem' }}>
+            <Typography sx={{ color: 'text.primary', fontWeight: 700, mb: 0.4 }}>لا توجد بيانات مالية بعد</Typography>
+            <Typography sx={{ color: 'text.secondary', fontSize: '0.84rem' }}>
               سيتم تحديث صافي الأرباح والمصروفات والتحصيل تلقائياً بمجرد إضافة بيانات جديدة.
             </Typography>
           </Card>
         )}
+        </Stack>
       </Container>
 
       <Drawer
@@ -1008,8 +1129,11 @@ export const DashboardHomePage = () => {
             width: { xs: '100%', sm: 380 },
             maxWidth: '100vw',
             borderRadius: { xs: '20px 20px 0 0', sm: '0' },
-            borderLeft: { sm: '1px solid rgba(31,61,53,0.08)' },
-            background: 'linear-gradient(180deg, #FDFDFB 0%, #F5F5F2 100%)',
+            borderLeft: { sm: `1px solid ${alpha(theme.palette.divider, 0.9)}` },
+            background: isMuiDark
+              ? 'linear-gradient(180deg, #1A1F1B 0%, #121814 100%)'
+              : 'linear-gradient(180deg, #FDFDFB 0%, #F5F5F2 100%)',
+            color: 'text.primary',
           },
         }}
       >
@@ -1017,14 +1141,14 @@ export const DashboardHomePage = () => {
           dir="rtl"
           sx={{
             p: 2.25,
-            borderBottom: '1px solid rgba(31,61,53,0.08)',
+            borderBottom: `1px solid ${alpha(theme.palette.divider, 0.9)}`,
             background: `linear-gradient(120deg, ${alpha(COLORS.primary, 0.08)} 0%, transparent 55%)`,
           }}
         >
           <Stack direction="row" alignItems="center" justifyContent="space-between" gap={1}>
             <Box>
-              <Typography sx={{ fontWeight: 800, fontSize: '1.05rem', color: COLORS.text }}>الإشعارات</Typography>
-              <Typography sx={{ fontSize: '0.78rem', color: COLORS.muted, mt: 0.35 }}>مُحدَّثة من بياناتك الحالية</Typography>
+              <Typography sx={{ fontWeight: 800, fontSize: '1.05rem', color: 'text.primary' }}>الإشعارات</Typography>
+              <Typography sx={{ fontSize: '0.78rem', color: 'text.secondary', mt: 0.35 }}>مُحدَّثة من بياناتك الحالية</Typography>
             </Box>
             <Box
               sx={{
@@ -1037,7 +1161,7 @@ export const DashboardHomePage = () => {
                 border: `1px solid ${alpha(COLORS.accent, 0.35)}`,
               }}
             >
-              <Bell size={20} color={COLORS.primary} strokeWidth={1.9} />
+              <Bell size={20} color={theme.palette.primary.main} strokeWidth={1.9} />
             </Box>
           </Stack>
         </Box>
@@ -1059,7 +1183,7 @@ export const DashboardHomePage = () => {
                 ) : n.kind === 'lock' ? (
                   <Shield size={22} color="#3949AB" />
                 ) : (
-                  <Sparkles size={22} color={alpha(COLORS.primary, 0.85)} />
+                  <Sparkles size={22} color={alpha(theme.palette.primary.main, 0.9)} />
                 );
               return (
                 <Box
@@ -1089,10 +1213,10 @@ export const DashboardHomePage = () => {
                   <Stack direction="row" gap={1.5} alignItems="flex-start">
                     <Box sx={{ pt: 0.15, flexShrink: 0 }}>{leftIcon}</Box>
                     <Box sx={{ minWidth: 0 }}>
-                      <Typography sx={{ fontWeight: 800, fontSize: '0.88rem', color: COLORS.text, lineHeight: 1.35 }}>
+                      <Typography sx={{ fontWeight: 800, fontSize: '0.88rem', color: 'text.primary', lineHeight: 1.35 }}>
                         {n.title}
                       </Typography>
-                      <Typography sx={{ fontSize: '0.8rem', color: COLORS.muted, mt: 0.75, lineHeight: 1.6 }}>
+                      <Typography sx={{ fontSize: '0.8rem', color: 'text.secondary', mt: 0.75, lineHeight: 1.6 }}>
                         {n.body}
                       </Typography>
                       {n.id === 'custody-deficit' && canOpenFund && (
@@ -1108,8 +1232,8 @@ export const DashboardHomePage = () => {
                             borderRadius: 2,
                             textTransform: 'none',
                             fontWeight: 800,
-                            bgcolor: COLORS.primary,
-                            '&:hover': { bgcolor: COLORS.primary2 },
+                            bgcolor: 'primary.main',
+                            '&:hover': { bgcolor: 'primary.dark' },
                           }}
                         >
                           فتح صندوق العهدة
@@ -1126,7 +1250,13 @@ export const DashboardHomePage = () => {
           <Button
             fullWidth
             onClick={() => setNotifOpen(false)}
-            sx={{ borderRadius: 2, fontWeight: 800, textTransform: 'none', color: COLORS.muted, border: '1px solid rgba(31,61,53,0.12)' }}
+            sx={{
+              borderRadius: 2,
+              fontWeight: 800,
+              textTransform: 'none',
+              color: 'text.secondary',
+              border: `1px solid ${alpha(theme.palette.divider, 0.9)}`,
+            }}
           >
             إغلاق
           </Button>

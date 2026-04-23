@@ -63,7 +63,6 @@ const ETLALA_UI = {
   primary: '#1F3D35',
   primary2: '#2C4A42',
   accent: '#C8B27D',
-  pageBg: '#F5F5F3',
 } as const;
 
 const clientSchema = z.object({
@@ -872,7 +871,7 @@ export const ClientProfilePage = () => {
       >
         <Box
           className="etlala-fill-viewport"
-          sx={{ bgcolor: ETLALA_UI.pageBg, minHeight: '100%', display: 'flex', flexDirection: 'column' }}
+          sx={{ bgcolor: 'background.default', minHeight: '100%', display: 'flex', flexDirection: 'column' }}
         >
           <Box sx={{ width: 1, flexShrink: 0, display: 'flex', flexDirection: 'column' }}>
             <ProfileListSessionHeader
@@ -896,7 +895,7 @@ export const ClientProfilePage = () => {
                     }}
                     sx={{
                       '& .MuiOutlinedInput-root': {
-                        bgcolor: '#fff',
+                        bgcolor: 'background.paper',
                         borderRadius: 1.5,
                         minHeight: 42,
                         boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
@@ -904,7 +903,7 @@ export const ClientProfilePage = () => {
                         '&:hover fieldset': { borderColor: 'rgba(31, 61, 53, 0.2)' },
                         '&.Mui-focused fieldset': { borderColor: ETLALA_UI.accent, borderWidth: 1 },
                       },
-                      '& .MuiInputBase-input': { fontSize: '0.87rem', color: '#1F2521', py: 0.9 },
+                      '& .MuiInputBase-input': { fontSize: '0.87rem', color: 'text.primary', py: 0.9 },
                     }}
                   />
                   <Box
@@ -914,7 +913,7 @@ export const ClientProfilePage = () => {
                     onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setExpensesPerUserOpen(true); } }}
                     sx={{
                       display: 'flex',
-                      bgcolor: '#fff',
+                      bgcolor: 'background.paper',
                       borderRadius: 1.5,
                       border: '1px solid rgba(31, 61, 53, 0.08)',
                       boxShadow: '0 1px 2px rgba(31, 61, 53, 0.04), 0 4px 14px -4px rgba(25, 34, 29, 0.07)',
@@ -946,12 +945,12 @@ export const ClientProfilePage = () => {
                             : {}),
                         }}
                       >
-                        <Typography sx={{ color: '#6B736E', fontSize: '0.62rem', fontWeight: 600, letterSpacing: 0.2, mb: 0.35, lineHeight: 1.2 }}>
+                        <Typography sx={{ color: 'text.secondary', fontSize: '0.62rem', fontWeight: 600, letterSpacing: 0.2, mb: 0.35, lineHeight: 1.2 }}>
                           {s.label}
                         </Typography>
                         <Typography
                           sx={{
-                            color: s.accent ? ETLALA_UI.primary : '#1F2521',
+                            color: s.accent ? ETLALA_UI.primary : 'text.primary',
                             fontSize: '0.8rem',
                             fontWeight: 800,
                             fontFamily: "'Outfit', sans-serif",
@@ -1002,7 +1001,7 @@ export const ClientProfilePage = () => {
               minHeight: 0,
               overflowY: 'auto',
               WebkitOverflowScrolling: 'touch',
-              bgcolor: ETLALA_UI.pageBg,
+              bgcolor: 'background.default',
             }}
           >
             {/* ── EXPENSE LIST: high-density rows ── */}
@@ -1014,17 +1013,17 @@ export const ClientProfilePage = () => {
                 pb: 'calc(40px + env(safe-area-inset-bottom, 0px))',
               }}
             >
-              <Box sx={{ bgcolor: '#fff', borderRadius: '6px', border: '1px solid rgba(47, 62, 52, 0.05)', overflow: 'hidden' }}>
+              <Box sx={{ bgcolor: 'background.paper', borderRadius: '6px', border: 1, borderColor: 'divider', overflow: 'hidden' }}>
                 {filteredExp.length === 0 ? (
                   <Box sx={{ py: 6, textAlign: 'center' }}>
                     <Search sx={{ fontSize: 28, color: '#C2B280', mb: 1 }} />
-                    <Typography sx={{ color: '#6B736E', fontSize: '0.8rem' }}>{expSearch ? 'لا نتائج' : 'لا توجد مصروفات بعد'}</Typography>
+                    <Typography sx={{ color: 'text.secondary', fontSize: '0.8rem' }}>{expSearch ? 'لا نتائج' : 'لا توجد مصروفات بعد'}</Typography>
                   </Box>
                 ) : (
                   filteredExp.map((exp, i) => {
                     /* ── Category icon resolver ── */
                     const cat = exp.category;
-                    const iconSx = { fontSize: 17, color: '#2F3E34' } as const;
+                    const iconSx = { fontSize: 17, color: 'primary.main' } as const;
                     let CatIcon: React.ReactNode;
                     if (['concrete', 'rebar', 'masonry', 'insulation', 'excavation', 'site_prep', 'surveying'].includes(cat))
                       CatIcon = <Engineering sx={iconSx} />;
@@ -1061,16 +1060,19 @@ export const ClientProfilePage = () => {
                           gap: 1,
                           px: 1.25,
                           py: '10px',
-                          borderBottom: i < filteredExp.length - 1 ? '1px solid rgba(47, 62, 52, 0.04)' : 'none',
+                          borderBottom: i < filteredExp.length - 1 ? 1 : 'none',
+                          borderColor: 'divider',
                           transition: 'background 0.15s',
                           cursor: 'pointer',
-                          '&:active': { bgcolor: 'rgba(47, 62, 52, 0.03)' },
+                          '&:active': {
+                            bgcolor: (t) => (t.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(47, 62, 52, 0.03)'),
+                          },
                         }}
                       >
                         {/* ▎ Category icon */}
                         <Box sx={{
                           width: 34, height: 34, borderRadius: '50%',
-                          bgcolor: 'rgba(47, 62, 52, 0.05)',
+                          bgcolor: (t) => (t.palette.mode === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(47, 62, 52, 0.05)'),
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                           flexShrink: 0, mt: '2px',
                         }}>
@@ -1080,14 +1082,14 @@ export const ClientProfilePage = () => {
                         {/* ▎ Center: title + meta */}
                         <Box sx={{ flex: 1, minWidth: 0 }}>
                           <Typography sx={{
-                            color: '#1F2521', fontSize: '0.82rem', fontWeight: 700,
+                            color: 'text.primary', fontSize: '0.82rem', fontWeight: 700,
                             lineHeight: 1.35, mb: '2px',
                             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                           }}>
                             {exp.description}
                           </Typography>
                           <Stack direction="row" alignItems="center" spacing={0.5} sx={{ mb: hasSecondary || exp.notes ? '3px' : 0 }}>
-                            <Typography sx={{ color: '#6B736E', fontSize: '0.62rem', fontWeight: 500 }}>{formatDate(exp.date)}</Typography>
+                            <Typography sx={{ color: 'text.secondary', fontSize: '0.62rem', fontWeight: 500 }}>{formatDate(exp.date)}</Typography>
                             <Box sx={{ width: 2.5, height: 2.5, borderRadius: '50%', bgcolor: '#C2B280' }} />
                             <Typography sx={{ color: '#C2B280', fontSize: '0.62rem', fontWeight: 700 }}>{getCategoryLabel(exp.category)}</Typography>
                           </Stack>
@@ -1107,7 +1109,7 @@ export const ClientProfilePage = () => {
                           )}
                           {exp.notes && (
                             <Typography sx={{
-                              color: '#6B736E', fontSize: '0.6rem', fontWeight: 500,
+                              color: 'text.secondary', fontSize: '0.6rem', fontWeight: 500,
                               lineHeight: 1.4,
                               bgcolor: 'rgba(194, 178, 128, 0.06)',
                               borderRight: '2px solid #C2B280',
@@ -1124,7 +1126,7 @@ export const ClientProfilePage = () => {
                         {/* ▎ Left: amount + actions */}
                         <Stack alignItems="flex-end" spacing={0.35} sx={{ flexShrink: 0, mt: '1px' }}>
                           <Typography sx={{
-                            color: '#2F3E34', fontSize: '0.88rem', fontWeight: 900,
+                            color: 'primary.main', fontSize: '0.88rem', fontWeight: 900,
                             fontFamily: "'Outfit', sans-serif", lineHeight: 1.2,
                             letterSpacing: -0.3,
                           }}>
@@ -1134,7 +1136,15 @@ export const ClientProfilePage = () => {
                             <IconButton
                               size="small"
                               onClick={(e) => { e.stopPropagation(); setEditingExpense(exp); setExpVal('description', exp.description); setExpVal('amount', exp.amount); setExpVal('category', exp.category); setExpVal('date', exp.date); setExpVal('invoiceNumber', exp.invoiceNumber || ''); setExpVal('notes', exp.notes || ''); setExpVal('userId', exp.userId || ''); setExpenseDialogOpen(true); }}
-                              sx={{ color: '#6B736E', p: 0.35, opacity: 0.5, '&:hover': { opacity: 1, bgcolor: 'rgba(47, 62, 52, 0.08)' } }}
+                              sx={{
+                                color: 'text.secondary',
+                                p: 0.35,
+                                opacity: 0.5,
+                                '&:hover': {
+                                  opacity: 1,
+                                  bgcolor: (t) => (t.palette.mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(47, 62, 52, 0.08)'),
+                                },
+                              }}
                             >
                               <Edit sx={{ fontSize: 14 }} />
                             </IconButton>
@@ -1180,7 +1190,7 @@ export const ClientProfilePage = () => {
       >
         <Box
           className="etlala-fill-viewport"
-          sx={{ bgcolor: ETLALA_UI.pageBg, minHeight: '100%', display: 'flex', flexDirection: 'column' }}
+          sx={{ bgcolor: 'background.default', minHeight: '100%', display: 'flex', flexDirection: 'column' }}
         >
           <Box sx={{ width: 1, flexShrink: 0, display: 'flex', flexDirection: 'column' }}>
             <ProfileListSessionHeader
@@ -1204,7 +1214,7 @@ export const ClientProfilePage = () => {
                     }}
                     sx={{
                       '& .MuiOutlinedInput-root': {
-                        bgcolor: '#fff',
+                        bgcolor: 'background.paper',
                         borderRadius: 1.5,
                         minHeight: 42,
                         boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
@@ -1212,13 +1222,13 @@ export const ClientProfilePage = () => {
                         '&:hover fieldset': { borderColor: 'rgba(31, 61, 53, 0.2)' },
                         '&.Mui-focused fieldset': { borderColor: ETLALA_UI.accent, borderWidth: 1 },
                       },
-                      '& .MuiInputBase-input': { fontSize: '0.87rem', color: '#1F2521', py: 0.9 },
+                      '& .MuiInputBase-input': { fontSize: '0.87rem', color: 'text.primary', py: 0.9 },
                     }}
                   />
                   <Box
                     sx={{
                       display: 'flex',
-                      bgcolor: '#fff',
+                      bgcolor: 'background.paper',
                       borderRadius: 1.5,
                       border: '1px solid rgba(31, 61, 53, 0.08)',
                       boxShadow: '0 1px 2px rgba(31, 61, 53, 0.04), 0 4px 14px -4px rgba(25, 34, 29, 0.07)',
@@ -1242,12 +1252,12 @@ export const ClientProfilePage = () => {
                             : {}),
                         }}
                       >
-                        <Typography sx={{ color: '#6B736E', fontSize: '0.62rem', fontWeight: 600, letterSpacing: 0.2, mb: 0.35, lineHeight: 1.2 }}>
+                        <Typography sx={{ color: 'text.secondary', fontSize: '0.62rem', fontWeight: 600, letterSpacing: 0.2, mb: 0.35, lineHeight: 1.2 }}>
                           {s.label}
                         </Typography>
                         <Typography
                           sx={{
-                            color: s.accent ? '#0d9668' : '#1F2521',
+                            color: s.accent ? '#0d9668' : 'text.primary',
                             fontSize: '0.8rem',
                             fontWeight: 800,
                             fontFamily: "'Outfit', sans-serif",
@@ -1298,7 +1308,7 @@ export const ClientProfilePage = () => {
               minHeight: 0,
               overflowY: 'auto',
               WebkitOverflowScrolling: 'touch',
-              bgcolor: ETLALA_UI.pageBg,
+              bgcolor: 'background.default',
             }}
           >
             <Box
@@ -1309,11 +1319,11 @@ export const ClientProfilePage = () => {
                 pb: 'calc(40px + env(safe-area-inset-bottom, 0px))',
               }}
             >
-              <Box sx={{ bgcolor: '#fff', borderRadius: '6px', border: '1px solid rgba(47, 62, 52, 0.05)', overflow: 'hidden' }}>
+              <Box sx={{ bgcolor: 'background.paper', borderRadius: '6px', border: 1, borderColor: 'divider', overflow: 'hidden' }}>
                 {filteredPay.length === 0 ? (
                   <Box sx={{ py: 6, textAlign: 'center' }}>
                     <Search sx={{ fontSize: 28, color: '#C2B280', mb: 1 }} />
-                    <Typography sx={{ color: '#6B736E', fontSize: '0.8rem' }}>{paySearch ? 'لا نتائج' : 'لا توجد مدفوعات'}</Typography>
+                    <Typography sx={{ color: 'text.secondary', fontSize: '0.8rem' }}>{paySearch ? 'لا نتائج' : 'لا توجد مدفوعات'}</Typography>
                   </Box>
                 ) : (
                   filteredPay.map((pay, i) => {
@@ -1331,9 +1341,12 @@ export const ClientProfilePage = () => {
                           gap: 1.25,
                           px: 1.5,
                           py: '10px',
-                          borderBottom: i < filteredPay.length - 1 ? '1px solid rgba(47, 62, 52, 0.04)' : 'none',
+                          borderBottom: i < filteredPay.length - 1 ? 1 : 'none',
+                          borderColor: 'divider',
                           transition: 'background 0.15s',
-                          '&:active': { bgcolor: 'rgba(47, 62, 52, 0.03)' },
+                          '&:active': {
+                            bgcolor: (t) => (t.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(47, 62, 52, 0.03)'),
+                          },
                         }}
                       >
                         <Box sx={{
@@ -1347,14 +1360,14 @@ export const ClientProfilePage = () => {
 
                         <Box sx={{ flex: 1, minWidth: 0 }}>
                           <Typography sx={{
-                            color: '#1F2521', fontSize: '0.82rem', fontWeight: 700,
+                            color: 'text.primary', fontSize: '0.82rem', fontWeight: 700,
                             lineHeight: 1.35, mb: '2px',
                             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                           }}>
                             {methodLabel} {pay.notes ? `- ${pay.notes}` : ''}
                           </Typography>
                           <Stack direction="row" alignItems="center" spacing={0.5} sx={{ mb: pay.createdBy ? '3px' : 0 }}>
-                            <Typography sx={{ color: '#6B736E', fontSize: '0.62rem', fontWeight: 500 }}>{formatDate(pay.paymentDate)}</Typography>
+                            <Typography sx={{ color: 'text.secondary', fontSize: '0.62rem', fontWeight: 500 }}>{formatDate(pay.paymentDate)}</Typography>
                           </Stack>
                           {pay.createdBy && (
                             <Typography sx={{ color: '#9CA3A7', fontSize: '0.58rem', fontWeight: 600 }}>
@@ -1375,7 +1388,15 @@ export const ClientProfilePage = () => {
                             <IconButton
                               size="small"
                               onClick={(e) => { e.stopPropagation(); setEditingPayment(pay); setPayVal('amount', pay.amount); setPayVal('paymentMethod', pay.paymentMethod as any); setPayVal('paymentDate', pay.paymentDate); setPayVal('notes', pay.notes || ''); setPaymentDialogOpen(true); }}
-                              sx={{ color: '#6B736E', p: 0.35, opacity: 0.5, '&:hover': { opacity: 1, bgcolor: 'rgba(47, 62, 52, 0.08)' } }}
+                              sx={{
+                                color: 'text.secondary',
+                                p: 0.35,
+                                opacity: 0.5,
+                                '&:hover': {
+                                  opacity: 1,
+                                  bgcolor: (t) => (t.palette.mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(47, 62, 52, 0.08)'),
+                                },
+                              }}
                             >
                               <Edit sx={{ fontSize: 14 }} />
                             </IconButton>
@@ -1421,13 +1442,13 @@ export const ClientProfilePage = () => {
       >
         <Box
           className="etlala-fill-viewport"
-          sx={{ display: 'flex', flexDirection: 'column', minHeight: '100%', bgcolor: ETLALA_UI.pageBg }}
+          sx={{ display: 'flex', flexDirection: 'column', minHeight: '100%', bgcolor: 'background.default' }}
         >
           <Box
             sx={{
               flexShrink: 0,
               borderBottom: '1px solid rgba(31,61,53,0.08)',
-              bgcolor: ETLALA_UI.pageBg,
+              bgcolor: 'background.default',
             }}
           >
             <Box sx={{ pt: 0.5, px: 0 }}>
@@ -1470,7 +1491,7 @@ export const ClientProfilePage = () => {
             </Box>
           </Box>
           <Box
-            sx={{ flex: 1, minHeight: 0, overflowY: 'auto', WebkitOverflowScrolling: 'touch', bgcolor: ETLALA_UI.pageBg }}
+            sx={{ flex: 1, minHeight: 0, overflowY: 'auto', WebkitOverflowScrolling: 'touch', bgcolor: 'background.default' }}
           >
             <Container
               maxWidth="sm"
@@ -1538,7 +1559,7 @@ export const ClientProfilePage = () => {
         onClose={() => setExpensesPerUserOpen(false)}
         maxWidth="xs"
         fullWidth
-        PaperProps={{ sx: { borderRadius: 3, bgcolor: '#F7F7F5' } }}
+        PaperProps={{ sx: { borderRadius: 3, bgcolor: 'background.paper' } }}
       >
         <DialogTitle sx={{ textAlign: 'center', fontWeight: 800, color: '#2F3E34', pb: 1 }}>
           إجمالي المصروفات لكل مستخدم
@@ -1558,12 +1579,12 @@ export const ClientProfilePage = () => {
               if (stats.length === 0) return <Typography textAlign="center" color="#6B736E" py={2}>لا توجد بيانات</Typography>;
               
               return stats.map(s => (
-                <Box key={s.id} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', bgcolor: '#fff', p: 1.5, borderRadius: 2, border: '1px solid rgba(47,62,52,0.06)' }}>
+                <Box key={s.id} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', bgcolor: 'background.paper', p: 1.5, borderRadius: 2, border: '1px solid rgba(47,62,52,0.06)' }}>
                    <Stack direction="row" alignItems="center" spacing={1.5}>
                       <Avatar sx={{ width: 36, height: 36, bgcolor: 'rgba(194,178,128,0.15)', color: '#C2B280', fontSize: '1rem', fontWeight: 700 }}>
                         {s.name.charAt(0)}
                       </Avatar>
-                      <Typography sx={{ fontWeight: 700, color: '#1F2521', fontSize: '0.9rem' }}>{s.name}</Typography>
+                      <Typography sx={{ fontWeight: 700, color: 'text.primary', fontSize: '0.9rem' }}>{s.name}</Typography>
                    </Stack>
                    <Typography sx={{ fontWeight: 900, color: '#2F3E34', fontFamily: "'Outfit', sans-serif" }}>
                       {formatCurrency(s.amount)}
@@ -1742,7 +1763,7 @@ export const ClientProfilePage = () => {
       >
         <Box
           className="etlala-fill-viewport"
-          sx={{ display: 'flex', flexDirection: 'column', minHeight: '100%', bgcolor: ETLALA_UI.pageBg }}
+          sx={{ display: 'flex', flexDirection: 'column', minHeight: '100%', bgcolor: 'background.default' }}
         >
           <Box
             sx={{
@@ -1750,7 +1771,7 @@ export const ClientProfilePage = () => {
               display: 'flex',
               flexDirection: 'column',
               borderBottom: '1px solid rgba(31,61,53,0.08)',
-              bgcolor: ETLALA_UI.pageBg,
+              bgcolor: 'background.default',
             }}
           >
             <Box sx={{ pt: 0, px: 0, flexShrink: 0 }}>
@@ -1815,7 +1836,7 @@ export const ClientProfilePage = () => {
                         px: 0.5,
                         borderRadius: 2,
                         border: '1px solid rgba(31, 61, 53, 0.1)',
-                        bgcolor: theme.palette.mode === 'dark' ? alpha('#fff', 0.04) : '#fff',
+                        bgcolor: theme.palette.mode === 'dark' ? alpha('#fff', 0.04) : 'background.paper',
                         boxShadow: '0 1px 0 rgba(255,255,255,0.8) inset, 0 4px 14px -6px rgba(25,34,29,0.08)',
                       }}
                     >
@@ -1828,7 +1849,7 @@ export const ClientProfilePage = () => {
             )}
           </Box>
 
-        <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', WebkitOverflowScrolling: 'touch', bgcolor: ETLALA_UI.pageBg, pt: 2, pb: 'calc(16px + env(safe-area-inset-bottom, 0px))' }}>
+        <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', WebkitOverflowScrolling: 'touch', bgcolor: 'background.default', pt: 2, pb: 'calc(16px + env(safe-area-inset-bottom, 0px))' }}>
           <Container maxWidth="sm" disableGutters sx={{ pl: { xs: 'max(12px, env(safe-area-inset-left, 0px))', sm: 2 }, pr: { xs: 'max(12px, env(safe-area-inset-right, 0px))', sm: 2 } }}>
             {clientWorkers.length === 0 ? (
               <Box sx={{ textAlign: 'center', py: 10, bgcolor: (t) => (t.palette.mode === 'dark' ? alpha('#fff', 0.04) : alpha('#fff', 0.7)), border: '1px solid', borderColor: (t) => alpha(PROFILE_MODULE.workers.listAccent, t.palette.mode === 'dark' ? 0.2 : 0.15), borderRadius: 2.5, mt: 1, boxShadow: (t) => (t.palette.mode === 'light' ? '0 1px 0 rgba(255,255,255,0.9) inset' : 'none') }}>
@@ -2296,7 +2317,7 @@ export const ClientProfilePage = () => {
         open={!!viewingExpense}
         onClose={() => setViewingExpense(null)}
         fullScreen
-        PaperProps={{ sx: { bgcolor: '#F7F7F5' } }}
+        PaperProps={{ sx: { bgcolor: 'background.paper' } }}
       >
         <Box sx={{ bgcolor: '#2F3E34', color: 'white', p: 2, pt: 'calc(max(env(safe-area-inset-top), 50px) + 16px)' }}>
           <Stack direction="row" alignItems="center" justifyContent="space-between">
@@ -2345,39 +2366,39 @@ export const ClientProfilePage = () => {
           </Stack>
         </Box>
         <Box sx={{ p: 2.5 }}>
-          <Box sx={{ bgcolor: '#fff', borderRadius: 2, border: '1px solid rgba(47, 62, 52, 0.06)', overflow: 'hidden', mb: 2 }}>
-            <Box sx={{ p: 2, borderBottom: '1px solid rgba(47, 62, 52, 0.04)' }}>
-              <Typography variant="caption" sx={{ color: '#6B736E', fontWeight: 700, letterSpacing: 0.5, fontSize: '0.65rem' }}>المبلغ</Typography>
+          <Box sx={{ bgcolor: 'background.paper', borderRadius: 2, border: 1, borderColor: 'divider', overflow: 'hidden', mb: 2 }}>
+            <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
+              <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, letterSpacing: 0.5, fontSize: '0.65rem' }}>المبلغ</Typography>
               <Typography sx={{ color: '#2F3E34', fontSize: '1.5rem', fontWeight: 900, fontFamily: "'Outfit', sans-serif", mt: 0.5 }}>{formatCurrency(viewingExpense?.amount || 0)}</Typography>
             </Box>
-            <Box sx={{ p: 2, borderBottom: '1px solid rgba(47, 62, 52, 0.04)' }}>
-              <Typography variant="caption" sx={{ color: '#6B736E', fontWeight: 700, letterSpacing: 0.5, fontSize: '0.65rem' }}>الوصف</Typography>
-              <Typography sx={{ color: '#1F2521', fontSize: '1rem', fontWeight: 700, mt: 0.5, lineHeight: 1.5 }}>{viewingExpense?.description}</Typography>
+            <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
+              <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, letterSpacing: 0.5, fontSize: '0.65rem' }}>الوصف</Typography>
+              <Typography sx={{ color: 'text.primary', fontSize: '1rem', fontWeight: 700, mt: 0.5, lineHeight: 1.5 }}>{viewingExpense?.description}</Typography>
             </Box>
-            <Box sx={{ p: 2, borderBottom: '1px solid rgba(47, 62, 52, 0.04)' }}>
-              <Typography variant="caption" sx={{ color: '#6B736E', fontWeight: 700, letterSpacing: 0.5, fontSize: '0.65rem' }}>التصنيف</Typography>
+            <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
+              <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, letterSpacing: 0.5, fontSize: '0.65rem' }}>التصنيف</Typography>
               <Chip label={getExpenseCategoryLabel(viewingExpense?.category || '')} size="small" sx={{ mt: 0.75, bgcolor: 'rgba(194, 178, 128, 0.15)', color: '#2F3E34', fontWeight: 700, fontSize: '0.75rem' }} />
             </Box>
-            <Box sx={{ p: 2, borderBottom: '1px solid rgba(47, 62, 52, 0.04)' }}>
-              <Typography variant="caption" sx={{ color: '#6B736E', fontWeight: 700, letterSpacing: 0.5, fontSize: '0.65rem' }}>التاريخ</Typography>
-              <Typography sx={{ color: '#1F2521', fontSize: '0.95rem', fontWeight: 600, mt: 0.5 }}>{formatDate(viewingExpense?.date || '')}</Typography>
+            <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
+              <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, letterSpacing: 0.5, fontSize: '0.65rem' }}>التاريخ</Typography>
+              <Typography sx={{ color: 'text.primary', fontSize: '0.95rem', fontWeight: 600, mt: 0.5 }}>{formatDate(viewingExpense?.date || '')}</Typography>
             </Box>
             {viewingExpense?.invoiceNumber && (
-              <Box sx={{ p: 2, borderBottom: '1px solid rgba(47, 62, 52, 0.04)' }}>
-                <Typography variant="caption" sx={{ color: '#6B736E', fontWeight: 700, letterSpacing: 0.5, fontSize: '0.65rem' }}>رقم الفاتورة</Typography>
-                <Typography sx={{ color: '#1F2521', fontSize: '0.95rem', fontWeight: 600, mt: 0.5 }}>{viewingExpense.invoiceNumber}</Typography>
+              <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
+                <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, letterSpacing: 0.5, fontSize: '0.65rem' }}>رقم الفاتورة</Typography>
+                <Typography sx={{ color: 'text.primary', fontSize: '0.95rem', fontWeight: 600, mt: 0.5 }}>{viewingExpense.invoiceNumber}</Typography>
               </Box>
             )}
             {viewingExpense?.createdBy && (
-              <Box sx={{ p: 2, borderBottom: '1px solid rgba(47, 62, 52, 0.04)' }}>
-                <Typography variant="caption" sx={{ color: '#6B736E', fontWeight: 700, letterSpacing: 0.5, fontSize: '0.65rem' }}>مسجل بواسطة</Typography>
-                <Typography sx={{ color: '#1F2521', fontSize: '0.95rem', fontWeight: 600, mt: 0.5 }}>{viewingExpense.createdBy}</Typography>
+              <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
+                <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, letterSpacing: 0.5, fontSize: '0.65rem' }}>مسجل بواسطة</Typography>
+                <Typography sx={{ color: 'text.primary', fontSize: '0.95rem', fontWeight: 600, mt: 0.5 }}>{viewingExpense.createdBy}</Typography>
               </Box>
             )}
             {viewingExpense?.notes && (
               <Box sx={{ p: 2 }}>
-                <Typography variant="caption" sx={{ color: '#6B736E', fontWeight: 700, letterSpacing: 0.5, fontSize: '0.65rem' }}>ملاحظات</Typography>
-                <Typography sx={{ color: '#1F2521', fontSize: '0.9rem', mt: 0.5, lineHeight: 1.6 }}>{viewingExpense.notes}</Typography>
+                <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, letterSpacing: 0.5, fontSize: '0.65rem' }}>ملاحظات</Typography>
+                <Typography sx={{ color: 'text.primary', fontSize: '0.9rem', mt: 0.5, lineHeight: 1.6 }}>{viewingExpense.notes}</Typography>
               </Box>
             )}
           </Box>

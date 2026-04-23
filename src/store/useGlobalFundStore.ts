@@ -24,7 +24,8 @@ interface GlobalFundState {
 
 export const useGlobalFundStore = create<GlobalFundState>((set, get) => ({
   transactions: [],
-  isLoading: true,
+  /** false من البداية — لا نُظهر "تحميل" لكل الشاشة؛ الاشتراك يملأ `transactions` فور وصول لقطة Firestore */
+  isLoading: false,
 
   // ─── Computed ─────────────────────────────────
   getTotalDeposits: () =>
@@ -57,7 +58,6 @@ export const useGlobalFundStore = create<GlobalFundState>((set, get) => ({
 
   // ─── Initialize ────────────────────────────────
   initialize: () => {
-    set({ isLoading: true });
     const unsub = globalFundTransactionsService.subscribe(
       (data) => set({ transactions: data, isLoading: false }),
       [orderBy('createdAt', 'desc')]

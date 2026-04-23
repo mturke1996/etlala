@@ -6,6 +6,44 @@ import { db } from '../config/firebase';
 
 export type AppModule = 'stats' | 'clients' | 'invoices' | 'payments' | 'debts' | 'expenses' | 'users' | 'workers' | 'balances' | 'letters';
 
+/** آخر إعدادات قفل مُتزامنة مع القرص — تُملأ عند وصول onSnapshot ليعيد التحميل يعرض القوائم/الصلاحيات مباشرة دون انتظار الشبكة */
+const APP_LOCK_CONFIG_CACHE = 'etlala-app-lock-config-v1';
+
+const readAppLockConfigCache = () => {
+  try {
+    const raw = localStorage.getItem(APP_LOCK_CONFIG_CACHE);
+    if (!raw) return null;
+    const c = JSON.parse(raw) as {
+      isLocked?: boolean;
+      ownerId?: string | null;
+      unlockedModules?: AppModule[];
+      exemptUsers?: string[];
+    };
+    if (!Array.isArray(c.unlockedModules)) return null;
+    return {
+      isLocked: !!c.isLocked,
+      ownerId: c.ownerId ?? null,
+      unlockedModules: c.unlockedModules,
+      exemptUsers: Array.isArray(c.exemptUsers) ? c.exemptUsers : [],
+    };
+  } catch {
+    return null;
+  }
+};
+
+const writeAppLockConfigCache = (data: {
+  isLocked: boolean;
+  ownerId: string | null;
+  unlockedModules: AppModule[];
+  exemptUsers: string[];
+}) => {
+  try {
+    localStorage.setItem(APP_LOCK_CONFIG_CACHE, JSON.stringify(data));
+  } catch {
+    // ignore
+  }
+};
+
 export interface AppLockState {
   pinCode: string;
   isLocked: boolean;
@@ -37,33 +75,51 @@ const pushToFirestore = async (data: any) => {
   }
 };
 
+const lockSnapshot = readAppLockConfigCache();
+
 export const useAppLockStore = create<AppLockState>()(
   persist(
     (set, get) => ({
       pinCode: '',
-      isLocked: false,
-      isAppLockReady: false,
-      ownerId: null,
-      unlockedModules: ['expenses', 'workers'], // default allowed modules
+      isLocked: lockSnapshot?.isLocked ?? false,
+      isAppLockReady: lockSnapshot != null,
+      ownerId: lockSnapshot?.ownerId ?? null,
+      unlockedModules: lockSnapshot?.unlockedModules ?? (['expenses', 'workers'] as AppModule[]),
+      exemptUsers: lockSnapshot?.exemptUsers ?? [],
       unlockedUsers: [],
-      exemptUsers: [],
 
       initAppLockSync: () => {
         const docRef = doc(db, 'settings', SETTINGS_DOC);
         const unsubscribe = onSnapshot(docRef, (snap) => {
           if (snap.exists()) {
             const data = snap.data();
+            const isLocked = data.isLocked || false;
+            const ownerId = data.ownerId || null;
+            const unlockedModules = (data.unlockedModules || ['expenses', 'workers']) as AppModule[];
+            const exemptUsers = (data.exemptUsers || []) as string[];
             set({
               pinCode: data.pinCode || '',
-              isLocked: data.isLocked || false,
+              isLocked,
               isAppLockReady: true,
-              ownerId: data.ownerId || null,
-              unlockedModules: data.unlockedModules || ['expenses', 'workers'],
-              exemptUsers: data.exemptUsers || []
+              ownerId,
+              unlockedModules,
+              exemptUsers,
+            });
+            writeAppLockConfigCache({
+              isLocked,
+              ownerId,
+              unlockedModules,
+              exemptUsers,
             });
           } else {
             // No settings doc: no lock configured, still mark ready
             set({ isAppLockReady: true });
+            writeAppLockConfigCache({
+              isLocked: false,
+              ownerId: null,
+              unlockedModules: ['expenses', 'workers'],
+              exemptUsers: [],
+            });
           }
         });
         return unsubscribe;

@@ -33,17 +33,19 @@ export function ProfileSessionListShell({
     ? alpha(PROFILE_MODULE[module].accent, theme.palette.mode === 'dark' ? 0.08 : 0.05)
     : 'transparent';
 
+  const defBg = theme.palette.background.default;
+  const isDark = theme.palette.mode === 'dark';
   return (
     <Box
       sx={{
         display: 'flex',
         flexDirection: 'column',
         minHeight: '100dvh',
-        bgcolor: theme.palette.mode === 'dark' ? '#0f130f' : '#f0ede6',
-        background:
-          theme.palette.mode === 'dark'
-            ? `radial-gradient(ellipse 100% 45% at 100% 0%, ${tint} 0%, #0f130f 55%), radial-gradient(ellipse 60% 40% at 0% 100%, rgba(47, 62, 52, 0.05) 0%, transparent 50%)`
-            : `radial-gradient(ellipse 100% 50% at 0% 0%, ${tint} 0%, #f0ede6 50%), linear-gradient(180deg, #faf8f3 0%, #f2efe8 100%)`,
+        bgcolor: defBg,
+        color: 'text.primary',
+        background: isDark
+          ? `radial-gradient(ellipse 100% 45% at 100% 0%, ${tint} 0%, ${defBg} 55%), radial-gradient(ellipse 60% 40% at 0% 100%, rgba(74, 94, 80, 0.12) 0%, transparent 50%)`
+          : `radial-gradient(ellipse 100% 50% at 0% 0%, ${tint} 0%, #f0ede6 50%), linear-gradient(180deg, #faf8f3 0%, #f2efe8 100%)`,
       }}
     >
       {children}

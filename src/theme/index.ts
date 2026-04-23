@@ -46,9 +46,10 @@ const premiumColors = {
       default: '#121814',
       paper: '#1A221C',
     },
+    /** نص فاتح دافئ — يندمج مع الأخضر الداكن دون بريق أبيض قاسٍ */
     text: {
-      primary: '#ECEBE8',
-      secondary: 'rgba(236, 235, 232, 0.65)',
+      primary: '#F4F1EC',
+      secondary: 'rgba(244, 241, 236, 0.64)',
     },
     divider: 'rgba(236, 235, 232, 0.12)',
   },
@@ -107,6 +108,48 @@ export const createAppTheme = (mode: ThemeMode = 'light') => {
               backgroundColor: isDark ? '#3D4A42' : '#C5CAC7',
             },
           },
+          '#root': {
+            backgroundColor: palette.background.default,
+            color: palette.text.primary,
+            minHeight: '100dvh',
+          },
+        },
+      },
+
+      MuiListItemText: {
+        styleOverrides: {
+          primary: { color: palette.text.primary },
+          secondary: { color: palette.text.secondary },
+        },
+      },
+      MuiListSubheader: {
+        styleOverrides: {
+          root: { color: palette.text.secondary },
+        },
+      },
+      MuiMenuItem: {
+        styleOverrides: {
+          root: { color: palette.text.primary },
+        },
+      },
+      MuiListItem: {
+        styleOverrides: {
+          root: { color: palette.text.primary },
+        },
+      },
+      MuiFormHelperText: {
+        styleOverrides: {
+          root: { color: palette.text.secondary },
+        },
+      },
+      MuiFormLabel: {
+        styleOverrides: {
+          root: { color: palette.text.secondary },
+        },
+      },
+      MuiInputLabel: {
+        styleOverrides: {
+          root: { color: palette.text.secondary, '&.Mui-focused': { color: isDark ? palette.primary.light : primary } },
         },
       },
 
@@ -144,10 +187,10 @@ export const createAppTheme = (mode: ThemeMode = 'light') => {
           outlined: {
             borderWidth: '1.5px',
             borderColor: accent,
-            color: text,
+            color: isDark ? palette.text.primary : text,
             '&:hover': {
               borderWidth: '1.5px',
-              backgroundColor: isDark ? 'rgba(194, 178, 128, 0.08)' : 'rgba(194, 178, 128, 0.12)',
+              backgroundColor: isDark ? 'rgba(194, 178, 128, 0.12)' : 'rgba(194, 178, 128, 0.12)',
             },
           },
         },
@@ -183,8 +226,16 @@ export const createAppTheme = (mode: ThemeMode = 'light') => {
           paper: {
             borderRadius: '24px',
             boxShadow: isDark ? '0 25px 60px rgba(0,0,0,0.5)' : '0 8px 32px rgba(31, 37, 33, 0.12)',
+            color: palette.text.primary,
+            backgroundColor: palette.background.paper,
           },
         },
+      },
+      MuiDialogTitle: {
+        styleOverrides: { root: { color: palette.text.primary } },
+      },
+      MuiDialogContent: {
+        styleOverrides: { root: { color: palette.text.primary } },
       },
 
       MuiTextField: {
@@ -210,6 +261,11 @@ export const createAppTheme = (mode: ThemeMode = 'light') => {
             },
             '& .MuiInputBase-input': {
               padding: '14px 16px',
+              color: palette.text.primary,
+            },
+            '& .MuiInputBase-input::placeholder': {
+              color: palette.text.secondary,
+              opacity: 0.9,
             },
           },
         },
@@ -219,7 +275,16 @@ export const createAppTheme = (mode: ThemeMode = 'light') => {
         styleOverrides: {
           root: {
             borderRadius: '12px',
+            color: palette.text.primary,
+            '& .MuiSvgIcon-root': {
+              color: palette.text.secondary,
+            },
           },
+        },
+      },
+      MuiTab: {
+        styleOverrides: {
+          root: { color: palette.text.secondary, '&.Mui-selected': { color: isDark ? '#E8DCC8' : primary } },
         },
       },
 
@@ -252,7 +317,7 @@ export const createAppTheme = (mode: ThemeMode = 'light') => {
             transition: 'all 0.2s ease',
             padding: '6px 0',
             '&.Mui-selected': {
-              color: primary,
+              color: isDark ? '#D4C9A3' : primary,
             },
             '& .MuiSvgIcon-root': {
               fontSize: 24,
@@ -260,7 +325,7 @@ export const createAppTheme = (mode: ThemeMode = 'light') => {
               transition: 'all 0.2s ease',
             },
             '&.Mui-selected .MuiSvgIcon-root': {
-              color: primary,
+              color: isDark ? '#D4C9A3' : primary,
             },
             '& .MuiBottomNavigationAction-label': {
               fontSize: '0.7rem',
@@ -303,6 +368,7 @@ export const createAppTheme = (mode: ThemeMode = 'light') => {
         styleOverrides: {
           root: {
             borderBottom: `1px solid ${palette.divider}`,
+            color: palette.text.primary,
           },
         },
       },

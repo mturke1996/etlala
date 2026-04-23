@@ -50,6 +50,11 @@ function AppContent() {
   const theme = useMemo(() => createAppTheme(mode), [mode]);
 
   useEffect(() => {
+    document.documentElement.setAttribute("data-theme", mode);
+    document.documentElement.style.setProperty("color-scheme", mode);
+  }, [mode]);
+
+  useEffect(() => {
     checkAuth();
   }, [checkAuth]);
 

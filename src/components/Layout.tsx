@@ -9,8 +9,18 @@ import { useAppLockStore } from "../store/useAppLockStore";
 import { CreditCard, FileText, Home, Users, Wallet } from "lucide-react";
 
 const navItems = [
-  { label: "الرئيسية", icon: <Home size={20} strokeWidth={1.9} />, path: "/", module: null },
-  { label: "العملاء", icon: <Users size={20} strokeWidth={1.9} />, path: "/clients", module: "clients" },
+  {
+    label: "الرئيسية",
+    icon: <Home size={20} strokeWidth={1.9} />,
+    path: "/",
+    module: null,
+  },
+  {
+    label: "العملاء",
+    icon: <Users size={20} strokeWidth={1.9} />,
+    path: "/clients",
+    module: "clients",
+  },
   {
     label: "الفواتير",
     icon: <FileText size={20} strokeWidth={1.9} />,

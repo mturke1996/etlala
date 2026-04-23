@@ -35,6 +35,26 @@
   --shadow-xl: 0 16px 48px rgba(31, 37, 33, 0.12);
 }
 
+/* يطابق MUI `createAppTheme('dark')` — خلفية ونصوص تملأ الـ body والصفحات غير MUI */
+html[data-theme="dark"] {
+  --etlala-primary: #4A5E50;
+  --etlala-primary-light: #5D7366;
+  --etlala-primary-dark: #2A352C;
+  --etlala-accent: #C2B280;
+  --etlala-cream: #2A302C;
+  --etlala-cream-light: #1E2420;
+  --etlala-taupe: #8A928C;
+  --etlala-bg: #121814;
+  --etlala-paper: #1A221C;
+  --etlala-text: #F4F1EC;
+  --etlala-text-secondary: rgba(244, 241, 236, 0.64);
+  --etlala-dot: rgba(255, 255, 255, 0.04);
+  --shadow-sm: 0 2px 12px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.38);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.42);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.45);
+}
+
 /* ── Base ── */
 *, *::before, *::after {
   box-sizing: border-box;
@@ -45,6 +65,8 @@ html {
   -webkit-text-size-adjust: 100%;
   /* GPU-accelerated scroll */
   scroll-behavior: smooth;
+  background-color: var(--etlala-bg);
+  min-height: 100%;
 }
 
 /* صفحات داخلية — خلفية موحّدة (PageScaffold) */
@@ -76,6 +98,12 @@ html {
   min-height: 100vh;
   min-height: 100dvh;
   min-height: -webkit-fill-available;
+}
+
+#root {
+  min-height: 100dvh;
+  background-color: var(--etlala-bg);
+  color: var(--etlala-text);
 }
 
 body {
