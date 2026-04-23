@@ -1,11 +1,14 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Avatar,
+  Badge,
   Box,
+  Button,
   Card,
   Container,
   Divider,
+  Drawer,
   IconButton,
   Skeleton,
   Stack,
@@ -13,8 +16,10 @@ import {
   alpha,
 } from '@mui/material';
 import {
+  AlertTriangle,
   Bell,
   Building2,
+  CheckCircle2,
   ChevronLeft,
   CircleDollarSign,
   CreditCard,
@@ -25,6 +30,8 @@ import {
   MapPin,
   Phone,
   Receipt,
+  Shield,
+  Sparkles,
   UserCog,
   Users,
   Wallet,
@@ -35,6 +42,9 @@ import { useAppLockStore, type AppModule } from '../store/useAppLockStore';
 import { AppLockSettingsDialog } from '../components/AppLockSettingsDialog';
 import { HeroLogo } from '../components/HeroLogo';
 import toast from 'react-hot-toast';
+import { useGlobalFundStore } from '../store/useGlobalFundStore';
+import { computeUserFundAllocTotals } from '../utils/custodyFundAlloc';
+import { formatCurrency } from '../utils/formatters';
 
 const COLORS = {
   primary: '#1F3D35',
@@ -113,6 +123,65 @@ const MoneyLine = ({
   );
 };
 
+/** مبلغ عهدة يدعم السالب (عجز) بألوان واضحة — يطابق عرض `MoneyLine` (د.ل يسار الرقم) */
+const CustodyMoneyLine = ({
+  value,
+  size = 'lg',
+}: {
+  value: number;
+  size?: 'md' | 'lg';
+}) => {
+  const neg = value < 0;
+  const raw = numberFormatter.format(Math.round(Math.abs(value || 0)));
+  const fs =
+    size === 'lg' ? 'clamp(1.35rem, 6.5vw, 1.95rem)' : 'clamp(1.02rem, 4.2vw, 1.18rem)';
+  const mainColor = neg ? '#C62828' : COLORS.text;
+  return (
+    <Box
+      component="span"
+      dir="ltr"
+      sx={{
+        display: 'inline-flex',
+        flexDirection: 'row',
+        alignItems: 'baseline',
+        gap: 0.6,
+        maxWidth: '100%',
+        fontStyle: 'normal',
+        unicodeBidi: 'embed',
+      }}
+    >
+      <Box
+        component="span"
+        sx={{
+          color: alpha(COLORS.muted, 0.9),
+          fontWeight: 700,
+          fontSize: size === 'lg' ? '0.72rem' : '0.66rem',
+          lineHeight: 1,
+          whiteSpace: 'nowrap',
+          letterSpacing: 0.08,
+        }}
+      >
+        د.ل
+      </Box>
+      <Box
+        component="span"
+        sx={{
+          color: mainColor,
+          fontWeight: 800,
+          fontSize: fs,
+          lineHeight: 1.2,
+          whiteSpace: 'nowrap',
+          fontVariantNumeric: 'tabular-nums',
+          letterSpacing: '0.01em',
+        }}
+      >
+        {neg ? '−' : ''}
+        {raw}
+      </Box>
+    </Box>
+  );
+};
+
 type MenuItem = {
   title: string;
   subtitle: string;
@@ -140,9 +209,114 @@ export const DashboardHomePage = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
   const { clients, payments, expenses, isLoading } = useDataStore();
+  const { transactions, getUserStats, initialize: initFund, isLoading: fundLoading } = useGlobalFundStore();
   const { isLocked, isSessionUnlocked, canAccess } = useAppLockStore();
   const [lockSettingsOpen, setLockSettingsOpen] = useState(false);
   const [logoFailed, setLogoFailed] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+
+  const canOpenFund = canAccess('balances');
+  const canSeeStats = canAccess('stats');
+  const sessionUnlocked = isSessionUnlocked();
+
+  useEffect(() => {
+    const u = initFund();
+    return u;
+  }, [initFund]);
+
+  /** نفس منطق صفحة المصروفات / ملف العميل: `computeUserFundAllocTotals` + fallback عند عدم وجود إيداعات */
+  const myCustodyFund = useMemo(() => {
+    if (!user) return null;
+    const uid = user.id;
+    const userName = user.displayName || '';
+
+    const deposits = transactions.filter(
+      (t) =>
+        t.type === 'deposit' &&
+        ((uid && t.userId === uid) || (userName && t.userName === userName))
+    );
+
+    if (deposits.length === 0) {
+      const storeStats = uid ? getUserStats(uid) : null;
+      if (storeStats && storeStats.deposited > 0) {
+        return {
+          deposited: storeStats.deposited,
+          spent: storeStats.withdrawn,
+          remaining: storeStats.remaining,
+        };
+      }
+      return null;
+    }
+
+    const depositRows = deposits.map((t) => ({ createdAt: t.createdAt, amount: t.amount }));
+    const expenseRows = expenses
+      .filter((e) => (uid && e.userId === uid) || (userName && e.createdBy === userName))
+      .map((e) => ({ createdAt: e.createdAt, amount: e.amount }));
+
+    return computeUserFundAllocTotals(depositRows, expenseRows);
+  }, [transactions, expenses, user, getUserStats]);
+
+  /** تنبيهات مبنية على بيانات فعلية — تُفتح في لوحة جانبية */
+  const homeNotifications = useMemo(() => {
+    const list: {
+      id: string;
+      kind: 'urgent' | 'info' | 'success' | 'lock';
+      title: string;
+      body: string;
+    }[] = [];
+
+    if (isLocked && !sessionUnlocked) {
+      list.push({
+        id: 'session-lock',
+        kind: 'lock',
+        title: 'جلسة القفل',
+        body: 'أدخل رمز التطبيق للوصول للأقسام المحمية (العملاء، الصندوق، وغيرها) إن وُجدت بصلاحيتك.',
+      });
+    }
+    if (!canSeeStats) {
+      list.push({
+        id: 'stats-hidden',
+        kind: 'info',
+        title: 'إحصائيات الشاشة الرئيسية',
+        body: 'مؤشرات صافي الأرباح والمحصّل وعموم المصروفات معطّلة بإعدادات الأمان. يبقى بإمكانك استخدام باقي الأقسام المفعّلة لك وعرض عهدتك عندما تظهر أدناه.',
+      });
+    }
+    if (myCustodyFund && myCustodyFund.remaining < 0) {
+      list.push({
+        id: 'custody-deficit',
+        kind: 'urgent',
+        title: 'عجز في عهدة صندوق العهدة',
+        body: `المتبقي المطلوب تسويته: ‎${formatCurrency(Math.abs(myCustodyFund.remaining))}‎. راجع العهدات في صندوق العهدة عند تفعيل صلاحيتك أو التواصل مع المسؤول.`,
+      });
+    } else if (myCustodyFund && myCustodyFund.remaining > 0 && myCustodyFund.remaining < 300) {
+      list.push({
+        id: 'custody-low',
+        kind: 'info',
+        title: 'تنبيه ميزانية عهدة',
+        body: `رصيدك المتبقي أقل من 300 ‎د.ل‎. خطط لإعادة التمويل عند الحاجة.`,
+      });
+    }
+
+    if (list.length === 0) {
+      list.push({
+        id: 'all-clear',
+        kind: 'success',
+        title: 'لا عناوين صادرة',
+        body: 'لا إشعارات مالية مخصصة حالياً. سيتم إظهار تنبيهات عند تغيّر وضع عهادتك أو عند اصطفاف مهم.',
+      });
+    }
+    return list;
+  }, [isLocked, sessionUnlocked, canSeeStats, myCustodyFund]);
+
+  const urgentNotifCount = useMemo(
+    () => homeNotifications.filter((n) => n.kind === 'urgent').length,
+    [homeNotifications],
+  );
+
+  const relevantNotifCount = useMemo(() => {
+    if (urgentNotifCount > 0) return urgentNotifCount;
+    return homeNotifications.filter((n) => n.id !== 'all-clear').length;
+  }, [homeNotifications, urgentNotifCount]);
 
   const primaryMenuVisible = useMemo(
     () => PRIMARY_MENU.filter((item) => canAccess(item.module)),
@@ -267,35 +441,56 @@ export const DashboardHomePage = () => {
           </Box>
 
           <Stack direction="row" spacing={1} sx={{ direction: 'rtl' }}>
-            {[
-              {
-                label: 'الإشعارات',
-                icon: (
-                  <Box sx={{ position: 'relative' }}>
-                    <Bell size={18} />
-                    <Box
-                      sx={{
-                        position: 'absolute',
-                        top: 2,
-                        right: 2,
-                        width: 6,
-                        height: 6,
-                        borderRadius: '50%',
-                        bgcolor: '#F59E0B',
-                        boxShadow: '0 0 0 1px #fff',
-                      }}
-                    />
-                  </Box>
-                ),
-                action: () => toast('الإشعارات قادمة في تحديث قريب'),
-              },
-              {
-                label: 'القفل',
-                icon: isLocked && !isSessionUnlocked() ? <Lock size={18} /> : <LockOpen size={18} />,
-                action: () => setLockSettingsOpen(true),
-              },
-              { label: 'تسجيل الخروج', icon: <LogOut size={18} />, action: () => { logout(); navigate('/login'); } },
-            ].map((item) => (
+            <IconButton
+              onClick={() => setNotifOpen(true)}
+              aria-label="الإشعارات"
+              sx={{
+                width: 44,
+                height: 44,
+                borderRadius: 2.5,
+                bgcolor: '#EFEFED',
+                color: '#1F2A2A',
+                border: '1px solid rgba(31,61,53,0.08)',
+                boxShadow: urgentNotifCount > 0
+                  ? '0 0 0 2px rgba(198,40,40,0.2), 0 4px 14px rgba(198,40,40,0.12)'
+                  : '0 2px 10px rgba(24,38,33,0.04)',
+                transition: 'all 180ms cubic-bezier(0.2, 0.8, 0.2, 1)',
+                '&:hover': { bgcolor: '#F6F6F4', transform: 'translateY(-1px)' },
+                ...(urgentNotifCount > 0 && {
+                  '@keyframes notifRing': {
+                    '0%, 100%': { boxShadow: '0 0 0 0 rgba(198,40,40,0.35)' },
+                    '50%': { boxShadow: '0 0 0 6px rgba(198,40,40,0)' },
+                  },
+                  animation: 'notifRing 2.2s ease-in-out infinite',
+                }),
+              }}
+            >
+              <Badge
+                color="error"
+                invisible={relevantNotifCount === 0}
+                badgeContent={relevantNotifCount > 9 ? '9+' : relevantNotifCount}
+                sx={{
+                  '& .MuiBadge-badge': {
+                    fontWeight: 800,
+                    fontSize: '0.65rem',
+                    minWidth: 18,
+                    height: 18,
+                  },
+                }}
+              >
+                <Bell size={18} />
+              </Badge>
+            </IconButton>
+            {(
+              [
+                {
+                  label: 'القفل',
+                  icon: isLocked && !isSessionUnlocked() ? <Lock size={18} /> : <LockOpen size={18} />,
+                  action: () => setLockSettingsOpen(true),
+                },
+                { label: 'تسجيل الخروج', icon: <LogOut size={18} />, action: () => { logout(); navigate('/login'); } },
+              ] as const
+            ).map((item) => (
               <IconButton
                 key={item.label}
                 onClick={item.action}
@@ -618,6 +813,110 @@ export const DashboardHomePage = () => {
           </>
         )}
 
+        {user && !fundLoading && myCustodyFund && (
+          <Card
+            elevation={0}
+            onClick={() => {
+              if (canOpenFund) {
+                navigate('/fund');
+                return;
+              }
+              toast('للمتابعة التفصيلية في «صندوق العهدة» يلزم تفعيل هذه الصلاحية من إعدادات قفل التطبيق لحسابك.', {
+                icon: '🔐',
+                duration: 4200,
+              });
+            }}
+            sx={{
+              borderRadius: '22px',
+              p: 2.5,
+              mb: 2,
+              overflow: 'hidden',
+              position: 'relative',
+              cursor: 'pointer',
+              background: 'linear-gradient(180deg, #FFFFFF 0%, #F9F9F6 100%)',
+              border: '1px solid rgba(31,61,53,0.09)',
+              boxShadow: '0 2px 0 rgba(31,61,53,0.04) inset, 0 12px 32px -8px rgba(25,34,29,0.1)',
+              transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+              '&:hover': {
+                boxShadow: '0 2px 0 rgba(31,61,53,0.05) inset, 0 16px 36px -6px rgba(25,34,29,0.14)',
+                transform: 'translateY(-1px)',
+              },
+              '&::before': {
+                content: '""',
+                position: 'absolute',
+                right: 0,
+                top: 0,
+                width: 4,
+                height: '100%',
+                borderRadius: '0 22px 22px 0',
+                background: `linear-gradient(180deg, ${alpha(COLORS.primary, 0.75)} 0%, ${alpha(COLORS.accent, 0.55)} 100%)`,
+              },
+            }}
+          >
+            <Box sx={{ pr: 1, textAlign: 'right' }}>
+              <Box
+                dir="rtl"
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 1.5,
+                  mb: 1,
+                }}
+              >
+                <Typography
+                  sx={{
+                    color: COLORS.muted,
+                    fontSize: '0.88rem',
+                    fontWeight: 600,
+                    letterSpacing: 0.02,
+                    lineHeight: 1.3,
+                  }}
+                >
+                  رصيد عهـدة صندوق العهـدة
+                  <Box component="span" sx={{ display: 'block', fontSize: '0.7rem', fontWeight: 500, opacity: 0.9, mt: 0.35 }}>
+                    {user?.displayName || '—'}
+                  </Box>
+                </Typography>
+                <Box
+                  sx={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: 2.5,
+                    display: 'grid',
+                    placeItems: 'center',
+                    background: `linear-gradient(145deg, ${alpha(COLORS.accent, 0.25)} 0%, ${alpha(COLORS.primary, 0.2)} 100%)`,
+                    border: '1px solid rgba(31,61,53,0.1)',
+                    flexShrink: 0,
+                  }}
+                >
+                  <Wallet size={20} color={COLORS.primary} strokeWidth={1.85} />
+                </Box>
+              </Box>
+              <Box
+                dir="rtl"
+                sx={{
+                  display: 'block',
+                  textAlign: 'right',
+                  lineHeight: 1.2,
+                }}
+              >
+                <CustodyMoneyLine value={myCustodyFund.remaining} size="lg" />
+              </Box>
+              <Typography sx={{ color: COLORS.muted, fontSize: '0.72rem', mt: 1.1, fontWeight: 500 }}>
+                {myCustodyFund.remaining >= 0
+                  ? canOpenFund
+                    ? 'المتبقي لك بعد تخصيص مصروفاتك — اضغط للتفاصيل'
+                    : 'المتبقي لك بعد تخصيص مصروفاتك (عرض تفصيلي الصندوق يتطلب صلاحية)'
+                  : canOpenFund
+                    ? 'عجز على عهدتك — اضغط لعرض التفاصيل في الصندوق'
+                    : 'عجز على عهدتك — اطلب من المسؤول تفعيل صلاحية صندوق العهدة للتفاصيل'}
+              </Typography>
+            </Box>
+          </Card>
+        )}
+
         {primaryMenuVisible.length > 0 && (
           <>
             <Box
@@ -699,6 +998,140 @@ export const DashboardHomePage = () => {
           </Card>
         )}
       </Container>
+
+      <Drawer
+        anchor="right"
+        open={notifOpen}
+        onClose={() => setNotifOpen(false)}
+        PaperProps={{
+          sx: {
+            width: { xs: '100%', sm: 380 },
+            maxWidth: '100vw',
+            borderRadius: { xs: '20px 20px 0 0', sm: '0' },
+            borderLeft: { sm: '1px solid rgba(31,61,53,0.08)' },
+            background: 'linear-gradient(180deg, #FDFDFB 0%, #F5F5F2 100%)',
+          },
+        }}
+      >
+        <Box
+          dir="rtl"
+          sx={{
+            p: 2.25,
+            borderBottom: '1px solid rgba(31,61,53,0.08)',
+            background: `linear-gradient(120deg, ${alpha(COLORS.primary, 0.08)} 0%, transparent 55%)`,
+          }}
+        >
+          <Stack direction="row" alignItems="center" justifyContent="space-between" gap={1}>
+            <Box>
+              <Typography sx={{ fontWeight: 800, fontSize: '1.05rem', color: COLORS.text }}>الإشعارات</Typography>
+              <Typography sx={{ fontSize: '0.78rem', color: COLORS.muted, mt: 0.35 }}>مُحدَّثة من بياناتك الحالية</Typography>
+            </Box>
+            <Box
+              sx={{
+                width: 40,
+                height: 40,
+                borderRadius: 2.5,
+                display: 'grid',
+                placeItems: 'center',
+                bgcolor: alpha(COLORS.accent, 0.2),
+                border: `1px solid ${alpha(COLORS.accent, 0.35)}`,
+              }}
+            >
+              <Bell size={20} color={COLORS.primary} strokeWidth={1.9} />
+            </Box>
+          </Stack>
+        </Box>
+        <Box sx={{ p: 2, pb: 3, maxHeight: 'calc(100dvh - 120px)', overflow: 'auto' }}>
+          <Stack spacing={1.5}>
+            {homeNotifications.map((n) => {
+              const kindStyles = {
+                urgent: { bg: 'rgba(198, 40, 40, 0.08)', border: 'rgba(198, 40, 40, 0.18)' },
+                info: { bg: 'rgba(200, 192, 176, 0.2)', border: 'rgba(31, 61, 53, 0.1)' },
+                success: { bg: 'rgba(46, 125, 50, 0.08)', border: 'rgba(46, 125, 50, 0.15)' },
+                lock: { bg: 'rgba(92, 107, 192, 0.1)', border: 'rgba(92, 107, 192, 0.2)' },
+              } as const;
+              const s = kindStyles[n.kind] ?? kindStyles.info;
+              const leftIcon =
+                n.kind === 'urgent' ? (
+                  <AlertTriangle size={22} color="#B71C1C" />
+                ) : n.kind === 'success' ? (
+                  <CheckCircle2 size={22} color="#2E7D32" />
+                ) : n.kind === 'lock' ? (
+                  <Shield size={22} color="#3949AB" />
+                ) : (
+                  <Sparkles size={22} color={alpha(COLORS.primary, 0.85)} />
+                );
+              return (
+                <Box
+                  key={n.id}
+                  sx={{
+                    p: 1.75,
+                    borderRadius: 2.5,
+                    bgcolor: s.bg,
+                    border: `1px solid ${s.border}`,
+                    position: 'relative',
+                    overflow: 'hidden',
+                    '&::after':
+                      n.kind === 'urgent'
+                        ? {
+                            content: '""',
+                            position: 'absolute',
+                            left: 0,
+                            top: 0,
+                            bottom: 0,
+                            width: 3,
+                            bgcolor: '#c62828',
+                            borderRadius: '0 2px 2px 0',
+                          }
+                        : {},
+                  }}
+                >
+                  <Stack direction="row" gap={1.5} alignItems="flex-start">
+                    <Box sx={{ pt: 0.15, flexShrink: 0 }}>{leftIcon}</Box>
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography sx={{ fontWeight: 800, fontSize: '0.88rem', color: COLORS.text, lineHeight: 1.35 }}>
+                        {n.title}
+                      </Typography>
+                      <Typography sx={{ fontSize: '0.8rem', color: COLORS.muted, mt: 0.75, lineHeight: 1.6 }}>
+                        {n.body}
+                      </Typography>
+                      {n.id === 'custody-deficit' && canOpenFund && (
+                        <Button
+                          size="small"
+                          variant="contained"
+                          onClick={() => {
+                            setNotifOpen(false);
+                            navigate('/fund');
+                          }}
+                          sx={{
+                            mt: 1.25,
+                            borderRadius: 2,
+                            textTransform: 'none',
+                            fontWeight: 800,
+                            bgcolor: COLORS.primary,
+                            '&:hover': { bgcolor: COLORS.primary2 },
+                          }}
+                        >
+                          فتح صندوق العهدة
+                        </Button>
+                      )}
+                    </Box>
+                  </Stack>
+                </Box>
+              );
+            })}
+          </Stack>
+        </Box>
+        <Box sx={{ p: 2, pt: 0, pb: 'calc(16px + env(safe-area-inset-bottom, 0px))' }}>
+          <Button
+            fullWidth
+            onClick={() => setNotifOpen(false)}
+            sx={{ borderRadius: 2, fontWeight: 800, textTransform: 'none', color: COLORS.muted, border: '1px solid rgba(31,61,53,0.12)' }}
+          >
+            إغلاق
+          </Button>
+        </Box>
+      </Drawer>
 
       <AppLockSettingsDialog open={lockSettingsOpen} onClose={() => setLockSettingsOpen(false)} />
     </Box>

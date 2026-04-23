@@ -49,6 +49,7 @@ import {
 } from '../components/client/ProfileSessionUi';
 import { PROFILE_MODULE } from '../components/client/profileSessionTokens';
 import { premiumTokens } from '../theme/tokens';
+import { computeUserFundAllocTotals } from '../utils/custodyFundAlloc';
 import { motion, useReducedMotion } from 'framer-motion';
 
 const Grid = MuiGrid as any;
@@ -203,39 +204,82 @@ export const ClientProfilePage = () => {
   }, [systemUsers]);
 
   const userBalancesSummary = useMemo(() => {
-    const summary: Record<string, { given: number, spent: number, remaining: number, expenses: typeof clientExpenses, name: string, minTime: string }> = {};
-    
-    const sortedBalances = [...clientUserBalances].sort((a, b) => dayjs(a.createdAt).diff(dayjs(b.createdAt)));
-    sortedBalances.forEach(b => {
-      // Normalize key to Firebase Auth UID
+    const summary: Record<
+      string,
+      {
+        given: number;
+        spent: number;
+        remaining: number;
+        expenses: typeof clientExpenses;
+        name: string;
+        minTime: string;
+      }
+    > = {};
+
+    const balanceKey = (b: (typeof clientUserBalances)[0]) => {
       let k = b.userId;
-      if (k && userIdMap.docToUid[k]) k = userIdMap.docToUid[k]; // old data: was stored as doc.id
+      if (k && userIdMap.docToUid[k]) k = userIdMap.docToUid[k];
       if (!k && b.userName && userIdMap.nameToUid[b.userName]) k = userIdMap.nameToUid[b.userName];
       if (!k) k = b.userId || b.userName || 'unknown';
-
-      const currentUserData = systemUsers.find((u: any) => (u.uid || u.id) === k);
-      const actualName = currentUserData ? currentUserData.displayName : (b.userName || 'مستخدم');
-
-      if (!summary[k]) summary[k] = { given: 0, spent: 0, remaining: 0, expenses: [], name: actualName, minTime: b.createdAt };
-      if (currentUserData) summary[k].name = actualName;
-      summary[k].given += b.amount;
-      summary[k].remaining += b.amount;
-    });
-
-    clientExpenses.forEach(e => {
-      // Normalize expense user key to Firebase Auth UID
+      return k;
+    };
+    const expenseKey = (e: (typeof clientExpenses)[0]) => {
       let k = e.userId;
       if (k && userIdMap.docToUid[k]) k = userIdMap.docToUid[k];
       if (!k && e.createdBy && userIdMap.nameToUid[e.createdBy]) k = userIdMap.nameToUid[e.createdBy];
       if (!k) k = e.userId || e.createdBy || 'المستخدم';
+      return k;
+    };
 
-      if (summary[k] && summary[k].minTime) {
-        if (dayjs(e.createdAt).isAfter(dayjs(summary[k].minTime).subtract(1, 'minute'))) {
-          summary[k].spent += e.amount;
-          summary[k].remaining -= e.amount;
-          summary[k].expenses.push(e);
-        }
+    const byBalance = new Map<string, typeof clientUserBalances>();
+    clientUserBalances.forEach((b) => {
+      const k = balanceKey(b);
+      if (!byBalance.has(k)) byBalance.set(k, []);
+      byBalance.get(k)!.push(b);
+    });
+    const byExp = new Map<string, typeof clientExpenses>();
+    clientExpenses.forEach((e) => {
+      const k = expenseKey(e);
+      if (!byExp.has(k)) byExp.set(k, []);
+      byExp.get(k)!.push(e);
+    });
+
+    const allKeys = new Set<string>([...byBalance.keys(), ...byExp.keys()]);
+    allKeys.forEach((k) => {
+      const balances = (byBalance.get(k) || []).sort(
+        (a, b) => dayjs(a.createdAt).valueOf() - dayjs(b.createdAt).valueOf()
+      );
+      const exps = (byExp.get(k) || []).sort(
+        (a, b) => dayjs(a.createdAt).valueOf() - dayjs(b.createdAt).valueOf()
+      );
+
+      const currentUserData = systemUsers.find((u: any) => (u.uid || u.id) === k);
+      const nameFromBalance = balances[0]?.userName;
+      const actualName = currentUserData
+        ? currentUserData.displayName
+        : nameFromBalance || exps[0]?.createdBy || 'مستخدم';
+
+      const depositRows = balances.map((b) => ({ createdAt: b.createdAt, amount: b.amount }));
+      const expenseRows = exps.map((e) => ({ createdAt: e.createdAt, amount: e.amount }));
+      const fund = computeUserFundAllocTotals(depositRows, expenseRows);
+
+      const minFromBal = balances[0]?.createdAt;
+      const minFromExp = exps[0]?.createdAt;
+      let minTime = '';
+      if (minFromBal && minFromExp) {
+        minTime = dayjs(minFromBal).isBefore(dayjs(minFromExp)) ? minFromBal : minFromExp;
+      } else {
+        minTime = minFromBal || minFromExp || '';
       }
+
+      summary[k] = {
+        given: fund.deposited,
+        spent: fund.spent,
+        remaining: fund.remaining,
+        expenses: exps,
+        name: actualName,
+        minTime,
+      };
     });
 
     return summary;
@@ -245,63 +289,46 @@ export const ClientProfilePage = () => {
   const activeUserKey = user?.id || '';
   const currentUserBalanceInfo = activeUserKey ? userBalancesSummary[activeUserKey] : null;
 
-  // ── رصيد العهدة العام (نفس خوارزمية FundPage بالضبط) ──────────────────
+  // ── رصيد العهدة العام: نفس منطق FundPage (حلقات ترحيل عجز — انظر `computeUserFundAllocTotals`) ──
   const globalFundStats = useMemo(() => {
     if (!user) return null;
     const uid = user.id;
     const userName = user.displayName || '';
 
-    const deposits = [...fundTransactions.filter(t =>
-      t.type === 'deposit' && (
-        (uid && t.userId === uid) ||
-        (userName && t.userName === userName)
-      )
-    )].sort((a, b) => dayjs(a.createdAt).diff(dayjs(b.createdAt)));
-
+    const deposits = fundTransactions.filter((t) => {
+      if (t.type !== 'deposit') return false;
+      let tid = t.userId;
+      if (tid && userIdMap.docToUid[tid]) tid = userIdMap.docToUid[tid];
+      return (uid && tid === uid) || (userName && t.userName === userName);
+    });
     if (deposits.length === 0) return null;
 
-    const custodies = deposits.map(tx => ({
-      createdAt: tx.createdAt, amount: tx.amount, remaining: tx.amount, spent: 0,
-    }));
+    const depositRows = deposits.map((t) => ({ createdAt: t.createdAt, amount: t.amount }));
+    const expenseRows = expenses
+      .filter((e) => (uid && e.userId === uid) || (userName && e.createdBy === userName))
+      .map((e) => ({ createdAt: e.createdAt, amount: e.amount }));
 
-    const allExp = [...expenses.filter(e =>
-      (uid && e.userId === uid) || (userName && e.createdBy === userName)
-    )].sort((a, b) => dayjs(a.createdAt).diff(dayjs(b.createdAt)));
+    return computeUserFundAllocTotals(depositRows, expenseRows);
+  }, [fundTransactions, expenses, user, userIdMap]);
 
-    allExp.forEach(exp => {
-      let rem = exp.amount;
-      const expTime = dayjs(exp.createdAt);
-      for (let i = 0; i < custodies.length; i++) {
-        const c = custodies[i];
-        if (rem <= 0) break;
-        if (expTime.isBefore(dayjs(c.createdAt))) continue;
-        if (c.remaining <= 0) {
-          const hasNext = custodies.slice(i + 1).some(nc => !expTime.isBefore(dayjs(nc.createdAt)));
-          if (hasNext) continue;
-        }
-        const take = Math.min(rem, Math.max(c.remaining, 0));
-        if (take > 0) { c.spent += take; c.remaining -= take; rem -= take; }
-        if (rem > 0) {
-          const hasNext = custodies.slice(i + 1).some(nc => !expTime.isBefore(dayjs(nc.createdAt)));
-          if (!hasNext) { c.spent += rem; c.remaining -= rem; rem = 0; }
-        }
-      }
-    });
-
-    for (let i = 0; i < custodies.length - 1; i++) {
-      if (custodies[i].remaining < 0) {
-        const deficit = Math.abs(custodies[i].remaining);
-        custodies[i + 1].remaining -= deficit;
-        custodies[i + 1].spent += deficit;
-        custodies[i].remaining = 0;
-      }
+  /** بانر إضافة مصروف: يعطي الأولوية لصندوق العهدة إن وُجد إيداع، وإلا رصيد العهدة على المشروع */
+  const expenseDialogWallet = useMemo(() => {
+    if (globalFundStats) {
+      return {
+        remaining: globalFundStats.remaining,
+        name: user?.displayName || currentUserBalanceInfo?.name || 'المستخدم',
+        isGlobalFund: true,
+      };
     }
-
-    const totalDeposited = custodies.reduce((s, c) => s + c.amount, 0);
-    const totalSpent = custodies.reduce((s, c) => s + c.spent, 0);
-    const totalRemaining = custodies.reduce((s, c) => s + c.remaining, 0);
-    return { deposited: totalDeposited, spent: totalSpent, remaining: totalRemaining };
-  }, [fundTransactions, expenses, user]);
+    if (currentUserBalanceInfo) {
+      return {
+        remaining: currentUserBalanceInfo.remaining,
+        name: user?.displayName || currentUserBalanceInfo.name,
+        isGlobalFund: false,
+      };
+    }
+    return null;
+  }, [globalFundStats, currentUserBalanceInfo, user]);
 
   const depletedBalances = useMemo(() => Object.entries(userBalancesSummary).filter(([u, b]) => b.given > 0 && b.remaining <= 0), [userBalancesSummary]);
 
@@ -1561,17 +1588,23 @@ export const ClientProfilePage = () => {
           </Box>
           <Box sx={{ p: 3.5 }}>
             <Stack spacing={3}>
-              {currentUserBalanceInfo && (
-                <Box sx={{ p: 2, borderRadius: 3, background: currentUserBalanceInfo.remaining >= 0 ? 'linear-gradient(135deg, rgba(16,185,129,0.1) 0%, rgba(16,185,129,0.05) 100%)' : 'linear-gradient(135deg, rgba(225,29,72,0.1) 0%, rgba(225,29,72,0.05) 100%)', border: `1px solid ${currentUserBalanceInfo.remaining >= 0 ? 'rgba(16,185,129,0.2)' : 'rgba(225,29,72,0.2)'}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              {expenseDialogWallet && (
+                <Box sx={{ p: 2, borderRadius: 3, background: expenseDialogWallet.remaining >= 0 ? 'linear-gradient(135deg, rgba(16,185,129,0.1) 0%, rgba(16,185,129,0.05) 100%)' : 'linear-gradient(135deg, rgba(225,29,72,0.1) 0%, rgba(225,29,72,0.05) 100%)', border: `1px solid ${expenseDialogWallet.remaining >= 0 ? 'rgba(16,185,129,0.2)' : 'rgba(225,29,72,0.2)'}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                  <Box>
-                     <Typography variant="caption" sx={{ color: currentUserBalanceInfo.remaining >= 0 ? '#0d9668' : '#f87171', fontWeight: 800 }}>
-                       {currentUserBalanceInfo.remaining >= 0 ? `الرصيد المتاح للعهدة (${user?.displayName || currentUserBalanceInfo.name})` : `عجز عهدة (${user?.displayName || currentUserBalanceInfo.name})`}
+                     <Typography variant="caption" sx={{ color: expenseDialogWallet.remaining >= 0 ? '#0d9668' : '#f87171', fontWeight: 800 }}>
+                       {expenseDialogWallet.isGlobalFund
+                         ? (expenseDialogWallet.remaining >= 0
+                           ? `الرصيد المتاح (صندوق العهدة) — ${user?.displayName || expenseDialogWallet.name}`
+                           : `عجز في صندوق العهدة — ${user?.displayName || expenseDialogWallet.name}`)
+                         : (expenseDialogWallet.remaining >= 0
+                           ? `الرصيد المتاح للعهدة (${user?.displayName || expenseDialogWallet.name})`
+                           : `عجز عهدة (${user?.displayName || expenseDialogWallet.name})`)}
                      </Typography>
-                     <Typography variant="h6" sx={{ color: currentUserBalanceInfo.remaining >= 0 ? '#0d9668' : '#f87171', fontWeight: 900, lineHeight: 1, mt: 0.5 }}>
-                       {currentUserBalanceInfo.remaining < 0 ? `-${formatCurrency(Math.abs(currentUserBalanceInfo.remaining))}` : formatCurrency(currentUserBalanceInfo.remaining)}
+                     <Typography variant="h6" sx={{ color: expenseDialogWallet.remaining >= 0 ? '#0d9668' : '#f87171', fontWeight: 900, lineHeight: 1, mt: 0.5 }}>
+                       {expenseDialogWallet.remaining < 0 ? `-${formatCurrency(Math.abs(expenseDialogWallet.remaining))}` : formatCurrency(expenseDialogWallet.remaining)}
                      </Typography>
                    </Box>
-                   <AccountBalanceWallet sx={{ fontSize: 32, color: currentUserBalanceInfo.remaining >= 0 ? 'rgba(16,185,129,0.5)' : 'rgba(225,29,72,0.5)' }} />
+                   <AccountBalanceWallet sx={{ fontSize: 32, color: expenseDialogWallet.remaining >= 0 ? 'rgba(16,185,129,0.5)' : 'rgba(225,29,72,0.5)' }} />
                 </Box>
               )}
               

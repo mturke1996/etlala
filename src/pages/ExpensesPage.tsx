@@ -51,6 +51,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import 'dayjs/locale/ar';
+import { computeUserFundAllocTotals } from '../utils/custodyFundAlloc';
 
 export const ExpensesPage = () => {
   const theme = useTheme();
@@ -97,18 +98,17 @@ export const ExpensesPage = () => {
 
   const COLORS = ['#4a5d4a', '#d64545', '#e6a817', '#3b82f6', '#8b7e6a', '#0d9668', '#6b7f6b', '#a0524a'];
 
-  // ─── رصيد عهدة المستخدم (نفس خوارزمية FundPage بالضبط) ─────────────────
+  // ─── رصيد عهدة المستخدم: نفس منطق `FundPage` / `computeUserFundAllocTotals` ──
   const myFundStats = useMemo(() => {
     if (!user) return null;
     const uid = user.id;
     const userName = user.displayName || '';
 
-    const deposits = [...transactions.filter(t =>
-      t.type === 'deposit' && (
-        (uid && t.userId === uid) ||
-        (userName && t.userName === userName)
-      )
-    )].sort((a, b) => dayjs(a.createdAt).diff(dayjs(b.createdAt)));
+    const deposits = transactions.filter(
+      (t) =>
+        t.type === 'deposit' &&
+        ((uid && t.userId === uid) || (userName && t.userName === userName))
+    );
 
     if (deposits.length === 0) {
       const storeStats = uid ? getUserStats(uid) : null;
@@ -118,47 +118,12 @@ export const ExpensesPage = () => {
       return null;
     }
 
-    const custodies = deposits.map(tx => ({
-      createdAt: tx.createdAt, amount: tx.amount, remaining: tx.amount, spent: 0,
-    }));
+    const depositRows = deposits.map((t) => ({ createdAt: t.createdAt, amount: t.amount }));
+    const expenseRows = expenses
+      .filter((e) => (uid && e.userId === uid) || (userName && e.createdBy === userName))
+      .map((e) => ({ createdAt: e.createdAt, amount: e.amount }));
 
-    const allExp = [...expenses.filter(e =>
-      (uid && e.userId === uid) || (userName && e.createdBy === userName)
-    )].sort((a, b) => dayjs(a.createdAt).diff(dayjs(b.createdAt)));
-
-    allExp.forEach(exp => {
-      let rem = exp.amount;
-      const expTime = dayjs(exp.createdAt);
-      for (let i = 0; i < custodies.length; i++) {
-        const c = custodies[i];
-        if (rem <= 0) break;
-        if (expTime.isBefore(dayjs(c.createdAt))) continue;
-        if (c.remaining <= 0) {
-          const hasNext = custodies.slice(i + 1).some(nc => !expTime.isBefore(dayjs(nc.createdAt)));
-          if (hasNext) continue;
-        }
-        const take = Math.min(rem, Math.max(c.remaining, 0));
-        if (take > 0) { c.spent += take; c.remaining -= take; rem -= take; }
-        if (rem > 0) {
-          const hasNext = custodies.slice(i + 1).some(nc => !expTime.isBefore(dayjs(nc.createdAt)));
-          if (!hasNext) { c.spent += rem; c.remaining -= rem; rem = 0; }
-        }
-      }
-    });
-
-    for (let i = 0; i < custodies.length - 1; i++) {
-      if (custodies[i].remaining < 0) {
-        const deficit = Math.abs(custodies[i].remaining);
-        custodies[i + 1].remaining -= deficit;
-        custodies[i + 1].spent += deficit;
-        custodies[i].remaining = 0;
-      }
-    }
-
-    const totalDeposited = custodies.reduce((s, c) => s + c.amount, 0);
-    const totalSpent = custodies.reduce((s, c) => s + c.spent, 0);
-    const totalRemaining = custodies.reduce((s, c) => s + c.remaining, 0);
-    return { deposited: totalDeposited, spent: totalSpent, remaining: totalRemaining };
+    return computeUserFundAllocTotals(depositRows, expenseRows);
   }, [transactions, expenses, user, getUserStats]);
 
   const handleAddExpense = async () => {
