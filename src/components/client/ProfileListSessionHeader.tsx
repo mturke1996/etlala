@@ -27,6 +27,15 @@ type ProfileListSessionHeaderProps = {
    * يقلل padding رأسيًا ويُناسب الشاشات التي تحتاج أقصى مساحة للقائمة.
    */
   strip?: boolean;
+  /** مظهر Etlala الرئيسية: تباعد أدق مع strip/compact (هيدر داخل %25 ارتفاع) */
+  etlalaHomeDensity?: boolean;
+  /** هيرو احترافي: عناوين أوضح، ظل أعمق، زوايا سفلية ناعمة، يتجاوز ضيق strip */
+  premium?: boolean;
+  /**
+   * بحث + إحصائيات (أو أي محتوى) داخل نفس خلفية الهيرو — بلا زوايا مفرطة، يلتصق بعرض الشاشة.
+   * عند التمرير يبقى الهيرو كتلة واحدة مربَعة السفل.
+   */
+  integratedSlot?: ReactNode;
 };
 
 /** أزرار ثانوية (PDF / مشاركة) فوق خلفية الهيرو الداكنة — مرتفعة، غير ملتصقة */
@@ -89,6 +98,31 @@ export const profileHeroAddIconButtonSx: SxProps<Theme> = {
   '&:focus-visible': { outline: `2px solid ${alpha('#fff', 0.5)}`, outlineOffset: 2 },
 };
 
+/** PDF / مشاركة — فوق هيرو Etlala الداكن (صف واحد مع العنوان) */
+export const profileListSessionHeroIconSecondarySx: SxProps<Theme> = {
+  width: { xs: 40, sm: 44 },
+  height: { xs: 40, sm: 44 },
+  borderRadius: 2.5,
+  bgcolor: '#EFEFED',
+  color: '#1F2A2A',
+  border: '1px solid rgba(31,61,53,0.08)',
+  boxShadow: '0 2px 10px rgba(24,38,33,0.04)',
+  '&:hover': { bgcolor: '#F6F6F4' },
+};
+
+/** زر إضافة ذهبي — نفس الصف */
+export const profileListSessionHeroIconAccentSx = (accent: string): SxProps<Theme> => ({
+  width: { xs: 40, sm: 44 },
+  height: { xs: 40, sm: 44 },
+  borderRadius: 2.5,
+  bgcolor: accent,
+  color: '#1F2A2A',
+  border: '1px solid rgba(31,61,53,0.1)',
+  boxShadow: '0 2px 12px rgba(200, 178, 125, 0.35)',
+  fontWeight: 800,
+  '&:hover': { bgcolor: alpha(accent, 0.92) },
+});
+
 /**
  * رأس جلسة القائمة — هيرو **نضيف**: تدرج + طبقة خفيفة + شبكة نقاط، دون فوضى بصرية.
  * مسافات واضحة بين العنوان والإجراءات وأزرار PDF.
@@ -108,10 +142,16 @@ export function ProfileListSessionHeader({
   squareBottom = false,
   studioBottomAccent = false,
   strip = false,
+  etlalaHomeDensity = false,
+  premium = false,
+  integratedSlot,
 }: ProfileListSessionHeaderProps) {
   const resolvedAccent = accent ?? PROFILE_MODULE[module].accent;
   const resolvedOverline = overline ?? PROFILE_MODULE[module].overline;
   const tight = strip && compact;
+  const ehd = etlalaHomeDensity && tight && !premium;
+  const prm = premium && compact;
+  const integrated = Boolean(integratedSlot);
 
   return (
     <Box
@@ -120,18 +160,46 @@ export function ProfileListSessionHeader({
         position: 'relative',
         overflow: 'hidden',
         color: 'common.white',
-        borderBottomLeftRadius: squareBottom ? 0 : compact ? { xs: 16, sm: 20 } : { xs: 20, sm: 24 },
-        borderBottomRightRadius: squareBottom ? 0 : compact ? { xs: 16, sm: 20 } : { xs: 20, sm: 24 },
+        width: 1,
+        alignSelf: 'stretch',
+        /* دمج: هيرو مربع بلا border-radius يفسد التلاصق مع القائمة */
+        borderTopLeftRadius: integrated ? 0 : undefined,
+        borderTopRightRadius: integrated ? 0 : undefined,
+        borderBottomLeftRadius: integrated
+          ? 0
+          : prm
+            ? { xs: 22, sm: 26 }
+            : squareBottom
+              ? 0
+              : compact
+                ? { xs: 16, sm: 20 }
+                : { xs: 20, sm: 24 },
+        borderBottomRightRadius: integrated
+          ? 0
+          : prm
+            ? { xs: 22, sm: 26 }
+            : squareBottom
+              ? 0
+              : compact
+                ? { xs: 16, sm: 20 }
+                : { xs: 20, sm: 24 },
         background: headerGradient,
-        boxShadow: tight
+        boxShadow: prm
+          ? '0 1px 0 rgba(255,255,255,0.07) inset, 0 20px 50px -14px rgba(0,0,0,0.45), 0 8px 24px -8px rgba(24,41,35,0.35)'
+          : tight
           ? '0 1px 0 rgba(0,0,0,0.18) inset, 0 2px 12px -8px rgba(0,0,0,0.28)'
           : squareBottom
             ? '0 1px 0 rgba(0,0,0,0.2) inset, 0 8px 32px -16px rgba(0,0,0,0.4)'
             : compact
               ? '0 4px 24px -8px rgba(0,0,0,0.35)'
               : '0 8px 32px -12px rgba(0,0,0,0.45)',
-        borderTop: squareBottom ? `1px solid ${alpha('#C2B280', 0.28)}` : 'none',
-        borderBottom: `1px solid ${alpha(squareBottom ? '#fff' : resolvedAccent, squareBottom ? 0.12 : 0.45)}`,
+        borderTop: squareBottom || prm || integrated ? `1px solid ${alpha('#C2B280', prm || integrated ? 0.35 : 0.28)}` : 'none',
+        borderBottom: `1px solid ${alpha(integrated ? '#000' : squareBottom ? '#fff' : resolvedAccent, integrated ? 0.2 : squareBottom ? 0.12 : 0.45)}`,
+        ...(ehd
+          ? {
+              flexShrink: 0,
+            }
+          : {}),
       }}
     >
       <Box
@@ -156,14 +224,32 @@ export function ProfileListSessionHeader({
         sx={{
           position: 'relative',
           zIndex: 1,
-          px: { xs: 1.75, sm: 2.5 },
-          pt: tight
-            ? 'calc(max(env(safe-area-inset-top), 16px))'
+          // مسافات آمنة أفقية (يسار/يمين) على آيفون + Dynamic Island
+          ...(prm
+            ? {
+                pl: { xs: 'max(10px, env(safe-area-inset-left, 0px))', sm: 2.5 },
+                pr: { xs: 'max(10px, env(safe-area-inset-right, 0px))', sm: 2.5 },
+              }
+            : { px: { xs: 1.75, sm: 2.5 } }),
+          pt: prm
+            ? integrated
+              ? 'calc(env(safe-area-inset-top, 0px) + 4px)'
+              : 'calc(env(safe-area-inset-top, 0px) + 8px)'
+            : ehd
+            ? 'max(8px, env(safe-area-inset-top, 0px))'
+            : tight
+            ? 'max(16px, env(safe-area-inset-top, 0px))'
             : compact
-            ? 'calc(max(env(safe-area-inset-top), 24px))'
-            : 'calc(max(env(safe-area-inset-top), 32px))',
-          pb: pdfRow
+            ? 'max(24px, env(safe-area-inset-top, 0px))'
+            : 'max(32px, env(safe-area-inset-top, 0px))',
+          pb: integrated
+            ? 0
+            : pdfRow
             ? (tight ? 0.5 : compact ? 1 : 1.5)
+            : prm
+              ? 1.65
+            : ehd
+              ? 0.2
             : tight
               ? 0.25
               : compact
@@ -171,41 +257,46 @@ export function ProfileListSessionHeader({
                 : 1.5,
         }}
       >
-        <Stack spacing={tight ? 0.75 : compact ? 1.25 : 2.25}>
+        <Stack spacing={integrated ? 0 : prm ? 1.35 : ehd ? 0.35 : tight ? 0.75 : compact ? 1.25 : 2.25}>
           <Stack
             direction="row"
             alignItems="center"
             justifyContent="space-between"
             flexWrap="nowrap"
-            gap={1}
-            sx={{ width: 1 }}
+            gap={{ xs: 0.5, sm: 1 }}
+            sx={{
+              width: 1,
+              ...(ehd ? { alignItems: 'flex-start' } : {}),
+            }}
           >
             <Stack
               direction="row"
               alignItems="center"
-              spacing={tight ? 1 : compact ? 1.25 : 2}
+              spacing={prm ? { xs: 0.75, sm: 1.25 } : ehd ? 0.75 : tight ? 1 : compact ? 1.25 : 2}
               useFlexGap
-              sx={{ flex: 1, minWidth: 0 }}
+              sx={{ flex: 1, minWidth: 0, overflow: 'hidden' }}
             >
               <IconButton
                 onClick={onBack}
                 aria-label="رجوع"
                 size="small"
                 sx={{
-                  minWidth: tight ? 32 : compact ? 36 : 40,
-                  minHeight: tight ? 32 : compact ? 36 : 40,
-                  p: 0.5,
-                  borderRadius: tight ? 0 : 2,
+                  flexShrink: 0,
+                  minWidth: prm ? { xs: 40, sm: 44 } : tight ? 32 : compact ? 36 : 40,
+                  minHeight: prm ? { xs: 40, sm: 44 } : tight ? 32 : compact ? 36 : 40,
+                  p: prm ? 0.65 : 0.5,
+                  borderRadius: prm ? 2.5 : tight ? 0 : 2,
                   color: 'common.white',
-                  border: `1px solid ${alpha('#fff', 0.22)}`,
-                  bgcolor: alpha('#fff', 0.08),
-                  '&:hover': { bgcolor: alpha('#fff', 0.14) },
+                  border: `1px solid ${alpha('#fff', prm ? 0.28 : 0.22)}`,
+                  bgcolor: alpha('#fff', prm ? 0.12 : 0.08),
+                  boxShadow: prm ? '0 2px 12px rgba(0,0,0,0.2)' : undefined,
+                  '&:hover': { bgcolor: alpha('#fff', 0.18) },
                   '&:focus-visible': { outline: `2px solid ${alpha('#fff', 0.5)}`, outlineOffset: 2 },
                 }}
               >
-                <ArrowBack sx={tight ? { fontSize: 22 } : undefined} />
+                <ArrowBack sx={prm ? { fontSize: { xs: 22, sm: 24 } } : tight ? { fontSize: 22 } : undefined} />
               </IconButton>
-              <Box sx={{ minWidth: 0, flex: 1 }}>
+              <Box sx={{ minWidth: 0, flex: 1, overflow: 'hidden' }}>
                 {!compact && (
                   <Typography
                     variant="overline"
@@ -227,11 +318,11 @@ export function ProfileListSessionHeader({
                     variant="overline"
                     sx={{
                       display: 'block',
-                      letterSpacing: 1,
-                      fontWeight: 700,
-                      fontSize: tight ? '0.55rem' : '0.58rem',
-                      color: alpha('#fff', 0.5),
-                      mb: tight ? 0.1 : 0.2,
+                      letterSpacing: prm ? 1.15 : 1,
+                      fontWeight: prm ? 800 : 700,
+                      fontSize: prm ? '0.65rem' : ehd ? '0.52rem' : tight ? '0.55rem' : '0.58rem',
+                      color: alpha('#fff', prm ? 0.62 : 0.5),
+                      mb: prm ? 0.4 : ehd ? 0.05 : tight ? 0.1 : 0.2,
                     }}
                   >
                     {resolvedOverline}
@@ -239,14 +330,23 @@ export function ProfileListSessionHeader({
                 )}
                 <Typography
                   fontWeight={900}
+                  noWrap={!!prm}
                   sx={{
-                    lineHeight: 1.1,
-                    fontSize: tight
+                    lineHeight: prm ? 1.2 : 1.1,
+                    ...(prm
+                      ? { overflow: 'hidden', textOverflow: 'ellipsis' }
+                      : {}),
+                    fontSize: prm
+                      ? { xs: '1.05rem', sm: '1.32rem' }
+                      : ehd
+                      ? { xs: '0.9rem', sm: '0.95rem' }
+                      : tight
                       ? { xs: '0.85rem', sm: '0.95rem' }
                       : compact
                         ? { xs: '0.95rem', sm: '1.05rem' }
                         : { xs: '1.1rem', sm: '1.25rem' },
-                    letterSpacing: 0.01,
+                    letterSpacing: prm ? 0.02 : 0.01,
+                    textShadow: prm ? '0 2px 16px rgba(0,0,0,0.25)' : undefined,
                   }}
                 >
                   {title}
@@ -272,11 +372,11 @@ export function ProfileListSessionHeader({
                     component="p"
                     variant="body2"
                     sx={{
-                      color: alpha('#fff', 0.65),
-                      fontWeight: 500,
-                      mt: tight ? 0.2 : 0.35,
-                      lineHeight: 1.35,
-                    fontSize: tight ? '0.72rem' : '0.78rem',
+                      color: alpha('#fff', prm ? 0.78 : 0.65),
+                      fontWeight: prm ? 600 : 500,
+                      mt: prm ? 0.5 : tight ? 0.2 : 0.35,
+                      lineHeight: 1.4,
+                    fontSize: prm ? { xs: '0.8rem', sm: '0.85rem' } : tight ? '0.72rem' : '0.78rem',
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
@@ -288,11 +388,33 @@ export function ProfileListSessionHeader({
               </Box>
             </Stack>
 
-            <Stack direction="row" alignItems="center" spacing={1} sx={{ flexShrink: 0 }}>
+            <Stack
+              direction="row"
+              alignItems="center"
+              spacing={prm ? { xs: 0.35, sm: 0.75 } : 1}
+              sx={{ flexShrink: 0, alignSelf: 'center' }}
+            >
               {endAdornment}
               {primaryAction ? <Box sx={{ display: 'inline-flex' }}>{primaryAction}</Box> : null}
             </Stack>
           </Stack>
+
+          {integrated ? (
+            <Box
+              sx={{
+                width: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                pt: 1,
+                mt: 0.5,
+                borderTop: `1px solid ${alpha('#fff', 0.12)}`,
+                gap: 0.75,
+                pb: 1.15,
+              }}
+            >
+              {integratedSlot}
+            </Box>
+          ) : null}
 
           {pdfRow ? (
             <Box
@@ -307,23 +429,24 @@ export function ProfileListSessionHeader({
             </Box>
           ) : null}
 
-          {studioBottomAccent && !pdfRow ? (
+          {(studioBottomAccent || prm) && !pdfRow && !integrated ? (
             <Box
               sx={{
                 display: 'flex',
                 justifyContent: 'center',
-                pt: tight ? 0.35 : compact ? 0.5 : 0.75,
-                mt: 0.25,
+                pt: prm ? 0.5 : tight ? 0.35 : compact ? 0.5 : 0.75,
+                mt: prm ? 0.15 : 0.25,
               }}
             >
               <Box
                 aria-hidden
                 sx={{
-                  width: 56,
-                  height: 2,
-                  borderRadius: 0,
+                  width: prm ? 72 : 56,
+                  height: prm ? 2.5 : 2,
+                  borderRadius: 2,
                   background: 'linear-gradient(90deg, transparent, #C2B280 20%, #E8DCC4 50%, #C2B280 80%, transparent)',
-                  opacity: 0.9,
+                  opacity: prm ? 1 : 0.9,
+                  boxShadow: prm ? '0 0 20px rgba(200, 192, 176, 0.35)' : undefined,
                 }}
               />
             </Box>

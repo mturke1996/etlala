@@ -33,8 +33,8 @@ import { ClientProfileHero } from '../components/client/ClientProfileHero';
 import {
   ProfileListSessionHeader,
   profileHeroAddIconButtonSx,
-  profileHeroPdfButtonSx,
-  profileHeroPrimaryButtonSx,
+  profileListSessionHeroIconAccentSx,
+  profileListSessionHeroIconSecondarySx,
 } from '../components/client/ProfileListSessionHeader';
 import {
   ProfileSessionListShell,
@@ -56,6 +56,14 @@ import type { Payment as PaymentType, Expense, StandaloneDebt, Worker, UserBalan
 import { COMPANY_INFO } from '../constants/companyInfo';
 
 dayjs.locale('ar');
+
+/** نفس تدرجات وخلفية الشاشة الرئيسية + شريط التنقل */
+const ETLALA_UI = {
+  primary: '#1F3D35',
+  primary2: '#2C4A42',
+  accent: '#C8B27D',
+  pageBg: '#F5F5F3',
+} as const;
 
 const clientSchema = z.object({
   name: z.string().min(2),
@@ -814,116 +822,171 @@ export const ClientProfilePage = () => {
         </Stack>
       </PageScaffold>
 
-      {/* ===== EXPENSES — Swiss / ledger: زوايا 0، هيرو قصير، تجميع أيقونات 48px، صفوف متلاصقة ===== */}
+      {/* ===== EXPENSES — هيرو + بحث + إحصائيات ≤ 25% ارتفاع الشاشة، باقي للقائمة (مطابق أسلوب الرئيسية) ===== */}
       <Dialog
         open={expensesListOpen}
         onClose={() => setExpensesListOpen(false)}
         fullScreen
-        sx={{ '& .MuiDialog-paper': { bgcolor: 'transparent', boxShadow: 'none' } }}
+        slotProps={{
+          paper: {
+            className: 'etlala-fill-viewport',
+            sx: {
+              m: 0,
+              width: '100%',
+              maxWidth: '100%',
+              height: '100%',
+              maxHeight: '100%',
+              overflow: 'hidden',
+              bgcolor: 'transparent',
+              boxShadow: 'none',
+            },
+          },
+        }}
       >
-        <Box sx={{ bgcolor: '#F7F7F5', minHeight: '100dvh', display: 'flex', flexDirection: 'column' }}>
-          {/* ── HEADER: 80px compact strip ── */}
-          <ProfileListSessionHeader
-            module="expenses"
-            title="المصروفات"
-            onBack={() => setExpensesListOpen(false)}
-            headerGradient="linear-gradient(135deg, #2F3E34 0%, #1A2218 100%)"
-            compact
-            squareBottom
-            strip
-            endAdornment={(
-              <Stack direction="row" alignItems="center" spacing={0.75}>
-                <IconButton
-                  onClick={handleDownloadExpenses}
-                  disabled={pdfLoading}
-                  sx={{ width: 36, height: 36, color: alpha('#fff', 0.9), bgcolor: 'rgba(255,255,255,0.06)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.1)', '&:hover': { bgcolor: 'rgba(255,255,255,0.15)', borderColor: 'rgba(255,255,255,0.2)' }, transition: 'all 0.2s' }}
-                >
-                  {pdfLoading ? <CircularProgress size={16} color="inherit" /> : <PictureAsPdf sx={{ fontSize: 18 }} />}
-                </IconButton>
-                <IconButton
-                  onClick={handleShareExpenses}
-                  disabled={pdfLoading}
-                  sx={{ width: 36, height: 36, color: alpha('#fff', 0.9), bgcolor: 'rgba(255,255,255,0.06)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.1)', '&:hover': { bgcolor: 'rgba(255,255,255,0.15)', borderColor: 'rgba(255,255,255,0.2)' }, transition: 'all 0.2s' }}
-                >
-                  <Share sx={{ fontSize: 18 }} />
-                </IconButton>
-                <Box sx={{ width: '1px', height: 22, bgcolor: alpha('#fff', 0.2), mx: 0.5 }} />
-                <IconButton
-                  onClick={() => { setEditingExpense(null); resetExp(); setExpenseDialogOpen(true); }}
-                  sx={{
-                    width: 38, height: 38,
-                    color: '#2F3E34',
-                    borderRadius: '10px',
-                    bgcolor: '#C2B280',
-                    boxShadow: '0 4px 12px rgba(194, 178, 128, 0.3)',
-                    '&:hover': { bgcolor: '#d4c592', transform: 'translateY(-1px)', boxShadow: '0 6px 16px rgba(194, 178, 128, 0.4)' },
-                    transition: 'all 0.2s'
-                  }}
-                >
-                  <Add sx={{ fontSize: 22 }} />
-                </IconButton>
-              </Stack>
-            )}
-          />
-
-          <Box sx={{ flex: 1, overflowY: 'auto', bgcolor: '#F7F7F5' }}>
-            {/* ── SEARCH: slim sticky prompt style ── */}
-            <Box sx={{ position: 'sticky', top: 0, zIndex: 10, px: 1.5, pt: 1.5, pb: 1, bgcolor: '#F7F7F5' }}>
-              <TextField
-                fullWidth
-                size="small"
-                placeholder="اسأل أو ابحث عن مصروف..."
-                value={expSearch}
-                onChange={(e) => setExpSearch(e.target.value)}
-                InputProps={{
-                  startAdornment: <InputAdornment position="start"><Search sx={{ color: '#C2B280', fontSize: 18 }} /></InputAdornment>,
-                }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    bgcolor: '#fff',
-                    borderRadius: '20px',
-                    height: 42,
-                    boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
-                    '& fieldset': { borderColor: 'rgba(47, 62, 52, 0.08)' },
-                    '&:hover fieldset': { borderColor: 'rgba(47, 62, 52, 0.15)' },
-                    '&.Mui-focused fieldset': { borderColor: '#C2B280', borderWidth: 1, boxShadow: '0 4px 16px rgba(194,178,128,0.15)' },
-                  },
-                  '& .MuiInputBase-input': { fontSize: '0.85rem', color: '#1F2521', px: 0.5 }
-                }}
-              />
-            </Box>
-
-            {/* ── SUMMARY STRIP: Clickable ── */}
-            <Box sx={{ px: 1.5, pb: 1.5 }}>
-              <Box 
-                onClick={() => setExpensesPerUserOpen(true)}
-                sx={{ display: 'flex', bgcolor: '#fff', borderRadius: '12px', border: '1px solid rgba(47, 62, 52, 0.08)', overflow: 'hidden', cursor: 'pointer', transition: 'all 0.2s', '&:hover': { boxShadow: '0 4px 12px rgba(0,0,0,0.03)', borderColor: 'rgba(194, 178, 128, 0.4)' }, '&:active': { transform: 'scale(0.98)' } }}
-              >
-                {[
-                  { label: 'العدد', val: String(filteredExp.length) },
-                  { label: 'الشهري', val: formatCurrency(summary.totalExpenses) },
-                  { label: 'الإجمالي (مفصل)', val: formatCurrency(summary.totalExpenses), accent: true },
-                ].map((s, idx) => (
-                  <Box
-                    key={idx}
+        <Box
+          className="etlala-fill-viewport"
+          sx={{ bgcolor: ETLALA_UI.pageBg, minHeight: '100%', display: 'flex', flexDirection: 'column' }}
+        >
+          <Box sx={{ width: 1, flexShrink: 0, display: 'flex', flexDirection: 'column' }}>
+            <ProfileListSessionHeader
+              module="expenses"
+              title="المصروفات"
+              subtitle={client?.name ? `العميل: ${client.name}` : undefined}
+              onBack={() => setExpensesListOpen(false)}
+              headerGradient={`linear-gradient(165deg, ${ETLALA_UI.primary} 0%, ${ETLALA_UI.primary2} 100%)`}
+              compact
+              premium
+              integratedSlot={(
+                <>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    placeholder="ابحث في المصروفات…"
+                    value={expSearch}
+                    onChange={(e) => setExpSearch(e.target.value)}
+                    InputProps={{
+                      startAdornment: <InputAdornment position="start"><Search sx={{ color: ETLALA_UI.accent, fontSize: 19 }} /></InputAdornment>,
+                    }}
                     sx={{
-                      flex: 1, py: 1.25, textAlign: 'center',
-                      borderRight: idx < 2 ? '1px solid rgba(47, 62, 52, 0.04)' : 'none',
-                      position: 'relative'
+                      '& .MuiOutlinedInput-root': {
+                        bgcolor: '#fff',
+                        borderRadius: 1.5,
+                        minHeight: 42,
+                        boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                        '& fieldset': { borderColor: 'rgba(31, 61, 53, 0.12)' },
+                        '&:hover fieldset': { borderColor: 'rgba(31, 61, 53, 0.2)' },
+                        '&.Mui-focused fieldset': { borderColor: ETLALA_UI.accent, borderWidth: 1 },
+                      },
+                      '& .MuiInputBase-input': { fontSize: '0.87rem', color: '#1F2521', py: 0.9 },
+                    }}
+                  />
+                  <Box
+                    onClick={() => setExpensesPerUserOpen(true)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setExpensesPerUserOpen(true); } }}
+                    sx={{
+                      display: 'flex',
+                      bgcolor: '#fff',
+                      borderRadius: 1.5,
+                      border: '1px solid rgba(31, 61, 53, 0.08)',
+                      boxShadow: '0 1px 2px rgba(31, 61, 53, 0.04), 0 4px 14px -4px rgba(25, 34, 29, 0.07)',
+                      overflow: 'hidden',
+                      cursor: 'pointer',
+                      transition: 'box-shadow 0.2s, border-color 0.2s',
+                      '&:hover': {
+                        boxShadow: '0 2px 6px rgba(31, 61, 53, 0.07), 0 6px 18px -4px rgba(25, 34, 29, 0.09)',
+                        borderColor: alpha(ETLALA_UI.accent, 0.35),
+                      },
+                      '&:active': { transform: 'scale(0.998)' },
                     }}
                   >
-                    <Typography sx={{ color: '#6B736E', fontSize: '0.6rem', fontWeight: 700, letterSpacing: 0.5, mb: 0.25 }}>{s.label}</Typography>
-                    <Typography sx={{ color: s.accent ? '#2F3E34' : '#1F2521', fontSize: '0.85rem', fontWeight: 800, fontFamily: "'Outfit', sans-serif", lineHeight: 1 }}>
-                      {s.val}
-                    </Typography>
-                    {s.accent && <Box sx={{ position: 'absolute', top: 8, left: 8, width: 6, height: 6, borderRadius: '50%', bgcolor: '#C2B280' }} />}
+                    {[
+                      { label: 'العدد', val: String(filteredExp.length) },
+                      { label: 'الإجمالي', val: formatCurrency(summary.totalExpenses) },
+                      { label: 'تفصيل', val: formatCurrency(summary.totalExpenses), accent: true },
+                    ].map((s, idx) => (
+                      <Box
+                        key={idx}
+                        sx={{
+                          flex: 1,
+                          py: 0.9,
+                          px: 0.5,
+                          textAlign: 'center',
+                          borderInlineEnd: idx < 2 ? '1px solid rgba(31, 61, 53, 0.06)' : 'none',
+                          ...(s.accent
+                            ? { bgcolor: 'rgba(31, 61, 53, 0.03)' }
+                            : {}),
+                        }}
+                      >
+                        <Typography sx={{ color: '#6B736E', fontSize: '0.62rem', fontWeight: 600, letterSpacing: 0.2, mb: 0.35, lineHeight: 1.2 }}>
+                          {s.label}
+                        </Typography>
+                        <Typography
+                          sx={{
+                            color: s.accent ? ETLALA_UI.primary : '#1F2521',
+                            fontSize: '0.8rem',
+                            fontWeight: 800,
+                            fontFamily: "'Outfit', sans-serif",
+                            lineHeight: 1.2,
+                            letterSpacing: -0.2,
+                          }}
+                        >
+                          {s.val}
+                        </Typography>
+                      </Box>
+                    ))}
                   </Box>
-                ))}
-              </Box>
-            </Box>
+                </>
+              )}
+              endAdornment={(
+                <Stack direction="row" alignItems="center" spacing={{ xs: 0.35, sm: 0.6 }}>
+                  <IconButton
+                    onClick={handleDownloadExpenses}
+                    disabled={pdfLoading}
+                    aria-label="تحميل PDF"
+                    sx={profileListSessionHeroIconSecondarySx}
+                  >
+                    {pdfLoading ? <CircularProgress size={16} color="inherit" /> : <PictureAsPdf sx={{ fontSize: { xs: 17, sm: 18 } }} />}
+                  </IconButton>
+                  <IconButton
+                    onClick={handleShareExpenses}
+                    disabled={pdfLoading}
+                    aria-label="مشاركة PDF"
+                    sx={profileListSessionHeroIconSecondarySx}
+                  >
+                    <Share sx={{ fontSize: { xs: 17, sm: 18 } }} />
+                  </IconButton>
+                  <IconButton
+                    onClick={() => { setEditingExpense(null); resetExp(); setExpenseDialogOpen(true); }}
+                    aria-label="إضافة مصروف"
+                    sx={profileListSessionHeroIconAccentSx(ETLALA_UI.accent)}
+                  >
+                    <Add sx={{ fontSize: { xs: 20, sm: 22 } }} />
+                  </IconButton>
+                </Stack>
+              )}
+            />
+          </Box>
 
+          <Box
+            sx={{
+              flex: 1,
+              minHeight: 0,
+              overflowY: 'auto',
+              WebkitOverflowScrolling: 'touch',
+              bgcolor: ETLALA_UI.pageBg,
+            }}
+          >
             {/* ── EXPENSE LIST: high-density rows ── */}
-            <Box sx={{ px: 1.5, pb: 12 }}>
+            <Box
+              sx={{
+                pt: 1,
+                pl: { xs: 'max(12px, env(safe-area-inset-left, 0px))', sm: 1.5 },
+                pr: { xs: 'max(12px, env(safe-area-inset-right, 0px))', sm: 1.5 },
+                pb: 'calc(40px + env(safe-area-inset-bottom, 0px))',
+              }}
+            >
               <Box sx={{ bgcolor: '#fff', borderRadius: '6px', border: '1px solid rgba(47, 62, 52, 0.05)', overflow: 'hidden' }}>
                 {filteredExp.length === 0 ? (
                   <Box sx={{ py: 6, textAlign: 'center' }}>
@@ -1067,107 +1130,158 @@ export const ClientProfilePage = () => {
         </Box>
       </Dialog>
 
-      {/* ===== PAYMENTS LIST DIALOG ===== */}
-      <Dialog open={paymentsListOpen} onClose={() => setPaymentsListOpen(false)} fullScreen sx={{ '& .MuiDialog-paper': { bgcolor: 'transparent', boxShadow: 'none' } }}>
-        <Box sx={{ bgcolor: '#F7F7F5', minHeight: '100dvh', display: 'flex', flexDirection: 'column' }}>
-          {/* ── HEADER ── */}
-          <ProfileListSessionHeader
-            module="payments"
-            title="المدفوعات"
-            onBack={() => setPaymentsListOpen(false)}
-            headerGradient="linear-gradient(135deg, #1A2218 0%, #2F3E34 100%)"
-            compact
-            squareBottom
-            strip
-            endAdornment={(
-              <Stack direction="row" alignItems="center" spacing={0.75}>
-                <IconButton
-                  onClick={handleDownloadPayments}
-                  disabled={pdfLoading}
-                  sx={{ width: 36, height: 36, color: alpha('#fff', 0.9), bgcolor: 'rgba(255,255,255,0.06)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.1)', '&:hover': { bgcolor: 'rgba(255,255,255,0.15)', borderColor: 'rgba(255,255,255,0.2)' }, transition: 'all 0.2s' }}
-                >
-                  {pdfLoading ? <CircularProgress size={16} color="inherit" /> : <PictureAsPdf sx={{ fontSize: 18 }} />}
-                </IconButton>
-                <IconButton
-                  onClick={handleSharePayments}
-                  disabled={pdfLoading}
-                  sx={{ width: 36, height: 36, color: alpha('#fff', 0.9), bgcolor: 'rgba(255,255,255,0.06)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.1)', '&:hover': { bgcolor: 'rgba(255,255,255,0.15)', borderColor: 'rgba(255,255,255,0.2)' }, transition: 'all 0.2s' }}
-                >
-                  <Share sx={{ fontSize: 18 }} />
-                </IconButton>
-                <Box sx={{ width: '1px', height: 22, bgcolor: alpha('#fff', 0.2), mx: 0.5 }} />
-                <IconButton
-                  onClick={() => { setEditingPayment(null); resetPay(); setPaymentDialogOpen(true); }}
-                  sx={{
-                    width: 38, height: 38,
-                    color: '#2F3E34',
-                    borderRadius: '10px',
-                    bgcolor: '#C2B280',
-                    boxShadow: '0 4px 12px rgba(194, 178, 128, 0.3)',
-                    '&:hover': { bgcolor: '#d4c592', transform: 'translateY(-1px)', boxShadow: '0 6px 16px rgba(194, 178, 128, 0.4)' },
-                    transition: 'all 0.2s'
-                  }}
-                >
-                  <Add sx={{ fontSize: 22 }} />
-                </IconButton>
-              </Stack>
-            )}
-          />
-
-          <Box sx={{ flex: 1, overflowY: 'auto', bgcolor: '#F7F7F5' }}>
-            {/* ── SEARCH ── */}
-            <Box sx={{ position: 'sticky', top: 0, zIndex: 10, px: 1.5, pt: 1.5, pb: 1, bgcolor: '#F7F7F5' }}>
-              <TextField
-                fullWidth
-                size="small"
-                placeholder="ابحث عن دفعة..."
-                value={paySearch}
-                onChange={(e) => setPaySearch(e.target.value)}
-                InputProps={{
-                  startAdornment: <InputAdornment position="start"><Search sx={{ color: '#C2B280', fontSize: 18 }} /></InputAdornment>,
-                }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    bgcolor: '#fff',
-                    borderRadius: '20px',
-                    height: 42,
-                    boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
-                    '& fieldset': { borderColor: 'rgba(47, 62, 52, 0.08)' },
-                    '&:hover fieldset': { borderColor: 'rgba(47, 62, 52, 0.15)' },
-                    '&.Mui-focused fieldset': { borderColor: '#C2B280', borderWidth: 1, boxShadow: '0 4px 16px rgba(194,178,128,0.15)' },
-                  },
-                  '& .MuiInputBase-input': { fontSize: '0.85rem', color: '#1F2521', px: 0.5 }
-                }}
-              />
-            </Box>
-
-            {/* ── SUMMARY STRIP ── */}
-            <Box sx={{ px: 1.5, pb: 1.5 }}>
-              <Box 
-                sx={{ display: 'flex', bgcolor: '#fff', borderRadius: '12px', border: '1px solid rgba(47, 62, 52, 0.08)', overflow: 'hidden' }}
-              >
-                {[
-                  { label: 'العدد', val: String(filteredPay.length) },
-                  { label: 'الإجمالي المقبوض', val: formatCurrency(summary.totalPaid), accent: true },
-                ].map((s, idx) => (
-                  <Box
-                    key={idx}
+      {/* ===== PAYMENTS LIST DIALOG (نمط هيرو موحّد مع المصروفات) ===== */}
+      <Dialog
+        open={paymentsListOpen}
+        onClose={() => setPaymentsListOpen(false)}
+        fullScreen
+        slotProps={{
+          paper: {
+            className: 'etlala-fill-viewport',
+            sx: {
+              m: 0,
+              width: '100%',
+              maxWidth: '100%',
+              height: '100%',
+              maxHeight: '100%',
+              overflow: 'hidden',
+              bgcolor: 'transparent',
+              boxShadow: 'none',
+            },
+          },
+        }}
+      >
+        <Box
+          className="etlala-fill-viewport"
+          sx={{ bgcolor: ETLALA_UI.pageBg, minHeight: '100%', display: 'flex', flexDirection: 'column' }}
+        >
+          <Box sx={{ width: 1, flexShrink: 0, display: 'flex', flexDirection: 'column' }}>
+            <ProfileListSessionHeader
+              module="payments"
+              title="المدفوعات"
+              subtitle={client?.name ? `العميل: ${client.name}` : undefined}
+              onBack={() => setPaymentsListOpen(false)}
+              headerGradient={`linear-gradient(165deg, ${ETLALA_UI.primary} 0%, ${ETLALA_UI.primary2} 100%)`}
+              compact
+              premium
+              integratedSlot={(
+                <>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    placeholder="ابحث عن دفعة…"
+                    value={paySearch}
+                    onChange={(e) => setPaySearch(e.target.value)}
+                    InputProps={{
+                      startAdornment: <InputAdornment position="start"><Search sx={{ color: ETLALA_UI.accent, fontSize: 19 }} /></InputAdornment>,
+                    }}
                     sx={{
-                      flex: 1, py: 1.25, textAlign: 'center',
-                      borderRight: idx === 0 ? '1px solid rgba(47, 62, 52, 0.04)' : 'none',
+                      '& .MuiOutlinedInput-root': {
+                        bgcolor: '#fff',
+                        borderRadius: 1.5,
+                        minHeight: 42,
+                        boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                        '& fieldset': { borderColor: 'rgba(31, 61, 53, 0.12)' },
+                        '&:hover fieldset': { borderColor: 'rgba(31, 61, 53, 0.2)' },
+                        '&.Mui-focused fieldset': { borderColor: ETLALA_UI.accent, borderWidth: 1 },
+                      },
+                      '& .MuiInputBase-input': { fontSize: '0.87rem', color: '#1F2521', py: 0.9 },
+                    }}
+                  />
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      bgcolor: '#fff',
+                      borderRadius: 1.5,
+                      border: '1px solid rgba(31, 61, 53, 0.08)',
+                      boxShadow: '0 1px 2px rgba(31, 61, 53, 0.04), 0 4px 14px -4px rgba(25, 34, 29, 0.07)',
+                      overflow: 'hidden',
                     }}
                   >
-                    <Typography sx={{ color: '#6B736E', fontSize: '0.6rem', fontWeight: 700, letterSpacing: 0.5, mb: 0.25 }}>{s.label}</Typography>
-                    <Typography sx={{ color: s.accent ? '#0d9668' : '#1F2521', fontSize: '0.85rem', fontWeight: 800, fontFamily: "'Outfit', sans-serif", lineHeight: 1 }}>
-                      {s.val}
-                    </Typography>
+                    {[
+                      { label: 'العدد', val: String(filteredPay.length) },
+                      { label: 'الإجمالي المقبوض', val: formatCurrency(summary.totalPaid), accent: true },
+                    ].map((s, idx) => (
+                      <Box
+                        key={idx}
+                        sx={{
+                          flex: 1,
+                          py: 0.9,
+                          px: 0.5,
+                          textAlign: 'center',
+                          borderInlineEnd: idx === 0 ? '1px solid rgba(31, 61, 53, 0.06)' : 'none',
+                          ...(s.accent
+                            ? { bgcolor: 'rgba(13, 150, 104, 0.05)' }
+                            : {}),
+                        }}
+                      >
+                        <Typography sx={{ color: '#6B736E', fontSize: '0.62rem', fontWeight: 600, letterSpacing: 0.2, mb: 0.35, lineHeight: 1.2 }}>
+                          {s.label}
+                        </Typography>
+                        <Typography
+                          sx={{
+                            color: s.accent ? '#0d9668' : '#1F2521',
+                            fontSize: '0.8rem',
+                            fontWeight: 800,
+                            fontFamily: "'Outfit', sans-serif",
+                            lineHeight: 1.2,
+                            letterSpacing: -0.2,
+                          }}
+                        >
+                          {s.val}
+                        </Typography>
+                      </Box>
+                    ))}
                   </Box>
-                ))}
-              </Box>
-            </Box>
+                </>
+              )}
+              endAdornment={(
+                <Stack direction="row" alignItems="center" spacing={{ xs: 0.35, sm: 0.6 }}>
+                  <IconButton
+                    onClick={handleDownloadPayments}
+                    disabled={pdfLoading}
+                    aria-label="تحميل PDF"
+                    sx={profileListSessionHeroIconSecondarySx}
+                  >
+                    {pdfLoading ? <CircularProgress size={16} color="inherit" /> : <PictureAsPdf sx={{ fontSize: { xs: 17, sm: 18 } }} />}
+                  </IconButton>
+                  <IconButton
+                    onClick={handleSharePayments}
+                    disabled={pdfLoading}
+                    aria-label="مشاركة"
+                    sx={profileListSessionHeroIconSecondarySx}
+                  >
+                    <Share sx={{ fontSize: { xs: 17, sm: 18 } }} />
+                  </IconButton>
+                  <IconButton
+                    onClick={() => { setEditingPayment(null); resetPay(); setPaymentDialogOpen(true); }}
+                    aria-label="إضافة دفعة"
+                    sx={profileListSessionHeroIconAccentSx(ETLALA_UI.accent)}
+                  >
+                    <Add sx={{ fontSize: { xs: 20, sm: 22 } }} />
+                  </IconButton>
+                </Stack>
+              )}
+            />
+          </Box>
 
-            {/* ── PAYMENTS LIST ── */}
-            <Box sx={{ px: 1.5, pb: 12 }}>
+          <Box
+            sx={{
+              flex: 1,
+              minHeight: 0,
+              overflowY: 'auto',
+              WebkitOverflowScrolling: 'touch',
+              bgcolor: ETLALA_UI.pageBg,
+            }}
+          >
+            <Box
+              sx={{
+                pt: 1,
+                pl: { xs: 'max(12px, env(safe-area-inset-left, 0px))', sm: 1.5 },
+                pr: { xs: 'max(12px, env(safe-area-inset-right, 0px))', sm: 1.5 },
+                pb: 'calc(40px + env(safe-area-inset-bottom, 0px))',
+              }}
+            >
               <Box sx={{ bgcolor: '#fff', borderRadius: '6px', border: '1px solid rgba(47, 62, 52, 0.05)', overflow: 'hidden' }}>
                 {filteredPay.length === 0 ? (
                   <Box sx={{ py: 6, textAlign: 'center' }}>
@@ -1257,67 +1371,90 @@ export const ClientProfilePage = () => {
         </Box>
       </Dialog>
 
-      {/* ===== DEBTS LIST DIALOG ===== */}
-      <Dialog open={debtsListOpen} onClose={() => setDebtsListOpen(false)} fullScreen sx={{ '& .MuiDialog-paper': { bgcolor: 'transparent', boxShadow: 'none' } }}>
-        <ProfileSessionListShell module="debts">
-          <ProfileListSessionHeader
-            module="debts"
-            title="الديون"
-            subtitle="التزامات على المشروع"
-            onBack={() => setDebtsListOpen(false)}
-            headerGradient={headerGradient}
-            endAdornment={(
-              <Stack direction="row" alignItems="center" spacing={0} sx={{ border: `1px solid ${alpha('#fff', 0.15)}`, bgcolor: 'rgba(0,0,0,0.1)' }}>
-                <IconButton
-                  onClick={() => { setEditingDebt(null); resetDebt(); setDebtDialogOpen(true); }}
-                  aria-label="دين جديد"
-                  sx={{
-                    width: 40, height: 40, minWidth: 40,
-                    color: '#fff',
-                    borderRadius: 0,
-                    border: 'none',
-                    bgcolor: alpha('#C2B280', 0.15),
-                    '&:hover': { bgcolor: alpha('#C2B280', 0.25) },
-                  }}
-                >
-                  <Add sx={{ fontSize: 24 }} />
-                </IconButton>
-                <Divider flexItem orientation="vertical" sx={{ borderColor: alpha('#fff', 0.1), height: 24, alignSelf: 'center' }} />
-                <IconButton
-                  onClick={handleShareDebts}
-                  disabled={pdfLoading}
-                  aria-label="مشاركة"
-                  sx={{
-                    width: 40, height: 40, minWidth: 40,
-                    color: '#fff',
-                    borderRadius: 0,
-                    border: 'none',
-                    bgcolor: 'transparent',
-                    '&:hover': { bgcolor: alpha('#fff', 0.1) },
-                  }}
-                >
-                  <Share sx={{ fontSize: 20 }} />
-                </IconButton>
-                <Divider flexItem orientation="vertical" sx={{ borderColor: alpha('#fff', 0.1), height: 24, alignSelf: 'center' }} />
-                <IconButton
-                  onClick={handleDownloadDebts}
-                  disabled={pdfLoading}
-                  aria-label="تحميل PDF"
-                  sx={{
-                    width: 40, height: 40, minWidth: 40,
-                    color: '#fff',
-                    borderRadius: 0,
-                    border: 'none',
-                    bgcolor: 'transparent',
-                    '&:hover': { bgcolor: alpha('#fff', 0.1) },
-                  }}
-                >
-                  {pdfLoading ? <CircularProgress size={20} color="inherit" /> : <PictureAsPdf sx={{ fontSize: 20 }} />}
-                </IconButton>
-              </Stack>
-            )}
-          />
-          <ProfileSessionScroll>
+      {/* ===== DEBTS LIST DIALOG (نمط هيرو موحّد) ===== */}
+      <Dialog
+        open={debtsListOpen}
+        onClose={() => setDebtsListOpen(false)}
+        fullScreen
+        slotProps={{
+          paper: {
+            className: 'etlala-fill-viewport',
+            sx: {
+              m: 0,
+              width: '100%',
+              maxWidth: '100%',
+              height: '100%',
+              maxHeight: '100%',
+              overflow: 'hidden',
+              bgcolor: 'transparent',
+              boxShadow: 'none',
+            },
+          },
+        }}
+      >
+        <Box
+          className="etlala-fill-viewport"
+          sx={{ display: 'flex', flexDirection: 'column', minHeight: '100%', bgcolor: ETLALA_UI.pageBg }}
+        >
+          <Box
+            sx={{
+              flexShrink: 0,
+              borderBottom: '1px solid rgba(31,61,53,0.08)',
+              bgcolor: ETLALA_UI.pageBg,
+            }}
+          >
+            <Box sx={{ pt: 0.5, px: 0 }}>
+              <ProfileListSessionHeader
+                module="debts"
+                title="الديون"
+                subtitle="التزامات على المشروع"
+                onBack={() => setDebtsListOpen(false)}
+                headerGradient={`linear-gradient(165deg, ${ETLALA_UI.primary} 0%, ${ETLALA_UI.primary2} 100%)`}
+                compact
+                premium
+                endAdornment={(
+                  <Stack direction="row" alignItems="center" spacing={{ xs: 0.35, sm: 0.6 }}>
+                    <IconButton
+                      onClick={handleDownloadDebts}
+                      disabled={pdfLoading}
+                      aria-label="تحميل PDF"
+                      sx={profileListSessionHeroIconSecondarySx}
+                    >
+                      {pdfLoading ? <CircularProgress size={16} color="inherit" /> : <PictureAsPdf sx={{ fontSize: { xs: 17, sm: 18 } }} />}
+                    </IconButton>
+                    <IconButton
+                      onClick={handleShareDebts}
+                      disabled={pdfLoading}
+                      aria-label="مشاركة"
+                      sx={profileListSessionHeroIconSecondarySx}
+                    >
+                      <Share sx={{ fontSize: { xs: 17, sm: 18 } }} />
+                    </IconButton>
+                    <IconButton
+                      onClick={() => { setEditingDebt(null); resetDebt(); setDebtDialogOpen(true); }}
+                      aria-label="دين جديد"
+                      sx={profileListSessionHeroIconAccentSx(ETLALA_UI.accent)}
+                    >
+                      <Add sx={{ fontSize: { xs: 20, sm: 22 } }} />
+                    </IconButton>
+                  </Stack>
+                )}
+              />
+            </Box>
+          </Box>
+          <Box
+            sx={{ flex: 1, minHeight: 0, overflowY: 'auto', WebkitOverflowScrolling: 'touch', bgcolor: ETLALA_UI.pageBg }}
+          >
+            <Container
+              maxWidth="sm"
+              disableGutters
+              sx={{
+                py: 2,
+                pl: { xs: 'max(12px, env(safe-area-inset-left, 0px))', sm: 2 },
+                pr: { xs: 'max(12px, env(safe-area-inset-right, 0px))', sm: 2 },
+                pb: 'calc(40px + env(safe-area-inset-bottom, 0px))',
+              }}
+            >
             {clientDebts.length === 0 ? (
               <EtlalaEmptyState icon={<CreditCard />} title="لا توجد ديون" hint="سجّل ديناً من الزر أعلاه" />
             ) : (
@@ -1364,8 +1501,9 @@ export const ClientProfilePage = () => {
                 tone="default"
               />
             )}
-          </ProfileSessionScroll>
-        </ProfileSessionListShell>
+            </Container>
+          </Box>
+        </Box>
       </Dialog>
       {/* ===== EXPENSES PER USER DIALOG ===== */}
       <Dialog
@@ -1548,94 +1686,117 @@ export const ClientProfilePage = () => {
 
       {/* Snackbar */}
 
-      {/* ===== WORKERS LIST DIALOG ===== */}
-      <Dialog open={workersListOpen} onClose={() => setWorkersListOpen(false)} fullScreen sx={{ '& .MuiDialog-paper': { bgcolor: 'transparent', boxShadow: 'none' } }}>
-        <ProfileSessionListShell module="workers">
-        <ProfileListSessionHeader
-          module="workers"
-          title="سجل العمال"
-          subtitle="فريق المشروع والمقاولون"
-          onBack={() => setWorkersListOpen(false)}
-          headerGradient={headerGradient}
-          primaryAction={(
-            <Button
-              variant="contained"
-              color="primary"
-              size="medium"
-              startIcon={<Add />}
-              onClick={() => { setEditingWorker(null); resetWork({ name: '', jobType: '', totalAmount: '' as any }); setWorkerDialogOpen(true); }}
-              sx={{ ...profileHeroPrimaryButtonSx, color: '#fff', '& .MuiButton-startIcon': { color: '#fff' } }}
-            >
-              إضافة
-            </Button>
-          )}
-          pdfRow={(
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} useFlexGap sx={{ width: 1 }}>
-              <Button
-                size="medium"
-                startIcon={pdfLoading ? <CircularProgress size={14} color="inherit" /> : <PictureAsPdf />}
-                onClick={handleDownloadWorkers}
-                disabled={pdfLoading}
-                sx={profileHeroPdfButtonSx}
-              >
-                تحميل PDF
-              </Button>
-              <Button
-                size="medium"
-                startIcon={<Share />}
-                onClick={handleShareWorkers}
-                disabled={pdfLoading}
-                sx={profileHeroPdfButtonSx}
-              >
-                مشاركة
-              </Button>
-            </Stack>
-          )}
-        />
-        {clientWorkers.length > 0 && (
+      {/* ===== WORKERS LIST DIALOG (نمط هيرو موحّد) ===== */}
+      <Dialog
+        open={workersListOpen}
+        onClose={() => setWorkersListOpen(false)}
+        fullScreen
+        slotProps={{
+          paper: {
+            className: 'etlala-fill-viewport',
+            sx: {
+              m: 0,
+              width: '100%',
+              maxWidth: '100%',
+              height: '100%',
+              maxHeight: '100%',
+              overflow: 'hidden',
+              bgcolor: 'transparent',
+              boxShadow: 'none',
+            },
+          },
+        }}
+      >
+        <Box
+          className="etlala-fill-viewport"
+          sx={{ display: 'flex', flexDirection: 'column', minHeight: '100%', bgcolor: ETLALA_UI.pageBg }}
+        >
           <Box
             sx={{
-              px: 2,
-              py: 1.75,
-              borderBottom: '1px solid',
-              borderColor: 'divider',
-              background:
-                theme.palette.mode === 'dark'
-                  ? `linear-gradient(180deg, ${alpha(PROFILE_MODULE.workers.listAccent, 0.08)} 0%, rgba(0,0,0,0.12) 100%)`
-                  : `linear-gradient(180deg, ${alpha(PROFILE_MODULE.workers.listAccent, 0.07)} 0%, rgba(255,255,255,0.85) 100%)`,
+              flexShrink: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              borderBottom: '1px solid rgba(31,61,53,0.08)',
+              bgcolor: ETLALA_UI.pageBg,
             }}
           >
-            <Container maxWidth="sm" disableGutters>
-              <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 1.25 }}>
-                {[
-                  { label: 'الاتفاقيات', value: formatCurrency(clientWorkers.reduce((s, w) => s + w.totalAmount, 0)), color: theme.palette.mode === 'dark' ? '#c8c0b0' : '#4a5d4a' },
-                  { label: 'المدفوع', value: formatCurrency(clientWorkers.reduce((s, w) => s + w.paidAmount, 0)), color: '#0d9668' },
-                  { label: 'المتبقي', value: formatCurrency(clientWorkers.reduce((s, w) => s + w.remainingAmount, 0)), color: '#d64545' },
-                ].map((s, i) => (
-                  <Box
-                    key={i}
-                    sx={{
-                      textAlign: 'center',
-                      py: 1.15,
-                      px: 0.5,
-                      borderRadius: 2,
-                      border: '1px solid',
-                      borderColor: (t) => alpha(PROFILE_MODULE.workers.listAccent, t.palette.mode === 'dark' ? 0.22 : 0.14),
-                      bgcolor: (t) => (t.palette.mode === 'dark' ? alpha('#fff', 0.04) : alpha('#fff', 0.6)),
-                    }}
-                  >
-                    <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, fontSize: '0.58rem', display: 'block', mb: 0.4 }}>{s.label}</Typography>
-                    <Typography sx={{ color: s.color, fontSize: '0.78rem', fontWeight: 800, fontFamily: "'Outfit', sans-serif" }}>{s.value}</Typography>
-                  </Box>
-                ))}
+            <Box sx={{ pt: 0, px: 0, flexShrink: 0 }}>
+              <ProfileListSessionHeader
+                module="workers"
+                title="سجل العمال"
+                subtitle="فريق المشروع والمقاولون"
+                onBack={() => setWorkersListOpen(false)}
+                headerGradient={`linear-gradient(165deg, ${ETLALA_UI.primary} 0%, ${ETLALA_UI.primary2} 100%)`}
+                compact
+                premium
+                endAdornment={(
+                  <Stack direction="row" alignItems="center" spacing={{ xs: 0.35, sm: 0.6 }}>
+                    <IconButton
+                      onClick={handleDownloadWorkers}
+                      disabled={pdfLoading}
+                      aria-label="تحميل PDF"
+                      sx={profileListSessionHeroIconSecondarySx}
+                    >
+                      {pdfLoading ? <CircularProgress size={16} color="inherit" /> : <PictureAsPdf sx={{ fontSize: { xs: 17, sm: 18 } }} />}
+                    </IconButton>
+                    <IconButton
+                      onClick={handleShareWorkers}
+                      disabled={pdfLoading}
+                      aria-label="مشاركة"
+                      sx={profileListSessionHeroIconSecondarySx}
+                    >
+                      <Share sx={{ fontSize: { xs: 17, sm: 18 } }} />
+                    </IconButton>
+                    <IconButton
+                      onClick={() => { setEditingWorker(null); resetWork({ name: '', jobType: '', totalAmount: '' as any }); setWorkerDialogOpen(true); }}
+                      aria-label="إضافة عامل"
+                      sx={profileListSessionHeroIconAccentSx(ETLALA_UI.accent)}
+                    >
+                      <Add sx={{ fontSize: { xs: 20, sm: 22 } }} />
+                    </IconButton>
+                  </Stack>
+                )}
+              />
+            </Box>
+            {clientWorkers.length > 0 && (
+              <Box
+                sx={{
+                  flexShrink: 0,
+                  py: 1.25,
+                  pl: { xs: 'max(12px, env(safe-area-inset-left, 0px))', sm: 2 },
+                  pr: { xs: 'max(12px, env(safe-area-inset-right, 0px))', sm: 2 },
+                  pb: 1.5,
+                }}
+              >
+                <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 1 }}>
+                  {[
+                    { label: 'الاتفاقيات', value: formatCurrency(clientWorkers.reduce((s, w) => s + w.totalAmount, 0)), color: theme.palette.mode === 'dark' ? '#c8c0b0' : '#4a5d4a' },
+                    { label: 'المدفوع', value: formatCurrency(clientWorkers.reduce((s, w) => s + w.paidAmount, 0)), color: '#0d9668' },
+                    { label: 'المتبقي', value: formatCurrency(clientWorkers.reduce((s, w) => s + w.remainingAmount, 0)), color: '#d64545' },
+                  ].map((s, i) => (
+                    <Box
+                      key={i}
+                      sx={{
+                        textAlign: 'center',
+                        py: 1,
+                        px: 0.5,
+                        borderRadius: 2,
+                        border: '1px solid rgba(31, 61, 53, 0.1)',
+                        bgcolor: theme.palette.mode === 'dark' ? alpha('#fff', 0.04) : '#fff',
+                        boxShadow: '0 1px 0 rgba(255,255,255,0.8) inset, 0 4px 14px -6px rgba(25,34,29,0.08)',
+                      }}
+                    >
+                      <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, fontSize: '0.58rem', display: 'block', mb: 0.35 }}>{s.label}</Typography>
+                      <Typography sx={{ color: s.color, fontSize: '0.76rem', fontWeight: 800, fontFamily: "'Outfit', sans-serif" }}>{s.value}</Typography>
+                    </Box>
+                  ))}
+                </Box>
               </Box>
-            </Container>
+            )}
           </Box>
-        )}
 
-        {/* ── Content below header ── */}
-        <Box sx={{ flex: 1, overflowY: 'auto', pb: 4, pt: 2 }}>
-          <Container maxWidth="sm">
+        <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', WebkitOverflowScrolling: 'touch', bgcolor: ETLALA_UI.pageBg, pt: 2, pb: 'calc(16px + env(safe-area-inset-bottom, 0px))' }}>
+          <Container maxWidth="sm" disableGutters sx={{ pl: { xs: 'max(12px, env(safe-area-inset-left, 0px))', sm: 2 }, pr: { xs: 'max(12px, env(safe-area-inset-right, 0px))', sm: 2 } }}>
             {clientWorkers.length === 0 ? (
               <Box sx={{ textAlign: 'center', py: 10, bgcolor: (t) => (t.palette.mode === 'dark' ? alpha('#fff', 0.04) : alpha('#fff', 0.7)), border: '1px solid', borderColor: (t) => alpha(PROFILE_MODULE.workers.listAccent, t.palette.mode === 'dark' ? 0.2 : 0.15), borderRadius: 2.5, mt: 1, boxShadow: (t) => (t.palette.mode === 'light' ? '0 1px 0 rgba(255,255,255,0.9) inset' : 'none') }}>
                 <PersonAdd sx={{ fontSize: 64, color: alpha('#4a5d4a', 0.2), mb: 2 }} />
@@ -1747,7 +1908,7 @@ export const ClientProfilePage = () => {
             )}
           </Container>
         </Box>
-        </ProfileSessionListShell>
+        </Box>
       </Dialog>
 
       {/* ===== ADD/EDIT WORKER DIALOG ===== */}

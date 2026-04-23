@@ -434,7 +434,7 @@ export const DashboardHomePage = () => {
                   }}
                 >
                   <Typography sx={{ fontSize: '0.82rem', fontWeight: 600, lineHeight: 1.4, textAlign: 'right' }}>
-                    شارع الجرانية، طرابلس، ليبيا
+                    شارع الجرابة، طرابلس، ليبيا
                   </Typography>
                   <MapPin size={16} color={alpha('#fff', 0.95)} />
                 </Box>
