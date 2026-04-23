@@ -122,7 +122,14 @@ function AppContent() {
           <Route
             element={isAuthenticated ? <Layout /> : <Navigate to="/login" />}
           >
-            <Route path="/" element={<DashboardHomePage />} />
+            <Route
+              path="/"
+              element={
+                <AppLockGuard module="stats" requireScreen>
+                  <DashboardHomePage />
+                </AppLockGuard>
+              }
+            />
 
             <Route
               path="/clients"

@@ -112,7 +112,8 @@ export const useAppLockStore = create<AppLockState>()(
         const userId = useAuthStore.getState().user?.id;
         // While app lock settings are still loading, block restricted modules to prevent flash
         if (!isAppLockReady) {
-          // Allow only the default unlocked modules during loading
+          // الرئيسية (stats): تُسمح مؤقتاً حتى تصل إعدادات Firestore ولا تظهر شاشة قفل كاذبة
+          if (module === 'stats') return true;
           return unlockedModules.includes(module);
         }
         if (!isLocked) return true; // everything allowed if no pin
