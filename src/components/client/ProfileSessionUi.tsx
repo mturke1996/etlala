@@ -42,7 +42,7 @@ export function ProfileSessionListShell({
         bgcolor: theme.palette.mode === 'dark' ? '#0f130f' : '#f0ede6',
         background:
           theme.palette.mode === 'dark'
-            ? `radial-gradient(ellipse 100% 45% at 100% 0%, ${tint} 0%, #0f130f 55%), radial-gradient(ellipse 60% 40% at 0% 100%, rgba(67, 97, 238, 0.05) 0%, transparent 50%)`
+            ? `radial-gradient(ellipse 100% 45% at 100% 0%, ${tint} 0%, #0f130f 55%), radial-gradient(ellipse 60% 40% at 0% 100%, rgba(47, 62, 52, 0.05) 0%, transparent 50%)`
             : `radial-gradient(ellipse 100% 50% at 0% 0%, ${tint} 0%, #f0ede6 50%), linear-gradient(180deg, #faf8f3 0%, #f2efe8 100%)`,
       }}
     >
@@ -51,17 +51,61 @@ export function ProfileSessionListShell({
   );
 }
 
+/** بحث بمظهر استوديو — حواف ناعمة وظل خفيف */
+const searchFieldSxElegant: SxProps<Theme> = (theme) => ({
+  '& .MuiOutlinedInput-root': {
+    minHeight: 50,
+    borderRadius: 2,
+    bgcolor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.06)' : '#fff',
+    border: '1px solid',
+    borderColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(47, 62, 52, 0.1)',
+    boxShadow: theme.palette.mode === 'light' ? '0 2px 8px rgba(47, 62, 52, 0.06), 0 1px 0 rgba(255,255,255,0.9) inset' : 'none',
+    transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
+    '&:hover': {
+      borderColor: 'rgba(194, 178, 128, 0.45)',
+    },
+    '&.Mui-focused': {
+      borderColor: 'primary.main',
+      boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.2)}`,
+    },
+    '& fieldset': { border: 'none' },
+  },
+  '& .MuiInputBase-input': { fontSize: '0.9rem', py: 1.15, fontWeight: 500 },
+  '& .MuiInputBase-input::placeholder': { opacity: 0.5, fontSize: '0.875rem' },
+});
+
+const searchFieldSxSharp: SxProps<Theme> = (theme) => ({
+  '& .MuiOutlinedInput-root': {
+    minHeight: 42,
+    borderRadius: 0,
+    bgcolor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.06)' : '#fff',
+    border: '1px solid',
+    borderColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(47, 62, 52, 0.12)',
+    boxShadow: 'none',
+    '&:hover': {
+      borderColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.18)' : 'rgba(47, 62, 52, 0.22)',
+    },
+    '&.Mui-focused': {
+      borderColor: 'primary.main',
+      boxShadow: `0 0 0 1px ${alpha(theme.palette.primary.main, 0.35)}`,
+    },
+    '& fieldset': { border: 'none' },
+  },
+  '& .MuiInputBase-input': { fontSize: '0.85rem', py: 0.9 },
+  '& .MuiInputBase-input::placeholder': { opacity: 0.55, fontSize: '0.82rem' },
+});
+
 const searchFieldSx: SxProps<Theme> = (theme) => ({
   '& .MuiOutlinedInput-root': {
     minHeight: 48,
     borderRadius: 2.5,
     bgcolor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.07)' : '#fff',
     border: '1px solid',
-    borderColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(67, 97, 238, 0.12)',
+    borderColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(47, 62, 52, 0.12)',
     boxShadow: theme.palette.mode === 'light' ? '0 1px 0 rgba(255,255,255,0.95) inset' : 'none',
     transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
     '&:hover': {
-      borderColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.16)' : 'rgba(67, 97, 238, 0.2)',
+      borderColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.16)' : 'rgba(47, 62, 52, 0.2)',
     },
     '&.Mui-focused': {
       borderColor: 'primary.main',
@@ -77,16 +121,21 @@ type ProfileSessionSearchProps = {
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
+  /** حواف 0 — مطابق لقائمة مصروفات مدمجة */
+  sharp?: boolean;
+  /** حواف لينة + ظل — قسم مصروفات مرتق */
+  elegant?: boolean;
 };
 
-export function ProfileSessionSearch({ value, onChange, placeholder = 'بحث في السجلات…' }: ProfileSessionSearchProps) {
+export function ProfileSessionSearch({ value, onChange, placeholder = 'بحث في السجلات…', sharp, elegant }: ProfileSessionSearchProps) {
+  const fieldSx = elegant ? searchFieldSxElegant : sharp ? searchFieldSxSharp : searchFieldSx;
   return (
     <TextField
       fullWidth
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
-      sx={searchFieldSx}
+      sx={fieldSx}
       InputProps={{
         startAdornment: (
           <InputAdornment position="start">
@@ -98,13 +147,22 @@ export function ProfileSessionSearch({ value, onChange, placeholder = 'بحث ف
   );
 }
 
-export function ProfileSessionSearchBar({ children }: { children: ReactNode }) {
+export function ProfileSessionSearchBar({
+  children,
+  dense,
+  flush,
+}: {
+  children: ReactNode;
+  dense?: boolean;
+  /** بدون padding جانبي — بعرض المخطط */
+  flush?: boolean;
+}) {
   return (
     <Box
       sx={(theme) => ({
-        px: 2,
-        py: 1.75,
-        borderBottom: `1px solid ${theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.07)' : 'rgba(67, 97, 238, 0.1)'}`,
+        px: flush ? 0 : dense ? 1.5 : 2,
+        py: flush ? 0.75 : dense ? 1.15 : 1.75,
+        borderBottom: `1px solid ${theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.07)' : 'rgba(47, 62, 52, 0.1)'}`,
         background:
           theme.palette.mode === 'dark'
             ? 'linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(0,0,0,0.08) 100%)'
@@ -118,7 +176,7 @@ export function ProfileSessionSearchBar({ children }: { children: ReactNode }) {
 }
 
 /** عنوان قسم داخل التمرير (مثال: «السجلات») */
-export function ProfileSessionListHeading({ children }: { children: ReactNode }) {
+export function ProfileSessionListHeading({ children, tight }: { children: ReactNode; /** مسافة أقل — قوائم مدمجة */ tight?: boolean }) {
   return (
     <Typography
       variant="overline"
@@ -126,9 +184,9 @@ export function ProfileSessionListHeading({ children }: { children: ReactNode })
         display: 'block',
         letterSpacing: 1.1,
         fontWeight: 800,
-        fontSize: '0.65rem',
+        fontSize: tight ? '0.6rem' : '0.65rem',
         color: 'text.secondary',
-        mb: 1.25,
+        mb: tight ? 0.5 : 1.25,
         opacity: 0.9,
       }}
     >
@@ -137,10 +195,28 @@ export function ProfileSessionListHeading({ children }: { children: ReactNode })
   );
 }
 
-export function ProfileSessionScroll({ children }: { children: ReactNode }) {
+export function ProfileSessionScroll({
+  children,
+  dense,
+  flush,
+}: {
+  children: ReactNode;
+  /** تقليل الهوامش لزيادة مساحة التمرير العمودية (قوائم طويلة) */
+  dense?: boolean;
+  /** عرض كامل بدون هوامش أفقية — قوائم مصروفات مدمجة */
+  flush?: boolean;
+}) {
   return (
-    <Box sx={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
-      <Container maxWidth="sm" sx={{ py: 2, px: 2, pb: 3.5 }}>
+    <Box sx={{ flex: 1, overflowY: 'auto', minHeight: 0, WebkitOverflowScrolling: 'touch' }}>
+      <Container
+        maxWidth="sm"
+        disableGutters={dense || flush}
+        sx={{
+          py: flush ? 0 : dense ? 1.25 : 2,
+          px: flush ? 0 : dense ? { xs: 1.5, sm: 2 } : 2,
+          pb: flush ? 3 : dense ? 4 : 3.5,
+        }}
+      >
         {children}
       </Container>
     </Box>
@@ -155,6 +231,8 @@ type ProfileSessionTotalBarProps = {
   children?: ReactNode;
   titleAdornment?: ReactNode;
   module?: ProfileSessionModule;
+  /** زوايا 0 — متوافق مع قائمة مسطحة */
+  square?: boolean;
 };
 
 export function ProfileSessionTotalBar({
@@ -165,6 +243,7 @@ export function ProfileSessionTotalBar({
   children,
   titleAdornment,
   module,
+  square = false,
 }: ProfileSessionTotalBarProps) {
   const theme = useTheme();
   const accent = module ? PROFILE_MODULE[module].accent : undefined;
@@ -173,10 +252,12 @@ export function ProfileSessionTotalBar({
     tone === 'success'
       ? 'linear-gradient(145deg, #1a3d2a 0%, #0f2a1a 100%)'
       : tone === 'danger'
-        ? 'linear-gradient(145deg, #3a1e1e 0%, #2a1212 100%)'
+        ? module === 'expenses'
+          ? 'linear-gradient(145deg, #3d4f44 0%, #243028 100%)'
+          : 'linear-gradient(145deg, #3a1e1e 0%, #2a1212 100%)'
         : theme.palette.mode === 'dark'
           ? 'linear-gradient(145deg, #1c241c 0%, #141a14 100%)'
-          : 'linear-gradient(145deg, #4361EE 0%, #1E293B 100%)';
+          : 'linear-gradient(145deg, #2F3E34 0%, #1a2218 100%)';
 
   return (
     <Box
@@ -186,15 +267,15 @@ export function ProfileSessionTotalBar({
       onKeyDown={onClick ? (e) => (e.key === 'Enter' || e.key === ' ') && onClick() : undefined}
       sx={{
         position: 'relative',
-        mt: 2.5,
+        mt: square ? 1 : 2.5,
         pt: accent ? 0.5 : 0,
-        p: 2.25,
-        borderRadius: 2.5,
+        p: square ? 1.75 : 2.5,
+        borderRadius: square ? 0 : 3.5,
         background: bg,
         color: '#fff',
         border: '1px solid',
         borderColor: 'rgba(255,255,255,0.1)',
-        boxShadow: '0 12px 36px -12px rgba(0,0,0,0.4)',
+        boxShadow: '0 16px 40px -12px rgba(0,0,0,0.4)',
         cursor: onClick ? 'pointer' : 'default',
         overflow: 'hidden',
         transition: 'transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.22s ease',
@@ -257,13 +338,25 @@ export const profileSessionRowCardContentSx: SxProps<Theme> = {
   '&:last-child': { pb: 2.25 },
 };
 
-export function ProfileSessionRowMeta({ children }: { children: ReactNode }) {
+export function ProfileSessionRowMeta({
+  children,
+  large,
+}: {
+  children: ReactNode;
+  /** نص أوضح لقوائم المصروفات الطويلة */
+  large?: boolean;
+}) {
   return (
     <Typography
       variant="caption"
       color="text.secondary"
       display="block"
-      sx={{ mt: 0.4, lineHeight: 1.5, fontSize: '0.72rem', fontWeight: 500 }}
+      sx={{
+        mt: 0.45,
+        lineHeight: 1.55,
+        fontSize: large ? '0.82rem' : '0.72rem',
+        fontWeight: 500,
+      }}
     >
       {children}
     </Typography>
@@ -275,13 +368,50 @@ type ProfileSessionRecordListItemProps = {
   children: ReactNode;
   /** فهرس لحركة دخول متدرجة */
   index?: number;
+  /** صف مضغوط بلا زوايا دائرية ولاصف — أقصى كثافة في الشاشة */
+  variant?: 'card' | 'flat';
+  /** آخر صف في المجموعة المسطحة — بدون خط سفلي */
+  isLast?: boolean;
 };
 
 /**
  * بطاقة سجل — حواف ناعمة، شريط لون، حركة دخول خفيفة (يُعطّل مع reduced-motion)
+ * أو وضع flat: جدولي بلا فواصل عمودية كبيرة
  */
-export function ProfileSessionRecordListItem({ accent, children, index = 0 }: ProfileSessionRecordListItemProps) {
+export function ProfileSessionRecordListItem({
+  accent,
+  children,
+  index = 0,
+  variant = 'card',
+  isLast = false,
+}: ProfileSessionRecordListItemProps) {
   const reduce = useReducedMotion();
+
+  if (variant === 'flat') {
+    return (
+      <Box
+        component={motion.div}
+        initial={reduce ? false : { opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: reduce ? 0 : Math.min(index * 0.02, 0.12), duration: 0.2 }}
+        sx={{
+          borderBottom: isLast ? 'none' : '1px solid',
+          borderColor: (t) => t.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(47, 62, 52, 0.08)',
+          bgcolor: (t) => t.palette.mode === 'dark' ? 'rgba(255,255,255,0.015)' : '#fff',
+          borderInlineStart: `4px solid ${accent}`,
+          boxShadow: 'none',
+          borderRadius: 0,
+          transition: 'background-color 0.2s ease',
+          '&:hover': {
+            bgcolor: (t) => t.palette.mode === 'dark' ? 'rgba(255,255,255,0.03)' : 'rgba(47, 62, 52, 0.02)',
+          }
+        }}
+      >
+        {children}
+      </Box>
+    );
+  }
+
   return (
     <Box
       component={motion.div}
@@ -293,18 +423,18 @@ export function ProfileSessionRecordListItem({ accent, children, index = 0 }: Pr
         <EtlalaAccentSurface
           accent={accent}
           sx={{
-            borderRadius: 3.5,
-            borderInlineStartWidth: 5,
+            borderRadius: 4,
+            borderInlineStartWidth: 0,
             border: '1px solid',
-            borderColor: (t) => t.palette.mode === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
+            borderColor: (t) => t.palette.mode === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(47, 62, 52, 0.05)',
             background: (t) => t.palette.mode === 'dark' 
-              ? 'linear-gradient(135deg, rgba(30,41,59,0.7) 0%, rgba(15,23,42,0.8) 100%)' 
-              : 'linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(248,250,252,0.9) 100%)',
-            backdropFilter: 'blur(12px)',
+              ? 'linear-gradient(135deg, rgba(24,30,26,0.8) 0%, rgba(15,20,17,0.95) 100%)' 
+              : 'linear-gradient(135deg, #ffffff 0%, #f9faf8 100%)',
+            backdropFilter: 'blur(16px)',
             boxShadow: (t) =>
               t.palette.mode === 'dark'
-                ? '0 8px 32px -4px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)'
-                : '0 8px 32px -4px rgba(71,85,105,0.08), inset 0 1px 0 rgba(255,255,255,1)',
+                ? '0 12px 32px -8px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04)'
+                : '0 12px 32px -8px rgba(47,62,52,0.08), inset 0 1px 0 rgba(255,255,255,1)',
             overflow: 'hidden',
           }}
         >
@@ -315,6 +445,28 @@ export function ProfileSessionRecordListItem({ accent, children, index = 0 }: Pr
   );
 }
 
-export function ProfileSessionRecordCardContent({ children }: { children: ReactNode }) {
-  return <CardContent sx={profileSessionRowCardContentSx}>{children}</CardContent>;
+export function ProfileSessionRecordCardContent({
+  children,
+  comfortable,
+  flat,
+}: {
+  children: ReactNode;
+  /** مسافات أوضح للقراءة في قوائم طويلة */
+  comfortable?: boolean;
+  /** صف جدولي مضغوط */
+  flat?: boolean;
+}) {
+  return (
+    <CardContent
+      sx={
+        flat
+          ? { p: 1, py: 0.85, px: 1.15, '&:last-child': { pb: 0.85 } }
+          : comfortable
+            ? { p: { xs: 2.5, sm: 2.75 }, pt: { xs: 2.35, sm: 2.5 }, '&:last-child': { pb: { xs: 2.5, sm: 2.75 } } }
+            : profileSessionRowCardContentSx
+      }
+    >
+      {children}
+    </CardContent>
+  );
 }

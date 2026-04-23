@@ -69,11 +69,11 @@ export function PageScaffold({
           {
             background: isProfile
               ? (isDark
-                ? 'linear-gradient(168deg, #0B1221 0%, #111C3A 38%, #0D1528 100%)'
-                : 'linear-gradient(168deg, #4361EE 0%, #2E44A6 45%, #1B296B 100%)')
+                ? 'linear-gradient(168deg, #0F1812 0%, #1A2218 40%, #121814 100%)'
+                : 'linear-gradient(168deg, #2F3E34 0%, #2A352C 45%, #243028 100%)')
               : (isDark
-                ? 'linear-gradient(162deg, #111827 0%, #0B0F19 52%, #090C14 100%)'
-                : 'linear-gradient(162deg, #637DFF 0%, #4361EE 46%, #2E44A6 100%)'),
+                ? 'linear-gradient(162deg, #1A2218 0%, #121814 52%, #0E120F 100%)'
+                : 'linear-gradient(162deg, #3A4B40 0%, #2F3E34 48%, #243028 100%)'),
             pt: isProfile ? 'calc(env(safe-area-inset-top) + 16px)' : 'calc(env(safe-area-inset-top) + 12px)',
             pb: isProfile ? 3.5 : 2.75,
             px: 2,
@@ -81,11 +81,11 @@ export function PageScaffold({
             borderRadius: isProfile ? { xs: '0 0 32px 32px', sm: '0 0 40px 40px' } : { xs: '0 0 26px 26px', sm: '0 0 32px 32px' },
             boxShadow: isProfile
               ? (isDark
-                ? '0 28px 80px -12px rgba(0,0,0,0.65), inset 0 0 100px -40px rgba(67, 97, 238, 0.06), inset 0 -1px 0 rgba(226, 232, 240, 0.08)'
-                : '0 24px 64px -14px rgba(15, 25, 60, 0.5), inset 0 0 80px -30px rgba(255,255,255,0.04)')
+                ? '0 28px 80px -12px rgba(0,0,0,0.65), inset 0 0 100px -40px rgba(194, 178, 128, 0.04), inset 0 -1px 0 rgba(226, 232, 240, 0.06)'
+                : '0 24px 64px -14px rgba(20, 28, 22, 0.45), inset 0 0 80px -30px rgba(255,255,255,0.04)')
               : (isDark
-                ? '0 20px 56px rgba(0,0,0,0.55), inset 0 -1px 0 rgba(226, 232, 240, 0.06)'
-                : '0 16px 48px -12px rgba(20, 25, 45, 0.35), inset 0 -1px 0 rgba(255,255,255,0.12)'),
+                ? '0 20px 56px rgba(0,0,0,0.55), inset 0 -1px 0 rgba(226, 232, 240, 0.05)'
+                : '0 16px 48px -12px rgba(20, 28, 22, 0.28), inset 0 -1px 0 rgba(255,255,255,0.1)'),
             position: 'relative',
             overflow: 'hidden',
             borderBottom: isProfile
@@ -97,11 +97,11 @@ export function PageScaffold({
               inset: 0,
               background: isProfile
                 ? (isDark
-                  ? 'radial-gradient(ellipse 100% 90% at 100% 0%, rgba(100, 130, 255, 0.18) 0%, transparent 45%), radial-gradient(ellipse 60% 50% at 0% 100%, rgba(226, 232, 240, 0.06) 0%, transparent 50%)'
-                  : 'radial-gradient(ellipse 100% 85% at 0% 0%, rgba(255,255,255,0.2) 0%, transparent 48%), radial-gradient(ellipse 70% 60% at 100% 100%, rgba(226, 232, 240, 0.12) 0%, transparent 55%)')
+                  ? 'radial-gradient(ellipse 100% 90% at 100% 0%, rgba(194, 178, 128, 0.1) 0%, transparent 45%), radial-gradient(ellipse 60% 50% at 0% 100%, rgba(255,255,255,0.04) 0%, transparent 50%)'
+                  : 'radial-gradient(ellipse 100% 85% at 0% 0%, rgba(255,255,255,0.12) 0%, transparent 48%), radial-gradient(ellipse 70% 60% at 100% 100%, rgba(194, 178, 128, 0.08) 0%, transparent 55%)')
                 : (isDark
-                  ? 'radial-gradient(ellipse 90% 70% at 100% 0%, rgba(100, 130, 255, 0.12) 0%, transparent 52%)'
-                  : 'radial-gradient(ellipse 85% 65% at 0% 0%, rgba(255,255,255,0.22) 0%, transparent 55%)'),
+                  ? 'radial-gradient(ellipse 90% 70% at 100% 0%, rgba(194, 178, 128, 0.08) 0%, transparent 52%)'
+                  : 'radial-gradient(ellipse 85% 65% at 0% 0%, rgba(255,255,255,0.18) 0%, transparent 55%)'),
               pointerEvents: 'none',
             },
             '&::after': {

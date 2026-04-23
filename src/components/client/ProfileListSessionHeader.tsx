@@ -14,6 +14,19 @@ type ProfileListSessionHeaderProps = {
   headerGradient: string;
   primaryAction?: ReactNode;
   pdfRow?: ReactNode;
+  /** هيرو أقصر — عناوين أصغر ومسافات أقل */
+  compact?: boolean;
+  /** أيقونة إضافية (مثل قائمة التصدير) بجانب زر الإضافة */
+  endAdornment?: ReactNode;
+  /** تمويجات سفلية = 0 — مظهر معماري حاد (بدون border-radius) */
+  squareBottom?: boolean;
+  /** خط زخرفي ذهبي رقيق تحت العنوان — مود «استوديو» */
+  studioBottomAccent?: boolean;
+  /**
+   * شريط علوي قصير جداً (Swiss / ledger): يُستخدم مع `compact` + `squareBottom`.
+   * يقلل padding رأسيًا ويُناسب الشاشات التي تحتاج أقصى مساحة للقائمة.
+   */
+  strip?: boolean;
 };
 
 /** أزرار ثانوية (PDF / مشاركة) فوق خلفية الهيرو الداكنة — مرتفعة، غير ملتصقة */
@@ -90,9 +103,15 @@ export function ProfileListSessionHeader({
   headerGradient,
   primaryAction,
   pdfRow,
+  compact = false,
+  endAdornment,
+  squareBottom = false,
+  studioBottomAccent = false,
+  strip = false,
 }: ProfileListSessionHeaderProps) {
   const resolvedAccent = accent ?? PROFILE_MODULE[module].accent;
   const resolvedOverline = overline ?? PROFILE_MODULE[module].overline;
+  const tight = strip && compact;
 
   return (
     <Box
@@ -101,11 +120,18 @@ export function ProfileListSessionHeader({
         position: 'relative',
         overflow: 'hidden',
         color: 'common.white',
-        borderBottomLeftRadius: { xs: 20, sm: 24 },
-        borderBottomRightRadius: { xs: 20, sm: 24 },
+        borderBottomLeftRadius: squareBottom ? 0 : compact ? { xs: 16, sm: 20 } : { xs: 20, sm: 24 },
+        borderBottomRightRadius: squareBottom ? 0 : compact ? { xs: 16, sm: 20 } : { xs: 20, sm: 24 },
         background: headerGradient,
-        boxShadow: '0 8px 32px -12px rgba(0,0,0,0.45)',
-        borderBottom: `1px solid ${alpha(resolvedAccent, 0.45)}`,
+        boxShadow: tight
+          ? '0 1px 0 rgba(0,0,0,0.18) inset, 0 2px 12px -8px rgba(0,0,0,0.28)'
+          : squareBottom
+            ? '0 1px 0 rgba(0,0,0,0.2) inset, 0 8px 32px -16px rgba(0,0,0,0.4)'
+            : compact
+              ? '0 4px 24px -8px rgba(0,0,0,0.35)'
+              : '0 8px 32px -12px rgba(0,0,0,0.45)',
+        borderTop: squareBottom ? `1px solid ${alpha('#C2B280', 0.28)}` : 'none',
+        borderBottom: `1px solid ${alpha(squareBottom ? '#fff' : resolvedAccent, squareBottom ? 0.12 : 0.45)}`,
       }}
     >
       <Box
@@ -114,7 +140,9 @@ export function ProfileListSessionHeader({
           position: 'absolute',
           inset: 0,
           zIndex: 0,
-          background: 'linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.22) 100%)',
+          background: squareBottom
+            ? 'linear-gradient(180deg, rgba(0,0,0,0.06) 0%, rgba(0,0,0,0.2) 100%)'
+            : 'linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.22) 100%)',
           pointerEvents: 'none',
         }}
       />
@@ -124,27 +152,50 @@ export function ProfileListSessionHeader({
         aria-hidden
       />
 
-      <Box sx={{ position: 'relative', zIndex: 1, px: { xs: 2, sm: 2.75 }, pt: 'calc(max(env(safe-area-inset-top), 48px) + 4px)', pb: pdfRow ? 2.25 : 2.5 }}>
-        <Stack spacing={2.25}>
+      <Box
+        sx={{
+          position: 'relative',
+          zIndex: 1,
+          px: { xs: 1.75, sm: 2.5 },
+          pt: tight
+            ? 'calc(max(env(safe-area-inset-top), 16px))'
+            : compact
+            ? 'calc(max(env(safe-area-inset-top), 24px))'
+            : 'calc(max(env(safe-area-inset-top), 32px))',
+          pb: pdfRow
+            ? (tight ? 0.5 : compact ? 1 : 1.5)
+            : tight
+              ? 0.25
+              : compact
+                ? 0.75
+                : 1.5,
+        }}
+      >
+        <Stack spacing={tight ? 0.75 : compact ? 1.25 : 2.25}>
           <Stack
             direction="row"
-            alignItems="flex-start"
+            alignItems="center"
             justifyContent="space-between"
-            flexWrap="wrap"
-            gap={2.5}
-            useFlexGap
-            sx={{ rowGap: 2, columnGap: 2.5 }}
+            flexWrap="nowrap"
+            gap={1}
+            sx={{ width: 1 }}
           >
-            <Stack direction="row" alignItems="flex-start" spacing={2} useFlexGap sx={{ flex: 1, minWidth: 0, maxWidth: { xs: '100%', sm: 'calc(100% - 200px)' } }}>
+            <Stack
+              direction="row"
+              alignItems="center"
+              spacing={tight ? 1 : compact ? 1.25 : 2}
+              useFlexGap
+              sx={{ flex: 1, minWidth: 0 }}
+            >
               <IconButton
                 onClick={onBack}
                 aria-label="رجوع"
                 size="small"
                 sx={{
-                  minWidth: 48,
-                  minHeight: 48,
-                  p: 1,
-                  mt: 0.25,
+                  minWidth: tight ? 32 : compact ? 36 : 40,
+                  minHeight: tight ? 32 : compact ? 36 : 40,
+                  p: 0.5,
+                  borderRadius: tight ? 0 : 2,
                   color: 'common.white',
                   border: `1px solid ${alpha('#fff', 0.22)}`,
                   bgcolor: alpha('#fff', 0.08),
@@ -152,34 +203,55 @@ export function ProfileListSessionHeader({
                   '&:focus-visible': { outline: `2px solid ${alpha('#fff', 0.5)}`, outlineOffset: 2 },
                 }}
               >
-                <ArrowBack />
+                <ArrowBack sx={tight ? { fontSize: 22 } : undefined} />
               </IconButton>
-              <Box sx={{ minWidth: 0, flex: 1, pt: 0.15 }}>
-                <Typography
-                  variant="overline"
-                  sx={{
-                    display: 'block',
-                    lineHeight: 1.35,
-                    letterSpacing: 1.2,
-                    fontWeight: 800,
-                    fontSize: '0.62rem',
-                    color: alpha('#fff', 0.55),
-                    mb: 0.35,
-                  }}
-                >
-                  {resolvedOverline}
-                </Typography>
+              <Box sx={{ minWidth: 0, flex: 1 }}>
+                {!compact && (
+                  <Typography
+                    variant="overline"
+                    sx={{
+                      display: 'block',
+                      lineHeight: 1.35,
+                      letterSpacing: 1.2,
+                      fontWeight: 800,
+                      fontSize: '0.62rem',
+                      color: alpha('#fff', 0.55),
+                      mb: 0.35,
+                    }}
+                  >
+                    {resolvedOverline}
+                  </Typography>
+                )}
+                {compact && (
+                  <Typography
+                    variant="overline"
+                    sx={{
+                      display: 'block',
+                      letterSpacing: 1,
+                      fontWeight: 700,
+                      fontSize: tight ? '0.55rem' : '0.58rem',
+                      color: alpha('#fff', 0.5),
+                      mb: tight ? 0.1 : 0.2,
+                    }}
+                  >
+                    {resolvedOverline}
+                  </Typography>
+                )}
                 <Typography
                   fontWeight={900}
                   sx={{
-                    lineHeight: 1.25,
-                    fontSize: { xs: '1.2rem', sm: '1.35rem' },
+                    lineHeight: 1.1,
+                    fontSize: tight
+                      ? { xs: '0.85rem', sm: '0.95rem' }
+                      : compact
+                        ? { xs: '0.95rem', sm: '1.05rem' }
+                        : { xs: '1.1rem', sm: '1.25rem' },
                     letterSpacing: 0.01,
                   }}
                 >
                   {title}
                 </Typography>
-                {subtitle ? (
+                {subtitle && !compact ? (
                   <Typography
                     component="p"
                     variant="body2"
@@ -195,35 +267,65 @@ export function ProfileListSessionHeader({
                     {subtitle}
                   </Typography>
                 ) : null}
+                {subtitle && compact ? (
+                  <Typography
+                    component="p"
+                    variant="body2"
+                    sx={{
+                      color: alpha('#fff', 0.65),
+                      fontWeight: 500,
+                      mt: tight ? 0.2 : 0.35,
+                      lineHeight: 1.35,
+                    fontSize: tight ? '0.72rem' : '0.78rem',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                  }}
+                >
+                    {subtitle}
+                  </Typography>
+                ) : null}
               </Box>
             </Stack>
 
-            {primaryAction ? (
-              <Box
-                sx={{
-                  flexShrink: 0,
-                  alignSelf: 'flex-start',
-                  display: 'inline-flex',
-                  pt: 0.25,
-                  pl: { xs: 0, sm: 1.5 },
-                  ml: { xs: 'auto', sm: 0 },
-                }}
-              >
-                {primaryAction}
-              </Box>
-            ) : null}
+            <Stack direction="row" alignItems="center" spacing={1} sx={{ flexShrink: 0 }}>
+              {endAdornment}
+              {primaryAction ? <Box sx={{ display: 'inline-flex' }}>{primaryAction}</Box> : null}
+            </Stack>
           </Stack>
 
           {pdfRow ? (
             <Box
               sx={{
                 width: 1,
-                pt: 2.25,
-                mt: 0.5,
+                pt: compact ? 1.35 : 2.25,
+                mt: compact ? 0 : 0.5,
                 borderTop: `1px solid ${alpha('#fff', 0.12)}`,
               }}
             >
               {pdfRow}
+            </Box>
+          ) : null}
+
+          {studioBottomAccent && !pdfRow ? (
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'center',
+                pt: tight ? 0.35 : compact ? 0.5 : 0.75,
+                mt: 0.25,
+              }}
+            >
+              <Box
+                aria-hidden
+                sx={{
+                  width: 56,
+                  height: 2,
+                  borderRadius: 0,
+                  background: 'linear-gradient(90deg, transparent, #C2B280 20%, #E8DCC4 50%, #C2B280 80%, transparent)',
+                  opacity: 0.9,
+                }}
+              />
             </Box>
           ) : null}
         </Stack>

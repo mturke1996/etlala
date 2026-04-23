@@ -4,6 +4,7 @@ import {
   Box, Button, Typography, Stack,
   IconButton, Dialog, TextField, Avatar, Divider, Collapse, useTheme,
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import {
   ArrowBack, Add, AccountBalanceWallet, TrendingDown, Delete, Edit,
   KeyboardArrowDown, KeyboardArrowUp, CalendarToday,
@@ -333,6 +334,38 @@ export const FundPage = () => {
         subtitle="إدارة رصيد العهدات"
         backTo="/"
         contentOffset={2}
+        headerSx={{
+          background: isDark
+            ? 'linear-gradient(168deg, #0F1812 0%, #1A2218 40%, #121814 100%)'
+            : 'linear-gradient(168deg, #1F3D35 0%, #2A4036 40%, #2C4A42 100%)',
+          boxShadow: isDark
+            ? '0 20px 56px rgba(0,0,0,0.55), inset 0 0 0 1px rgba(200, 192, 176, 0.04)'
+            : '0 18px 48px -12px rgba(0,0,0,0.32), inset 0 0 0 1px rgba(0,0,0,0.05)',
+          borderBottom: isDark
+            ? `1px solid ${alpha('#c8c0b0', 0.1)} !important`
+            : `1px solid ${alpha('#1f3d35', 0.35)} !important`,
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            inset: 0,
+            background: isDark
+              ? 'radial-gradient(ellipse 90% 75% at 100% 0%, rgba(200, 192, 176, 0.05) 0%, transparent 48%)'
+              : 'radial-gradient(ellipse 88% 70% at 0% 100%, rgba(0,0,0,0.18) 0%, transparent 52%)',
+            pointerEvents: 'none',
+          },
+          '&::after': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 1,
+            background: isDark
+              ? 'linear-gradient(90deg, transparent, rgba(200, 192, 176, 0.12), transparent)'
+              : 'linear-gradient(90deg, transparent, rgba(200, 192, 176, 0.22), transparent)',
+            pointerEvents: 'none',
+          },
+        }}
         rightAction={isAdmin ? (
               <Button onClick={openAdd}
                 size="small"
@@ -353,14 +386,14 @@ export const FundPage = () => {
         ) : undefined}
         headerExtra={(
           <Box ref={balanceCardRef} sx={{ 
-              bgcolor: 'rgba(255,255,255,0.1)', 
-              backdropFilter: 'blur(24px)', 
-              WebkitBackdropFilter: 'blur(24px)', 
-              border: '1px solid rgba(255,255,255,0.2)', 
+              bgcolor: 'rgba(0,0,0,0.2)',
+              backdropFilter: 'blur(20px)', 
+              WebkitBackdropFilter: 'blur(20px)', 
+              border: '1px solid rgba(200, 192, 176, 0.22)', 
               borderRadius: 4, 
               p: 3, 
               mb: 1, 
-              boxShadow: '0 12px 40px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.2)' 
+              boxShadow: '0 12px 36px rgba(0,0,0,0.28), inset 0 1px 0 rgba(200, 192, 176, 0.1)',
             }}>
             <Stack direction="row" alignItems="center" justifyContent="space-between" mb={2.5}>
               <Box>
@@ -372,14 +405,14 @@ export const FundPage = () => {
                 </Typography>
               </Box>
               <Box sx={{
-                width: 56, height: 56, borderRadius: '50%',
-                background: 'linear-gradient(135deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.1) 100%)',
-                border: '1px solid rgba(255,255,255,0.4)',
+                width: 56, height: 56, borderRadius: 2.5,
+                background: 'linear-gradient(150deg, rgba(200, 192, 176, 0.28) 0%, rgba(0,0,0,0.2) 100%)',
+                border: '1px solid rgba(200, 192, 176, 0.3)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: '0 8px 24px rgba(0,0,0,0.1)',
-                backdropFilter: 'blur(10px)',
+                boxShadow: '0 6px 20px rgba(0,0,0,0.2)',
+                backdropFilter: 'blur(8px)',
               }}>
-                <AccountBalanceWallet sx={{ fontSize: 28, color: '#ffffff' }} />
+                <AccountBalanceWallet sx={{ fontSize: 28, color: 'rgba(255,255,255,0.95)' }} />
               </Box>
             </Stack>
             {/* 3-col stats */}

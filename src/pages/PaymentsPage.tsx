@@ -10,7 +10,6 @@ import {
   useTheme,
   Chip,
   Paper,
-  alpha,
   Grid as MuiGrid,
 } from '@mui/material';
 import {
@@ -104,7 +103,7 @@ export const PaymentsPage = () => {
               const invoice = invoices.find(inv => inv.id === payment.invoiceId);
               const clientName = client?.name || invoice?.tempClientName || 'عميل غير معروف';
               return (
-                <EtlalaAccentSurface key={payment.id} accent={theme.palette.success.main}>
+                <EtlalaAccentSurface key={payment.id} accent={theme.palette.primary.main}>
                   <CardContent sx={{ py: 2, '&:last-child': { pb: 2 } }}>
                     <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
                       <Box sx={{ minWidth: 0, flex: 1 }}>
@@ -118,11 +117,11 @@ export const PaymentsPage = () => {
                           <Chip
                             label={getPaymentMethodLabel(payment.paymentMethod)}
                             size="small"
-                            sx={{ height: 20, fontSize: '0.65rem', fontWeight: 600, bgcolor: alpha(theme.palette.primary.main, 0.08), color: 'primary.main' }}
+                            sx={{ height: 22, fontSize: '0.65rem', fontWeight: 600, bgcolor: 'rgba(47, 62, 52, 0.1)', color: 'primary.main' }}
                           />
                         </Stack>
                       </Box>
-                      <Typography fontWeight={800} color="success.main" variant="body1" sx={{ whiteSpace: 'nowrap', mr: 1, fontFamily: 'Outfit, sans-serif' }}>
+                      <Typography fontWeight={800} color="primary.main" variant="body1" sx={{ whiteSpace: 'nowrap', mr: 1, fontFamily: 'Outfit, sans-serif' }}>
                         +{formatCurrency(payment.amount)}
                       </Typography>
                     </Stack>

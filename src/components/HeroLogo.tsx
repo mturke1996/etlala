@@ -5,14 +5,27 @@ import { Logo } from "./Logo";
 type HeroLogoProps = {
   size?: number;
   /** تخطٍ أقل للهيرو المدمج */ compact?: boolean;
+  /** بدون حلقات ولا قرص أبيض — شعار فقط (يُناسب خلفية خضراء) */
+  plain?: boolean;
 };
 
-/** شعار الهيرو — حلقات خفيفة، قرص زجاجي، حركة ناعمة */
-export function HeroLogo({ size = 200, compact = false }: HeroLogoProps) {
+/** شعار الهيرو — حلقات خفيفة، قرص زجاجي، حركة ناعمة (أو `plain` للعُرف البسيط) */
+export function HeroLogo({ size = 200, compact = false, plain = false }: HeroLogoProps) {
   const reduce = useReducedMotion();
   const ringOuter = compact ? 48 : 100;
   const ringInner = compact ? 28 : 64;
   const discPad = compact ? 24 : 36;
+
+  if (plain) {
+    return (
+      <Box
+        className="etlala-hero-logo-root etlala-hero-logo-root--plain"
+        sx={{ display: "flex", justifyContent: "center", alignItems: "center", width: 1, mb: compact ? 0.8 : 0.5 }}
+      >
+        <Logo size={size} variant="hero" showSubtitle={false} />
+      </Box>
+    );
+  }
 
   return (
     <Box

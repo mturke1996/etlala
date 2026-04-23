@@ -3,19 +3,19 @@ import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box, Button, Typography, TextField, InputAdornment, Chip,
-  Stack, Paper, Grid as MuiGrid, useTheme,
+  Stack, Paper, Grid as MuiGrid,
 } from '@mui/material';
 import { Add, Search, Description } from '@mui/icons-material';
 import { useDataStore } from '../store/useDataStore';
 import { formatCurrency, formatDate, getStatusLabel } from '../utils/formatters';
 import { PageScaffold } from '../components/layout/PageScaffold';
 import { EtlalaAccentSurface, EtlalaEmptyState, EtlalaSectionTitle } from '../components/etlala/EtlalaMobileUi';
+import { premiumTokens } from '../theme/tokens';
 
 const Grid = MuiGrid as any;
 
 export const InvoicesPage = () => {
   const navigate = useNavigate();
-  const theme = useTheme();
   const { invoices, clients } = useDataStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
@@ -38,16 +38,6 @@ export const InvoicesPage = () => {
     const pending = total - paid;
     return { total, paid, pending };
   }, [invoices]);
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'paid': return 'success';
-      case 'partially_paid': return 'warning';
-      case 'overdue': return 'error';
-      case 'draft': return 'default';
-      default: return 'primary';
-    }
-  };
 
   return (
     <PageScaffold
@@ -124,8 +114,27 @@ export const InvoicesPage = () => {
               label={status === 'all' ? 'الكل' : getStatusLabel(status)}
               onClick={() => setFilterStatus(status)}
               variant={filterStatus === status ? 'filled' : 'outlined'}
-              color={filterStatus === status && status !== 'all' ? getStatusColor(status) as any : 'default'}
-              sx={{ borderRadius: 2, height: 30, fontSize: '0.75rem', fontWeight: 600, flexShrink: 0 }}
+              sx={{
+                borderRadius: 2,
+                height: 32,
+                fontSize: '0.75rem',
+                fontWeight: 600,
+                flexShrink: 0,
+                borderColor: filterStatus === status ? 'transparent' : 'rgba(47, 62, 52, 0.2)',
+                bgcolor:
+                  filterStatus === status
+                    ? status === 'all'
+                      ? 'primary.main'
+                      : 'rgba(47, 62, 52, 0.12)'
+                    : 'transparent',
+                color:
+                  filterStatus === status
+                    ? status === 'all'
+                      ? 'primary.contrastText'
+                      : 'primary.main'
+                    : 'text.primary',
+                '&.MuiChip-clickable:hover': { bgcolor: 'rgba(194, 178, 128, 0.12)' },
+              }}
             />
           ))}
         </Stack>
@@ -144,7 +153,8 @@ export const InvoicesPage = () => {
               return (
                 <EtlalaAccentSurface
                   key={inv.id}
-                  accent={isPaid ? theme.palette.success.main : theme.palette.warning.main}
+                  accent={isPaid ? premiumTokens.primary : premiumTokens.accent}
+                  topGoldAccent={isPaid}
                   onClick={() => navigate(`/invoices/${inv.id}`)}
                 >
                   <Box sx={{ p: 2 }}>
@@ -163,9 +173,16 @@ export const InvoicesPage = () => {
                         </Typography>
                         <Chip
                           label={getStatusLabel(inv.status)}
-                          color={getStatusColor(inv.status) as any}
                           size="small"
-                          sx={{ fontWeight: 600, borderRadius: 1.5, height: 20, fontSize: '0.6rem' }}
+                          sx={{
+                            fontWeight: 600,
+                            borderRadius: 1.5,
+                            height: 22,
+                            fontSize: '0.65rem',
+                            bgcolor: isPaid ? 'rgba(47, 62, 52, 0.1)' : 'rgba(194, 178, 128, 0.18)',
+                            color: 'primary.main',
+                            border: 'none',
+                          }}
                         />
                       </Stack>
                     </Stack>

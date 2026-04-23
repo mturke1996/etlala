@@ -12,9 +12,9 @@ export const PROFILE_MODULE: Record<
   }
 > = {
   expenses: {
-    accent: '#c43d3d',
+    accent: '#2F3E34',
     overline: 'سجل الصرف',
-    listAccent: '#c73e3e',
+    listAccent: '#2F3E34',
   },
   payments: {
     accent: '#0d9668',

@@ -1,59 +1,56 @@
 import { createTheme, ThemeOptions } from '@mui/material/styles';
+import { premiumTokens } from './tokens';
 
 export type ThemeMode = 'light' | 'dark';
 
-// ═══════════════════════════════════════════════════════════
-// PREMIUM SOFT MODERN UI - Design System
-// Primary: Royal Blue (#4361EE)
-// Background: Soft Cool Gray (#F7F9FC)
-// Typography: Inter / Tajawal
-// ═══════════════════════════════════════════════════════════
+const { primary, primaryDark, background, paper, accent, text, textMuted } = premiumTokens;
+
 const premiumColors = {
   light: {
     primary: {
-      main: '#4361EE',
-      light: '#7B8DFA',
-      dark: '#2E44A6',
+      main: primary,
+      light: '#4A5E50',
+      dark: primaryDark,
       contrastText: '#ffffff',
     },
     secondary: {
-      main: '#64748B',
-      light: '#94A3B8',
-      dark: '#475569',
-      contrastText: '#ffffff',
+      main: accent,
+      light: '#D4C9A3',
+      dark: '#9A8B60',
+      contrastText: text,
     },
     background: {
-      default: '#F7F9FC',
-      paper: '#FFFFFF',
+      default: background,
+      paper: paper,
     },
     text: {
-      primary: '#1E293B',
-      secondary: '#64748B',
+      primary: text,
+      secondary: textMuted,
     },
-    divider: '#E2E8F0',
+    divider: 'rgba(31, 37, 33, 0.1)',
   },
   dark: {
     primary: {
-      main: '#637DFF',
-      light: '#8F9BFE',
-      dark: '#3A55D4',
-      contrastText: '#ffffff',
+      main: '#4A5E50',
+      light: '#5D7366',
+      dark: primary,
+      contrastText: '#F7F7F5',
     },
     secondary: {
-      main: '#94A3B8',
-      light: '#CBD5E1',
-      dark: '#64748B',
-      contrastText: '#0F172A',
+      main: accent,
+      light: '#D4C9A3',
+      dark: '#8A7D58',
+      contrastText: text,
     },
     background: {
-      default: '#0B0F19',
-      paper: '#111827',
+      default: '#121814',
+      paper: '#1A221C',
     },
     text: {
-      primary: '#F8FAFC',
-      secondary: '#94A3B8',
+      primary: '#ECEBE8',
+      secondary: 'rgba(236, 235, 232, 0.65)',
     },
-    divider: '#1E293B',
+    divider: 'rgba(236, 235, 232, 0.12)',
   },
 };
 
@@ -70,10 +67,10 @@ export const createAppTheme = (mode: ThemeMode = 'light') => {
       background: palette.background,
       text: palette.text,
       divider: palette.divider,
-      success: { main: '#10B981', light: '#34D399', dark: '#059669', contrastText: '#fff' },
-      error: { main: '#EF4444', light: '#F87171', dark: '#DC2626', contrastText: '#fff' },
-      warning: { main: '#F59E0B', light: '#FBBF24', dark: '#D97706', contrastText: '#fff' },
-      info: { main: '#3B82F6', light: '#60A5FA', dark: '#2563EB', contrastText: '#fff' },
+      success: { main: primary, light: '#4A5E50', dark: primaryDark, contrastText: '#fff' },
+      error: { main: '#B54747', light: '#D65555', dark: '#8F3838', contrastText: '#fff' },
+      warning: { main: accent, light: '#D4C9A3', dark: '#9A8B60', contrastText: text },
+      info: { main: primary, light: '#4A5E50', dark: primaryDark, contrastText: '#fff' },
     },
     typography: {
       fontFamily: "'Inter', 'Tajawal', 'Cairo', sans-serif",
@@ -99,7 +96,7 @@ export const createAppTheme = (mode: ThemeMode = 'light') => {
           body: {
             backgroundColor: palette.background.default,
             color: palette.text.primary,
-            scrollbarColor: isDark ? '#334155 #0B0F19' : '#CBD5E1 #F7F9FC',
+            scrollbarColor: isDark ? '#3D4A42 #121814' : '#C5CAC7 #F7F7F5',
             '&::-webkit-scrollbar, & *::-webkit-scrollbar': {
               backgroundColor: 'transparent',
               width: 6,
@@ -107,7 +104,7 @@ export const createAppTheme = (mode: ThemeMode = 'light') => {
             },
             '&::-webkit-scrollbar-thumb, & *::-webkit-scrollbar-thumb': {
               borderRadius: 8,
-              backgroundColor: isDark ? '#334155' : '#CBD5E1',
+              backgroundColor: isDark ? '#3D4A42' : '#C5CAC7',
             },
           },
         },
@@ -122,31 +119,35 @@ export const createAppTheme = (mode: ThemeMode = 'light') => {
             borderRadius: '14px',
             minHeight: 48,
             padding: '10px 24px',
-            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+            transition: 'transform 0.12s ease, opacity 0.12s ease, background 0.2s ease, box-shadow 0.2s ease',
             '&:active': {
-              transform: 'scale(0.96)',
+              transform: 'scale(0.97)',
+              opacity: 0.96,
+            },
+            '@media (prefers-reduced-motion: reduce)': {
+              '&:active': { transform: 'none' },
             },
           },
           contained: {
             boxShadow: 'none',
             '&:hover': {
-              boxShadow: isDark 
-                ? '0 8px 20px rgba(0, 0, 0, 0.4)' 
-                : '0 8px 20px rgba(67, 97, 238, 0.15)',
-              transform: 'translateY(-2px)',
+              boxShadow: isDark ? '0 8px 20px rgba(0, 0, 0, 0.4)' : '0 4px 16px rgba(47, 62, 52, 0.18)',
             },
           },
           containedPrimary: {
             background: palette.primary.main,
+            color: '#fff',
             '&:hover': {
-              background: palette.primary.dark,
+              background: isDark ? palette.primary.light : premiumTokens.primaryDark,
             },
           },
           outlined: {
             borderWidth: '1.5px',
+            borderColor: accent,
+            color: text,
             '&:hover': {
               borderWidth: '1.5px',
-              backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(67, 97, 238, 0.05)',
+              backgroundColor: isDark ? 'rgba(194, 178, 128, 0.08)' : 'rgba(194, 178, 128, 0.12)',
             },
           },
         },
@@ -156,18 +157,12 @@ export const createAppTheme = (mode: ThemeMode = 'light') => {
         styleOverrides: {
           root: {
             borderRadius: '20px',
-            boxShadow: isDark 
-              ? '0 4px 24px rgba(0, 0, 0, 0.2)' 
-              : '0 4px 24px rgba(149, 157, 165, 0.08)',
-            border: `1px solid ${palette.divider}`,
+            boxShadow: isDark
+              ? '0 4px 24px rgba(0, 0, 0, 0.25)'
+              : '0 2px 8px rgba(31, 37, 33, 0.06), 0 1px 2px rgba(31, 37, 33, 0.04)',
+            border: 'none',
             backgroundImage: 'none',
-            transition: 'box-shadow 0.3s ease, transform 0.3s ease',
-            '&:hover': {
-              boxShadow: isDark 
-                ? '0 8px 32px rgba(0, 0, 0, 0.3)' 
-                : '0 8px 32px rgba(149, 157, 165, 0.12)',
-              transform: 'translateY(-2px)',
-            },
+            transition: 'box-shadow 0.25s ease, transform 0.2s ease',
           },
         },
       },
@@ -178,7 +173,7 @@ export const createAppTheme = (mode: ThemeMode = 'light') => {
             backgroundImage: 'none',
           },
           elevation1: {
-            boxShadow: isDark ? '0 2px 12px rgba(0,0,0,0.2)' : '0 2px 12px rgba(0,0,0,0.04)',
+            boxShadow: isDark ? '0 2px 12px rgba(0,0,0,0.2)' : '0 2px 8px rgba(31, 37, 33, 0.06)',
           },
         },
       },
@@ -187,9 +182,7 @@ export const createAppTheme = (mode: ThemeMode = 'light') => {
         styleOverrides: {
           paper: {
             borderRadius: '24px',
-            boxShadow: isDark 
-              ? '0 25px 60px rgba(0,0,0,0.5)' 
-              : '0 25px 60px rgba(0,0,0,0.1)',
+            boxShadow: isDark ? '0 25px 60px rgba(0,0,0,0.5)' : '0 8px 32px rgba(31, 37, 33, 0.12)',
           },
         },
       },
@@ -198,20 +191,21 @@ export const createAppTheme = (mode: ThemeMode = 'light') => {
         styleOverrides: {
           root: {
             '& .MuiOutlinedInput-root': {
-              borderRadius: '12px',
-              backgroundColor: isDark ? '#1E293B' : '#F1F5F9',
+              borderRadius: '14px',
+              backgroundColor: isDark ? '#1A221C' : paper,
               transition: 'all 0.2s ease',
               '& fieldset': {
-                border: 'none', // Remove default border
+                border: '1px solid',
+                borderColor: isDark ? 'rgba(236,235,232,0.1)' : 'rgba(31, 37, 33, 0.1)',
               },
               '&:hover': {
-                backgroundColor: isDark ? '#334155' : '#E2E8F0',
+                backgroundColor: isDark ? '#1F2A22' : paper,
               },
               '&.Mui-focused': {
-                backgroundColor: isDark ? '#111827' : '#FFFFFF',
-                boxShadow: isDark 
-                  ? '0 0 0 2px #637DFF' 
-                  : '0 0 0 2px #4361EE',
+                backgroundColor: isDark ? '#1A221C' : paper,
+                boxShadow: isDark
+                  ? `0 0 0 2px ${primary}88`
+                  : `0 0 0 2px rgba(47, 62, 52, 0.2)`,
               },
             },
             '& .MuiInputBase-input': {
@@ -242,13 +236,11 @@ export const createAppTheme = (mode: ThemeMode = 'light') => {
             zIndex: 1200,
             height: 'calc(70px + env(safe-area-inset-bottom, 0px))',
             paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-            background: isDark
-              ? 'rgba(15, 23, 42, 0.85)'
-              : 'rgba(255, 255, 255, 0.85)',
+            background: isDark ? 'rgba(26, 34, 28, 0.92)' : 'rgba(255, 255, 255, 0.95)',
             backdropFilter: 'saturate(1.8) blur(20px)',
             WebkitBackdropFilter: 'saturate(1.8) blur(20px)',
             borderTop: `1px solid ${palette.divider}`,
-            boxShadow: 'none',
+            boxShadow: '0 -1px 0 rgba(31, 37, 33, 0.04)',
           },
         },
       },
@@ -260,7 +252,7 @@ export const createAppTheme = (mode: ThemeMode = 'light') => {
             transition: 'all 0.2s ease',
             padding: '6px 0',
             '&.Mui-selected': {
-              color: palette.primary.main,
+              color: primary,
             },
             '& .MuiSvgIcon-root': {
               fontSize: 24,
@@ -268,7 +260,7 @@ export const createAppTheme = (mode: ThemeMode = 'light') => {
               transition: 'all 0.2s ease',
             },
             '&.Mui-selected .MuiSvgIcon-root': {
-              transform: 'translateY(-2px)',
+              color: primary,
             },
             '& .MuiBottomNavigationAction-label': {
               fontSize: '0.7rem',
@@ -280,7 +272,7 @@ export const createAppTheme = (mode: ThemeMode = 'light') => {
               fontWeight: 600,
             },
             '&:active': {
-              transform: 'scale(0.92)',
+              transform: 'scale(0.95)',
             },
           },
         },
@@ -301,7 +293,7 @@ export const createAppTheme = (mode: ThemeMode = 'light') => {
             '& .MuiTableCell-head': {
               fontWeight: 600,
               color: palette.text.secondary,
-              backgroundColor: isDark ? '#1E293B' : '#F8FAFC',
+              backgroundColor: isDark ? '#1A221C' : background,
               borderBottom: `1px solid ${palette.divider}`,
             },
           },
@@ -317,7 +309,7 @@ export const createAppTheme = (mode: ThemeMode = 'light') => {
       MuiChip: {
         styleOverrides: {
           root: {
-            borderRadius: '8px',
+            borderRadius: '10px',
             fontWeight: 500,
           },
         },

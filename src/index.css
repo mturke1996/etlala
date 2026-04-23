@@ -6,32 +6,33 @@
    ═══════════════════════════════════════════════════════════ */
 
 :root {
-  /* Premium Soft Modern UI */
-  --etlala-primary: #4361EE;
-  --etlala-primary-light: #7B8DFA;
-  --etlala-primary-dark: #2E44A6;
-  --etlala-cream: #E2E8F0;
-  --etlala-cream-light: #F1F5F9;
-  --etlala-taupe: #64748B;
-  --etlala-bg: #F7F9FC;
+  /* Premium architecture — dark green + gold */
+  --etlala-primary: #2F3E34;
+  --etlala-primary-light: #4A5E50;
+  --etlala-primary-dark: #243028;
+  --etlala-accent: #C2B280;
+  --etlala-cream: #E5E3DD;
+  --etlala-cream-light: #EEEDE9;
+  --etlala-taupe: #6B736E;
+  --etlala-bg: #F7F7F5;
   --etlala-paper: #FFFFFF;
-  --etlala-text: #1E293B;
-  --etlala-text-secondary: #64748B;
-  --etlala-dot: rgba(67, 97, 238, 0.05);
+  --etlala-text: #1F2521;
+  --etlala-text-secondary: #6B736E;
+  --etlala-dot: rgba(47, 62, 52, 0.06);
 
   /* Timing */
-  --ease-spring: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.2, 0.8, 0.2, 1);
   --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
-  --ease-smooth: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --ease-smooth: cubic-bezier(0.2, 0.8, 0.2, 1);
   --duration-fast: 150ms;
   --duration-normal: 250ms;
   --duration-slow: 400ms;
 
   /* Shadows */
-  --shadow-sm: 0 1px 4px rgba(67, 97, 238, 0.08), 0 1px 2px rgba(0,0,0,0.04);
-  --shadow-md: 0 4px 16px rgba(67, 97, 238, 0.1), 0 2px 6px rgba(0,0,0,0.06);
-  --shadow-lg: 0 8px 32px rgba(67, 97, 238, 0.14), 0 4px 12px rgba(0,0,0,0.08);
-  --shadow-xl: 0 16px 48px rgba(67, 97, 238, 0.18), 0 8px 24px rgba(0,0,0,0.1);
+  --shadow-sm: 0 2px 8px rgba(31, 37, 33, 0.06), 0 1px 2px rgba(31, 37, 33, 0.04);
+  --shadow-md: 0 4px 16px rgba(31, 37, 33, 0.08);
+  --shadow-lg: 0 8px 32px rgba(31, 37, 33, 0.1);
+  --shadow-xl: 0 16px 48px rgba(31, 37, 33, 0.12);
 }
 
 /* ── Base ── */
@@ -238,16 +239,16 @@ input, button, textarea, select {
 /* خلفية تطبيق — غسل لوني خفيف يتنفس */
 .etlala-app-ambient {
   background:
-    radial-gradient(ellipse 90% 70% at 0% 0%, rgba(67, 97, 238, 0.06) 0%, transparent 55%),
-    radial-gradient(ellipse 60% 50% at 100% 30%, rgba(100, 116, 139, 0.05) 0%, transparent 50%),
-    radial-gradient(ellipse 50% 40% at 50% 100%, rgba(67, 97, 238, 0.03) 0%, transparent 45%);
+    radial-gradient(ellipse 90% 70% at 0% 0%, rgba(47, 62, 52, 0.06) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 50% at 100% 30%, rgba(194, 178, 128, 0.05) 0%, transparent 50%),
+    radial-gradient(ellipse 50% 40% at 50% 100%, rgba(47, 62, 52, 0.04) 0%, transparent 45%);
   animation: etlala-mesh-drift 36s var(--ease-smooth) infinite alternate;
 }
 .etlala-app-ambient--dark {
   background:
-    radial-gradient(ellipse 85% 60% at 0% 0%, rgba(99, 125, 255, 0.08) 0%, transparent 55%),
-    radial-gradient(ellipse 55% 45% at 100% 25%, rgba(148, 163, 184, 0.04) 0%, transparent 50%),
-    radial-gradient(ellipse 45% 35% at 40% 100%, rgba(11, 15, 25, 0.5) 0%, transparent 50%);
+    radial-gradient(ellipse 85% 60% at 0% 0%, rgba(74, 94, 80, 0.12) 0%, transparent 55%),
+    radial-gradient(ellipse 55% 45% at 100% 25%, rgba(194, 178, 128, 0.05) 0%, transparent 50%),
+    radial-gradient(ellipse 45% 35% at 40% 100%, rgba(10, 16, 12, 0.6) 0%, transparent 50%);
   animation: etlala-mesh-drift 40s var(--ease-smooth) infinite alternate;
 }
 
@@ -387,11 +388,12 @@ input, button, textarea, select {
   contain: layout style;
 }
 .card-hover:hover {
-  transform: translateY(-3px) scale(1.005);
+  transform: translateY(-2px);
   box-shadow: var(--shadow-lg);
 }
 .card-hover:active {
   transform: scale(0.98);
+  opacity: 0.96;
   transition-duration: 100ms;
 }
 

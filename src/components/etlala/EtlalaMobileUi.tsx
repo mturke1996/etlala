@@ -2,6 +2,7 @@ import type { ReactNode, ElementType } from 'react';
 import type { SxProps, Theme } from '@mui/material/styles';
 import { Box, Typography, Button, Stack } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import { premiumTokens } from '../../theme/tokens';
 
 /** صف تنقّل مسطح — أسلوب تطبيقات حديثة (بدون ظلال ثقيلة) */
 export function EtlalaNavRow(props: {
@@ -40,19 +41,23 @@ export function EtlalaNavRow(props: {
         py: 1.35,
         borderRadius: 2.5,
         border: '1px solid',
-        borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
+        borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(31, 37, 33, 0.08)',
         borderInlineStart: `3px solid ${accent}`,
-        bgcolor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.92)',
+        bgcolor: isDark ? 'rgba(255,255,255,0.03)' : premiumTokens.paper,
         cursor: 'pointer',
         WebkitTapHighlightColor: 'transparent',
-        transition: 'background 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease',
-        boxShadow: isDark ? 'none' : '0 1px 0 rgba(255,255,255,0.9) inset',
+        transition: 'background 0.2s ease, box-shadow 0.2s ease, transform 0.12s ease',
+        boxShadow: isDark
+          ? '0 2px 12px rgba(0,0,0,0.2)'
+          : '0 2px 8px rgba(31, 37, 33, 0.06), 0 1px 2px rgba(31, 37, 33, 0.04)',
         overflow: 'hidden',
         '&:hover': {
-          bgcolor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(67, 97, 238, 0.04)',
-          boxShadow: isDark ? '0 0 0 1px rgba(255,255,255,0.06)' : '0 1px 0 rgba(255,255,255,1) inset, 0 4px 18px rgba(20,25,20,0.05)',
+          bgcolor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(47, 62, 52, 0.03)',
+          boxShadow: isDark
+            ? '0 0 0 1px rgba(255,255,255,0.06)'
+            : '0 4px 16px rgba(31, 37, 33, 0.08)',
         },
-        '&:active': { transform: 'scale(0.995)' },
+        '&:active': { transform: 'scale(0.98)', opacity: 0.97 },
         '@media (prefers-reduced-motion: reduce)': { transition: 'none', '&:active': { transform: 'none' } },
       }}
     >
@@ -65,18 +70,26 @@ export function EtlalaNavRow(props: {
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.75, minWidth: 0, flex: 1, pt: topStripe ? 0.3 : 0 }}>
         <Box
           sx={{
-            width: dense ? 42 : 46,
-            height: dense ? 42 : 46,
-            borderRadius: 2,
+            width: dense ? 40 : 44,
+            height: dense ? 40 : 44,
+            borderRadius: '50%',
             flexShrink: 0,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            bgcolor: `${accent}18`,
-            border: `1px solid ${accent}2a`,
+            bgcolor: (() => {
+              if (accent === premiumTokens.accent) return 'rgba(194, 178, 128, 0.2)';
+              return isDark ? 'rgba(47, 62, 52, 0.35)' : 'rgba(47, 62, 52, 0.1)';
+            })(),
+            border: 'none',
           }}
         >
-          <Icon sx={{ fontSize: dense ? 22 : 24, color: accent }} />
+          <Icon
+            sx={{
+              fontSize: dense ? 22 : 24,
+              color: accent === premiumTokens.accent ? premiumTokens.primary : accent,
+            }}
+          />
         </Box>
         <Box sx={{ minWidth: 0 }}>
           <Typography variant="body1" fontWeight={800} sx={{ fontSize: '0.95rem', letterSpacing: 0.1, lineHeight: 1.25 }}>
@@ -108,8 +121,8 @@ export function EtlalaSectionTitle({ title, subtitle }: { title: string; subtitl
           mt: 0.4,
           flexShrink: 0,
           background: isDark
-            ? 'linear-gradient(180deg, #637DFF, #2E44A6)'
-            : 'linear-gradient(180deg, #4361EE, #7B8DFA)',
+            ? `linear-gradient(180deg, ${premiumTokens.accent}, ${premiumTokens.primary})`
+            : `linear-gradient(180deg, ${premiumTokens.primary}, ${premiumTokens.accent})`,
         }}
         aria-hidden
       />
@@ -150,10 +163,21 @@ export function EtlalaEmptyState(props: {
         backgroundImage: isDark
           ? 'none'
           : 'linear-gradient(160deg, rgba(255,255,255,0.95) 0%, rgba(250,247,240,0.9) 100%)',
-        boxShadow: isDark ? '0 4px 24px rgba(0,0,0,0.2)' : '0 1px 0 rgba(255,255,255,0.9) inset, 0 6px 28px rgba(20,25,20,0.04)',
+        boxShadow: isDark ? '0 4px 24px rgba(0,0,0,0.2)' : '0 2px 8px rgba(31, 37, 33, 0.06)',
       }}
     >
-      <Box sx={{ color: 'text.secondary', opacity: 0.35, mb: 2, '& svg': { fontSize: 56 } }}>{icon}</Box>
+      <Box
+        sx={{
+          color: premiumTokens.accent,
+          opacity: 0.85,
+          mb: 2,
+          display: 'flex',
+          justifyContent: 'center',
+          '& svg': { fontSize: 48 },
+        }}
+      >
+        {icon}
+      </Box>
       <Typography variant="h6" color="text.secondary" fontWeight={700} sx={{ mb: hint ? 0.5 : 0, fontSize: '1rem' }}>
         {title}
       </Typography>
@@ -177,9 +201,11 @@ export function EtlalaAccentSurface(props: {
   /** لون شريط البداية (inline-start) */
   accent: string;
   onClick?: () => void;
+  /** شريط علوي ذهبي للكروت المميزة */
+  topGoldAccent?: boolean;
   sx?: SxProps<Theme>;
 }) {
-  const { children, accent, onClick, sx: sxIn } = props;
+  const { children, accent, onClick, topGoldAccent, sx: sxIn } = props;
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
   return (
@@ -188,19 +214,18 @@ export function EtlalaAccentSurface(props: {
       role={onClick ? 'button' : undefined}
       sx={[
         {
-          borderRadius: 2,
+          position: 'relative',
+          overflow: 'hidden',
+          borderRadius: 2.5,
           cursor: onClick ? 'pointer' : 'default',
-          border: '1px solid',
-          borderColor: 'divider',
-          borderInlineStart: `4px solid ${accent}`,
+          border: 'none',
+          borderInlineStart: `3px solid ${accent}`,
           bgcolor: 'background.paper',
-          backgroundImage: isDark
-            ? 'linear-gradient(115deg, #1a221a 0%, #171c17 100%)'
-            : 'linear-gradient(115deg, #fff 0%, #faf7f0 100%)',
+          backgroundImage: 'none',
           boxShadow: isDark
-            ? '0 4px 20px rgba(0,0,0,0.25)'
-            : '0 1px 0 rgba(255,255,255,0.95) inset, 0 4px 20px rgba(20,25,20,0.05)',
-          transition: 'transform 0.22s ease, box-shadow 0.28s ease, border-color 0.22s ease',
+            ? '0 4px 20px rgba(0,0,0,0.22)'
+            : '0 2px 8px rgba(31, 37, 33, 0.06), 0 1px 2px rgba(31, 37, 33, 0.04)',
+          transition: 'transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.25s ease',
           WebkitTapHighlightColor: 'transparent',
           '@media (prefers-reduced-motion: reduce)': {
             transition: 'none',
@@ -208,18 +233,31 @@ export function EtlalaAccentSurface(props: {
           ...(onClick
             ? {
                 '&:hover': {
-                  transform: 'translateY(-2px)',
                   boxShadow: isDark
-                    ? '0 12px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04)'
-                    : '0 14px 40px rgba(61, 79, 61, 0.14), 0 0 0 1px rgba(255,255,255,0.5) inset',
+                    ? '0 8px 28px rgba(0,0,0,0.4)'
+                    : '0 4px 16px rgba(31, 37, 33, 0.1)',
                 },
-                '&:active': { transform: 'scale(0.99)' },
+                '&:active': { transform: 'scale(0.98)', opacity: 0.97 },
               }
             : {}),
         },
         ...(sxIn ? [sxIn] : []),
       ] as SxProps<Theme>}
     >
+      {topGoldAccent ? (
+        <Box
+          aria-hidden
+          sx={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 3,
+            background: premiumTokens.accent,
+            borderRadius: '20px 20px 0 0',
+          }}
+        />
+      ) : null}
       {children}
     </Box>
   );
@@ -242,7 +280,7 @@ export function EtlalaStatRow(props: { items: { label: string; value: string; co
             px: 1.25,
             py: 0.5,
             borderRadius: 1.5,
-            bgcolor: (t) => (t.palette.mode === 'dark' ? 'rgba(255,255,255,0.04)' : 'rgba(67, 97, 238, 0.04)'),
+            bgcolor: (t) => (t.palette.mode === 'dark' ? 'rgba(255,255,255,0.04)' : 'rgba(47, 62, 52, 0.06)'),
             border: '1px solid',
             borderColor: 'divider',
           }}
