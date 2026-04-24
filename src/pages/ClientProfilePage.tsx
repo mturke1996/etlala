@@ -310,7 +310,7 @@ export const ClientProfilePage = () => {
     return computeUserFundAllocTotals(depositRows, expenseRows);
   }, [fundTransactions, expenses, user, userIdMap]);
 
-  /** بانر إضافة مصروف: يعطي الأولوية لصندوق العهدة إن وُجد إيداع، وإلا رصيد العهدة على المشروع */
+  /** بانر إضافة مصروف: فقط لمن لديه عهدة فعلية (إيداع صندوق أو عهدة ممنوحة على المشروع). من سجّل مصروفات بلا عهدة لا يُعرض له «عجز» بقيمة المصروفات. */
   const expenseDialogWallet = useMemo(() => {
     if (globalFundStats) {
       return {
@@ -319,7 +319,7 @@ export const ClientProfilePage = () => {
         isGlobalFund: true,
       };
     }
-    if (currentUserBalanceInfo) {
+    if (currentUserBalanceInfo && currentUserBalanceInfo.given > 0) {
       return {
         remaining: currentUserBalanceInfo.remaining,
         name: user?.displayName || currentUserBalanceInfo.name,

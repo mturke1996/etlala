@@ -34,7 +34,7 @@ const navItems = [
     module: "payments",
   },
   {
-    label: "صندوق العهدة",
+    label: "العهدة",
     icon: <Wallet size={20} strokeWidth={1.9} />,
     path: "/fund",
     module: "fund",
@@ -57,7 +57,10 @@ export const Layout = () => {
     <Box
       sx={{
         minHeight: "100dvh",
-        pb: "calc(72px + env(safe-area-inset-bottom))",
+        width: "100%",
+        maxWidth: "100%",
+        /* يطابق ارتفاع MuiBottomNavigation (~70px) + المنطقة الآمنة — بدون تكرار مع padding الـ body */
+        pb: "calc(70px + env(safe-area-inset-bottom, 0px))",
         position: "relative",
         "@media print": { pb: 0 },
       }}

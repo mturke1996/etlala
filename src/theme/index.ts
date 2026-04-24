@@ -112,6 +112,13 @@ export const createAppTheme = (mode: ThemeMode = 'light') => {
             backgroundColor: palette.background.default,
             color: palette.text.primary,
             minHeight: '100dvh',
+            height: 'auto',
+            overflow: 'visible',
+          },
+          html: {
+            height: 'auto',
+            overflowX: 'hidden',
+            overflowY: 'auto',
           },
         },
       },
@@ -314,7 +321,6 @@ export const createAppTheme = (mode: ThemeMode = 'light') => {
         styleOverrides: {
           root: {
             color: palette.text.secondary,
-            transition: 'all 0.2s ease',
             padding: '6px 0',
             '&.Mui-selected': {
               color: isDark ? '#D4C9A3' : primary,
@@ -322,7 +328,6 @@ export const createAppTheme = (mode: ThemeMode = 'light') => {
             '& .MuiSvgIcon-root': {
               fontSize: 24,
               marginBottom: 4,
-              transition: 'all 0.2s ease',
             },
             '&.Mui-selected .MuiSvgIcon-root': {
               color: isDark ? '#D4C9A3' : primary,
@@ -330,14 +335,10 @@ export const createAppTheme = (mode: ThemeMode = 'light') => {
             '& .MuiBottomNavigationAction-label': {
               fontSize: '0.7rem',
               fontWeight: 500,
-              transition: 'all 0.2s ease',
             },
             '&.Mui-selected .MuiBottomNavigationAction-label': {
               fontSize: '0.75rem',
               fontWeight: 600,
-            },
-            '&:active': {
-              transform: 'scale(0.95)',
             },
           },
         },

@@ -61,21 +61,22 @@ html[data-theme="dark"] {
 }
 
 html {
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
   -webkit-text-size-adjust: 100%;
-  /* GPU-accelerated scroll */
-  scroll-behavior: smooth;
   background-color: var(--etlala-bg);
   min-height: 100%;
+  height: auto !important;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
-/* صفحات داخلية — خلفية موحّدة (PageScaffold) */
+/* صفحات داخلية — خلفية موحّدة (PageScaffold) — بدون background-attachment:fixed (يكسر التمرير في PWA) */
 .etlala-page {
   -webkit-tap-highlight-color: transparent;
-  /* شبكة نقاط دقيقة — Swiss / editorial (رؤية فقط، بدون تشتيت) */
   background-image: radial-gradient(var(--etlala-dot) 0.6px, transparent 0.6px);
   background-size: 18px 18px;
-  background-attachment: fixed;
+  background-attachment: scroll;
 }
 
 /* هبوط أخف للنقاط داخل الـ hero الداكن */
@@ -102,6 +103,8 @@ html {
 
 #root {
   min-height: 100dvh;
+  height: auto !important;
+  overflow: visible !important;
   background-color: var(--etlala-bg);
   color: var(--etlala-text);
 }
@@ -110,16 +113,16 @@ body {
   margin: 0;
   min-height: 100dvh;
   min-height: -webkit-fill-available;
-  /* Add safe area bottom inset to the body globally for PWA content */
-  padding-bottom: env(safe-area-inset-bottom);
+  height: auto !important;
   font-family: 'Inter', 'Tajawal', 'Cairo', system-ui, -apple-system, sans-serif !important;
   background-color: var(--etlala-bg);
   color: var(--etlala-text);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   line-height: 1.6;
-  /* Performance: tell browser root element doesn't affect layout of others */
   text-rendering: optimizeSpeed;
 }
 
@@ -278,14 +281,14 @@ input, button, textarea, select {
     radial-gradient(ellipse 90% 70% at 0% 0%, rgba(47, 62, 52, 0.06) 0%, transparent 55%),
     radial-gradient(ellipse 60% 50% at 100% 30%, rgba(194, 178, 128, 0.05) 0%, transparent 50%),
     radial-gradient(ellipse 50% 40% at 50% 100%, rgba(47, 62, 52, 0.04) 0%, transparent 45%);
-  animation: etlala-mesh-drift 36s var(--ease-smooth) infinite alternate;
+  animation: none;
 }
 .etlala-app-ambient--dark {
   background:
     radial-gradient(ellipse 85% 60% at 0% 0%, rgba(74, 94, 80, 0.12) 0%, transparent 55%),
     radial-gradient(ellipse 55% 45% at 100% 25%, rgba(194, 178, 128, 0.05) 0%, transparent 50%),
     radial-gradient(ellipse 45% 35% at 40% 100%, rgba(10, 16, 12, 0.6) 0%, transparent 50%);
-  animation: etlala-mesh-drift 40s var(--ease-smooth) infinite alternate;
+  animation: none;
 }
 
 /* شعار الهيرو — نبض الحلقات */
@@ -449,14 +452,12 @@ input, button, textarea, select {
   background-color: rgba(0, 0, 0, 0.4) !important;
 }
 
-/* Dialog paper slide-up */
 .MuiDialog-paper {
-  animation: scaleIn 0.28s var(--ease-spring) !important;
+  animation: none !important;
 }
 
-/* Snackbar slide-in */
 .MuiSnackbar-root {
-  animation: slideInRight 0.3s var(--ease-spring);
+  animation: none !important;
 }
 
 /* Bottom navigation label */
@@ -489,9 +490,10 @@ input, button, textarea, select {
   border-radius: 14px !important;
 }
 
-/* Collapse transition */
-.MuiCollapse-root {
-  transition: height 0.32s var(--ease-spring) !important;
+.MuiCollapse-root,
+.MuiCollapse-wrapper,
+.MuiCollapse-wrapperInner {
+  transition: none !important;
 }
 
 /* Avatar border */
@@ -603,49 +605,30 @@ input, button, textarea, select {
    iOS PWA PERFORMANCE & SMOOTHNESS
    ══════════════════════════════════════════ */
 
-/* Standalone PWA mode detection */
 @media all and (display-mode: standalone) {
-  html, body {
-    /* Prevent rubber-band overscroll */
-    overscroll-behavior: none;
-    /* Use dynamic viewport height */
-    height: 100dvh;
+  html,
+  body {
+    min-height: 100dvh;
+    min-height: -webkit-fill-available;
+    height: auto !important;
+    overflow-x: hidden;
+    overflow-y: auto;
   }
 }
 
-/* Smooth scrolling with momentum on iOS */
-* {
-  -webkit-overflow-scrolling: touch;
-}
+/* لا تطبّق touch-scrolling على كل العناصر — في WebView/PWA يسبب تجميد التمرير للصفحة الرئيسية */
 
-/* Prevent text selection lag on interactive elements */
+/* تفاعل اللمس: لا تستخدم touch-action: manipulation على كل شيء — يسبب تجميد التمرير في Chrome/Android PWA */
 button, a, [role="button"], .MuiBottomNavigationAction-root,
 .MuiIconButton-root, .MuiButton-root, .MuiChip-root, .MuiTab-root {
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;
-  touch-action: manipulation;
 }
 
-/* GPU acceleration for fixed elements to prevent jank */
-.MuiBottomNavigation-root,
-.MuiDialog-root .MuiDialog-paper,
-[style*="position: fixed"],
-[style*="position:fixed"] {
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-}
+/* لا تطابق [style*="position:fixed"] — يصيب طبقات MUI/البوابات عشوائياً ويكسر التمرير */
 
-/* Reduce motion for users who prefer it */
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-}
+/* بدون transform على الشريط السفلي — يقلل تعارض التمرير في WebView */
 
 /* Fix iOS input zoom - prevent page scaling when tapping inputs */
 @media screen and (max-width: 768px) {
@@ -669,10 +652,17 @@ button, a, [role="button"], .MuiBottomNavigationAction-root,
   contain: layout style paint;
 }
 
-/* Optimize MUI Dialog for mobile - prevent body scroll when dialog open */
+/*
+ * عدم استخدام position:fixed على body — يترك التمرير عالقاً على بعض أجهزة Android/PWA
+ * عند بقاء الفئة أو فشل إزالتها. الإبقاء على منع تمرير الخلفية فقط.
+ */
 body.MuiDialog-open {
   overflow: hidden !important;
-  position: fixed;
-  width: 100%;
 }
 
+/* —— بدون أنيميشن/انتقالات (طلب صريح) + أقل تعارض مع التمرير —— */
+*, *::before, *::after {
+  animation: none !important;
+  transition: none !important;
+  scroll-behavior: auto !important;
+}

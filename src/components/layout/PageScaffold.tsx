@@ -58,8 +58,6 @@ export function PageScaffold({
         minHeight: '100dvh',
         bgcolor: 'background.default',
         pb: 'calc(80px + env(safe-area-inset-bottom, 0px))',
-        display: 'flex',
-        flexDirection: 'column',
       }}
     >
       <Box
@@ -192,7 +190,6 @@ export function PageScaffold({
       <Container
         maxWidth={maxWidth}
         sx={{
-          flex: 1,
           py: 2.5,
           px: 2,
           mt: contentOffset,

@@ -52,12 +52,13 @@ import { computeUserFundAllocTotals } from '../utils/custodyFundAlloc';
 import { formatCurrency } from '../utils/formatters';
 
 const COLORS = {
-  primary: '#1F3D35',
-  primary2: '#2C4A42',
-  background: '#F5F5F3',
-  accent: '#C8B27D',
-  text: '#2B2B2B',
-  muted: '#7A7A7A',
+  primary: '#1E3F36',
+  primary2: '#2D5246',
+  primaryDeep: '#152E28',
+  background: '#F7F6F1',
+  accent: '#C4AE72',
+  text: '#2A2E2C',
+  muted: '#6E756F',
 };
 
 /** صورة مباني (محلية داخل /public) — مُنزَّلة من Unsplash: أبراج / واجهة حداثية */
@@ -344,11 +345,11 @@ export const DashboardHomePage = () => {
   }, [clients.length, expenses, payments]);
 
   const menuListCardSurface = isMuiDark
-    ? 'linear-gradient(180deg, #1E2620 0%, #1A211C 100%)'
-    : 'linear-gradient(180deg, #FFFFFF 0%, #F9F9F6 100%)';
+    ? 'linear-gradient(165deg, #222A24 0%, #181E1A 100%)'
+    : 'linear-gradient(165deg, #FEFDFB 0%, #F5F3ED 100%)';
 
   const renderMenuList = (menu: MenuItem[]) => (
-    <Stack spacing={1.25} sx={{ width: 1 }} useFlexGap>
+    <Stack spacing={1.35} sx={{ width: 1 }} useFlexGap>
       {menu.map((item) => {
         const Icon = item.icon;
         const p = theme.palette;
@@ -357,9 +358,9 @@ export const DashboardHomePage = () => {
             key={item.path}
             onClick={() => navigate(item.path)}
             sx={{
-              borderRadius: 2.5,
-              px: 1.5,
-              py: 1.35,
+              borderRadius: 3,
+              px: 1.6,
+              py: 1.4,
               minHeight: 64,
               display: 'flex',
               flexDirection: 'row',
@@ -368,13 +369,20 @@ export const DashboardHomePage = () => {
               gap: 1.25,
               direction: 'rtl',
               cursor: 'pointer',
-              border: `1px solid ${alpha(p.divider, isMuiDark ? 0.45 : 0.14)}`,
-              bgcolor: isMuiDark ? alpha('#C8B27D', 0.06) : alpha(p.primary.main, 0.04),
-              transition: 'background 160ms ease, box-shadow 160ms ease, border-color 160ms ease',
-              '&:hover': {
-                bgcolor: isMuiDark ? alpha('#fff', 0.07) : alpha(p.primary.main, 0.07),
-                boxShadow: isMuiDark ? '0 4px 18px rgba(0,0,0,0.28)' : '0 4px 14px rgba(25,34,29,0.08)',
-                borderColor: alpha(p.primary.main, isMuiDark ? 0.35 : 0.22),
+              border: 'none',
+              bgcolor: isMuiDark ? alpha('#fff', 0.04) : alpha('#fff', 0.72),
+              boxShadow: isMuiDark
+                ? '0 2px 16px rgba(0,0,0,0.22)'
+                : '0 2px 14px rgba(31, 61, 53, 0.06)',
+              transition: 'background 180ms ease, box-shadow 180ms ease',
+              '@media (hover: hover) and (pointer: fine)': {
+                '&:hover': {
+                  bgcolor: isMuiDark ? alpha('#fff', 0.08) : alpha('#fff', 0.95),
+                  boxShadow: isMuiDark
+                    ? '0 6px 22px rgba(0,0,0,0.32)'
+                    : '0 8px 24px rgba(31, 61, 53, 0.1)',
+                  transform: 'translateY(-1px)',
+                },
               },
             }}
           >
@@ -387,10 +395,11 @@ export const DashboardHomePage = () => {
                   display: 'grid',
                   placeItems: 'center',
                   background: isMuiDark
-                    ? 'linear-gradient(145deg, rgba(31,61,53,0.5) 0%, rgba(31,45,40,0.85) 100%)'
-                    : `linear-gradient(145deg, ${alpha(p.primary.main, 0.12)} 0%, ${alpha(p.primary.main, 0.2)} 100%)`,
-                  border: `1px solid ${alpha(p.divider, isMuiDark ? 0.35 : 0.2)}`,
+                    ? `linear-gradient(145deg, ${alpha(COLORS.accent, 0.14)} 0%, ${alpha('#fff', 0.06)} 100%)`
+                    : `linear-gradient(145deg, ${alpha(p.primary.main, 0.1)} 0%, ${alpha(COLORS.accent, 0.12)} 100%)`,
+                  border: 'none',
                   flexShrink: 0,
+                  boxShadow: isMuiDark ? 'inset 0 1px 0 rgba(255,255,255,0.06)' : 'inset 0 1px 0 rgba(255,255,255,0.85)',
                 }}
               >
                 <Icon size={20} color={p.primary.main} strokeWidth={1.85} />
@@ -414,14 +423,20 @@ export const DashboardHomePage = () => {
       dir="rtl"
       sx={{
         minHeight: '100dvh',
-        bgcolor: 'background.default',
-        pb: 4,
+        width: '100%',
+        maxWidth: '100%',
+        overflowX: 'hidden',
+        background: isMuiDark
+          ? 'linear-gradient(180deg, #141916 0%, #0F1310 45%, #121814 100%)'
+          : `linear-gradient(180deg, ${COLORS.background} 0%, #EEEBE4 55%, #E8E4DB 100%)`,
+        /* المساحة فوق شريط التنقل تُدار من Layout فقط — لا padding إضافي يُضاعف الفراغ */
+        pb: 0,
         direction: 'rtl',
         textAlign: 'right',
         fontFamily: '"Cairo","IBM Plex Sans Arabic","Tajawal",sans-serif',
       }}
     >
-      <Container maxWidth="sm" sx={{ px: 2, pt: 'calc(env(safe-area-inset-top, 0px) + 16px)' }}>
+      <Container maxWidth="sm" sx={{ px: 2, pt: 'calc(env(safe-area-inset-top, 0px) + 16px)', maxWidth: '100% !important' }}>
         {/* MUI Stack row = theme RTL: inner order was [text,avatar] so avatar sat on the **left**; use div+rtl+Avatar first = far right */}
         <Box
           dir="rtl"
@@ -473,10 +488,12 @@ export const DashboardHomePage = () => {
                   : isMuiDark
                     ? '0 2px 12px rgba(0,0,0,0.35)'
                     : '0 2px 10px rgba(24,38,33,0.04)',
-                transition: 'all 180ms cubic-bezier(0.2, 0.8, 0.2, 1)',
-                '&:hover': {
-                  bgcolor: isMuiDark ? 'rgba(255,255,255,0.16)' : '#F6F6F4',
-                  transform: 'translateY(-1px)',
+                transition: 'background 180ms cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 180ms cubic-bezier(0.2, 0.8, 0.2, 1)',
+                '@media (hover: hover) and (pointer: fine)': {
+                  '&:hover': {
+                    bgcolor: isMuiDark ? 'rgba(255,255,255,0.16)' : '#F6F6F4',
+                    transform: 'translateY(-1px)',
+                  },
                 },
                 ...(urgentNotifCount > 0 && {
                   '@keyframes notifRing': {
@@ -520,10 +537,12 @@ export const DashboardHomePage = () => {
                     color: isMuiDark ? 'common.white' : '#1F2A2A',
                     border: `1px solid ${isMuiDark ? 'rgba(255,255,255,0.14)' : 'rgba(31,61,53,0.08)'}`,
                     boxShadow: isMuiDark ? '0 2px 12px rgba(0,0,0,0.35)' : '0 2px 10px rgba(24,38,33,0.04)',
-                    transition: 'all 180ms cubic-bezier(0.2, 0.8, 0.2, 1)',
-                    '&:hover': {
-                      bgcolor: isMuiDark ? 'rgba(255,255,255,0.16)' : '#F6F6F4',
-                      transform: 'translateY(-1px)',
+                    transition: 'background 180ms cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 180ms cubic-bezier(0.2, 0.8, 0.2, 1)',
+                    '@media (hover: hover) and (pointer: fine)': {
+                      '&:hover': {
+                        bgcolor: isMuiDark ? 'rgba(255,255,255,0.16)' : '#F6F6F4',
+                        transform: 'translateY(-1px)',
+                      },
                     },
                   }}
                 >
@@ -554,10 +573,12 @@ export const DashboardHomePage = () => {
                   color: isMuiDark ? 'common.white' : '#1F2A2A',
                   border: `1px solid ${isMuiDark ? 'rgba(255,255,255,0.14)' : 'rgba(31,61,53,0.08)'}`,
                   boxShadow: isMuiDark ? '0 2px 12px rgba(0,0,0,0.35)' : '0 2px 10px rgba(24,38,33,0.04)',
-                  transition: 'all 180ms cubic-bezier(0.2, 0.8, 0.2, 1)',
-                  '&:hover': {
-                    bgcolor: isMuiDark ? 'rgba(255,255,255,0.16)' : '#F6F6F4',
-                    transform: 'translateY(-1px)',
+                  transition: 'background 180ms cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 180ms cubic-bezier(0.2, 0.8, 0.2, 1)',
+                  '@media (hover: hover) and (pointer: fine)': {
+                    '&:hover': {
+                      bgcolor: isMuiDark ? 'rgba(255,255,255,0.16)' : '#F6F6F4',
+                      transform: 'translateY(-1px)',
+                    },
                   },
                 }}
               >
@@ -570,15 +591,17 @@ export const DashboardHomePage = () => {
         <Box sx={{ mb: 2.5 }}>
           <Card
             sx={{
-              borderRadius: '24px',
+              borderRadius: '26px',
               p: 2.5,
               color: '#F7FAF8',
-              background: `linear-gradient(165deg, ${COLORS.primary} 0%, ${COLORS.primary2} 100%)`,
-              boxShadow: '0 16px 30px rgba(24,41,35,0.24)',
-              border: '1px solid rgba(255,255,255,0.08)',
+              background: `linear-gradient(155deg, ${COLORS.primaryDeep} 0%, ${COLORS.primary} 38%, ${COLORS.primary2} 72%, ${alpha(COLORS.accent, 0.22)} 100%)`,
+              boxShadow: isMuiDark
+                ? '0 20px 48px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.06)'
+                : '0 20px 44px rgba(24, 41, 35, 0.2), 0 0 0 1px rgba(255,255,255,0.35)',
+              border: 'none',
               position: 'relative',
               overflow: 'hidden',
-              minHeight: 320,
+              minHeight: { xs: 392, sm: 368 },
             }}
           >
             {/* مبنى: فوق تدرج البطاقة + mixBlendMode = يظهر بخفاء دون طبقة ساترة كاملة */}
@@ -641,24 +664,24 @@ export const DashboardHomePage = () => {
                 <Box
                   component="img"
                   src="/logo.png"
-                  alt="ETLAA"
+                  alt="ETLALA"
                   onError={() => setLogoFailed(true)}
                   sx={{
-                    width: 112,
-                    height: 112,
+                    width: 168,
+                    height: 168,
                     objectFit: 'contain',
                     mb: 0.8,
                     display: 'block',
                     borderRadius: 0,
-                    filter: 'drop-shadow(0 4px 20px rgba(0,0,0,0.35))',
+                    filter: 'drop-shadow(0 6px 28px rgba(0,0,0,0.38)) drop-shadow(0 0 24px rgba(196,174,114,0.2))',
                   }}
                 />
               ) : (
-                <HeroLogo size={100} compact plain />
+                <HeroLogo size={150} compact plain />
               )}
 
               <Typography sx={{ fontSize: '0.64rem', letterSpacing: 0.8, fontWeight: 500, opacity: 0.92 }}>
-                ETLAA ARCHITECTURAL & ENGINEERING CONSULTANCY
+                ETLALA ARCHITECTURAL & ENGINEERING CONSULTANCY
               </Typography>
               <Typography sx={{ mt: 1, fontSize: '0.93rem', lineHeight: 1.7, fontWeight: 500 }}>
                 لوحة تحكم موحدة لعملائك والفواتير والمدفوعات
@@ -730,10 +753,10 @@ export const DashboardHomePage = () => {
                 background: isMuiDark
                   ? 'linear-gradient(180deg, #1E2620 0%, #1A211C 100%)'
                   : 'linear-gradient(180deg, #FFFFFF 0%, #F9F9F6 100%)',
-                border: `1px solid ${alpha(theme.palette.divider, isMuiDark ? 0.5 : 0.9)}`,
+                border: 'none',
                 boxShadow: isMuiDark
-                  ? '0 2px 0 rgba(255,255,255,0.04) inset, 0 12px 32px -8px rgba(0,0,0,0.4)'
-                  : '0 2px 0 rgba(31,61,53,0.04) inset, 0 12px 32px -8px rgba(25,34,29,0.1)',
+                  ? '0 10px 36px rgba(0,0,0,0.35)'
+                  : '0 10px 32px rgba(25, 34, 29, 0.08)',
                 '&::before': {
                   content: '""',
                   position: 'absolute',
@@ -808,10 +831,10 @@ export const DashboardHomePage = () => {
                     background: isMuiDark
                       ? 'linear-gradient(165deg, #1C241E 0%, #181F1A 100%)'
                       : 'linear-gradient(165deg, #FFFFFF 0%, #F6F5F0 100%)',
-                    border: `1px solid ${alpha(theme.palette.divider, 0.85)}`,
+                    border: 'none',
                     boxShadow: isMuiDark
-                      ? '0 1px 0 rgba(255,255,255,0.05) inset, 0 10px 24px -10px rgba(0,0,0,0.45)'
-                      : '0 1px 0 rgba(255,255,255,0.8) inset, 0 10px 24px -10px rgba(25,34,29,0.12)',
+                      ? '0 8px 28px rgba(0,0,0,0.32)'
+                      : '0 8px 26px rgba(25, 34, 29, 0.08)',
                     textAlign: 'right',
                     transition: 'transform 0.2s ease, box-shadow 0.2s ease',
                     '&:hover': {
@@ -901,16 +924,18 @@ export const DashboardHomePage = () => {
               background: isMuiDark
                 ? 'linear-gradient(180deg, #1E2620 0%, #1A211C 100%)'
                 : 'linear-gradient(180deg, #FFFFFF 0%, #F9F9F6 100%)',
-              border: `1px solid ${alpha(theme.palette.divider, isMuiDark ? 0.5 : 0.9)}`,
+              border: 'none',
               boxShadow: isMuiDark
-                ? '0 2px 0 rgba(255,255,255,0.04) inset, 0 12px 32px -8px rgba(0,0,0,0.4)'
-                : '0 2px 0 rgba(31,61,53,0.04) inset, 0 12px 32px -8px rgba(25,34,29,0.1)',
-              transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-              '&:hover': {
-                boxShadow: isMuiDark
-                  ? '0 2px 0 rgba(255,255,255,0.05) inset, 0 16px 36px -6px rgba(0,0,0,0.5)'
-                  : '0 2px 0 rgba(31,61,53,0.05) inset, 0 16px 36px -6px rgba(25,34,29,0.14)',
-                transform: 'translateY(-1px)',
+                ? '0 12px 36px rgba(0,0,0,0.35)'
+                : '0 12px 32px rgba(25, 34, 29, 0.09)',
+              transition: 'box-shadow 0.2s ease',
+              '@media (hover: hover) and (pointer: fine)': {
+                '&:hover': {
+                  boxShadow: isMuiDark
+                    ? '0 2px 0 rgba(255,255,255,0.05) inset, 0 16px 36px -6px rgba(0,0,0,0.5)'
+                    : '0 2px 0 rgba(31,61,53,0.05) inset, 0 16px 36px -6px rgba(25,34,29,0.14)',
+                  transform: 'translateY(-1px)',
+                },
               },
               '&::before': {
                 content: '""',
@@ -958,8 +983,9 @@ export const DashboardHomePage = () => {
                     display: 'grid',
                     placeItems: 'center',
                     background: `linear-gradient(145deg, ${alpha(COLORS.accent, 0.25)} 0%, ${alpha(COLORS.primary, 0.2)} 100%)`,
-                    border: `1px solid ${alpha(theme.palette.divider, 0.75)}`,
+                    border: 'none',
                     flexShrink: 0,
+                    boxShadow: isMuiDark ? 'inset 0 1px 0 rgba(255,255,255,0.08)' : 'inset 0 1px 0 rgba(255,255,255,0.9)',
                   }}
                 >
                   <Wallet size={20} color={theme.palette.primary.main} strokeWidth={1.85} />
@@ -1026,12 +1052,12 @@ export const DashboardHomePage = () => {
               elevation={0}
               sx={{
                 borderRadius: '22px',
-                p: 1.5,
+                p: 1.65,
                 background: menuListCardSurface,
-                border: `1px solid ${alpha(theme.palette.divider, isMuiDark ? 0.5 : 0.88)}`,
+                border: 'none',
                 boxShadow: isMuiDark
-                  ? '0 2px 0 rgba(255,255,255,0.04) inset, 0 12px 32px -8px rgba(0,0,0,0.4)'
-                  : '0 2px 0 rgba(31,61,53,0.04) inset, 0 10px 24px -8px rgba(25,34,29,0.1)',
+                  ? '0 12px 40px rgba(0,0,0,0.38)'
+                  : '0 10px 36px rgba(31, 61, 53, 0.08)',
               }}
             >
               {renderMenuList(primaryMenuVisible)}
@@ -1070,12 +1096,12 @@ export const DashboardHomePage = () => {
               elevation={0}
               sx={{
                 borderRadius: '22px',
-                p: 1.5,
+                p: 1.65,
                 background: menuListCardSurface,
-                border: `1px solid ${alpha(theme.palette.divider, isMuiDark ? 0.5 : 0.88)}`,
+                border: 'none',
                 boxShadow: isMuiDark
-                  ? '0 2px 0 rgba(255,255,255,0.04) inset, 0 12px 32px -8px rgba(0,0,0,0.4)'
-                  : '0 2px 0 rgba(31,61,53,0.04) inset, 0 10px 24px -8px rgba(25,34,29,0.1)',
+                  ? '0 12px 40px rgba(0,0,0,0.38)'
+                  : '0 10px 36px rgba(31, 61, 53, 0.08)',
               }}
             >
               {renderMenuList(shortcutsMenuVisible)}

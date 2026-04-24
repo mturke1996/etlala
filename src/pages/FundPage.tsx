@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   Box, Button, Typography, Stack,
   IconButton, Dialog, TextField, Avatar, Divider, Collapse, useTheme,
@@ -20,11 +20,7 @@ import { db } from '../config/firebase';
 import dayjs from 'dayjs';
 import 'dayjs/locale/ar';
 import toast from 'react-hot-toast';
-import gsap from 'gsap';
-import { useGSAP } from '@gsap/react';
 import { PageScaffold } from '../components/layout/PageScaffold';
-
-gsap.registerPlugin(useGSAP);
 
 dayjs.locale('ar');
 const fmt = (d: string) => dayjs(d).format('DD/MM/YYYY');
@@ -48,25 +44,27 @@ export const FundPage = () => {
   const isAdmin = canAccess('stats');
 
   const { transactions, initialize, addTransaction, updateTransaction, deleteTransaction } = useGlobalFundStore();
-  const { expenses, clients } = useDataStore();
+  const { expenses, clients, isLoading: dataStoreLoading } = useDataStore();
 
   const [systemUsers, setSystemUsers] = useState<any[]>([]);
+  const [directoryReady, setDirectoryReady] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTx, setEditingTx] = useState<any>(null);
   const [openId, setOpenId] = useState<string | null>(null);
   const [form, setForm] = useState({ userId: '', amount: '', description: '', date: dayjs().format('YYYY-MM-DD'), notes: '' });
 
-  // ── GSAP Refs ──────────────────────────────────────────────────────────────
-  const pageRef = useRef<HTMLDivElement>(null);
-  const balanceCardRef = useRef<HTMLDivElement>(null);
-  const bodyRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => { const u = initialize(); return u; }, []);
+
   useEffect(() => {
-    const unsub = onSnapshot(query(collection(db, 'users')), s =>
-      setSystemUsers(s.docs.map(d => ({ id: d.id, ...d.data() }))));
+    const unsub = onSnapshot(query(collection(db, 'users')), (s) => {
+      setSystemUsers(s.docs.map(d => ({ id: d.id, ...d.data() })));
+      setDirectoryReady(true);
+    });
     return unsub;
   }, []);
+
+  /** صف واحد بعد اكتمال لقطة المصروفات/البيانات + مستخدمي النظام — يقلّل القفزات والتمرير المتقطع */
+  const fundBodyReady = !dataStoreLoading && directoryReady;
 
   const clientMap = useMemo(() => {
     const m: Record<string, string> = {};
@@ -282,52 +280,8 @@ export const FundPage = () => {
     return { color: '#10b981', bg: 'rgba(16,185,129,0.12)', border: 'rgba(16,185,129,0.3)', label: 'نشطة' };
   };
 
-  // ── GSAP Animations ────────────────────────────────────────────────────────
-  useGSAP(() => {
-    // التأكد من وجود GSAP لتجنب الشاشة البيضاء لو فشل التحميل
-    if (typeof gsap === 'undefined') return;
-    
-    const mm = gsap.matchMedia();
-    mm.add('(prefers-reduced-motion: no-preference)', () => {
-        // ── Balance Card ──
-        if (balanceCardRef.current) {
-          gsap.from(balanceCardRef.current, {
-            opacity: 0,
-            y: 20,
-            scale: 0.98,
-            duration: 0.7,
-            delay: 0.1,
-            ease: 'power3.out',
-          });
-        }
-
-        // ── Stats Grid ──
-        gsap.from('.fund-stat-item', {
-          opacity: 0,
-          y: 10,
-          duration: 0.5,
-          stagger: 0.1,
-          delay: 0.25,
-          ease: 'power2.out',
-        });
-
-        // ── User Cards (body) ──
-        if (bodyRef.current) {
-          gsap.from('.fund-user-card', {
-            opacity: 0,
-            y: 30,
-            duration: 0.6,
-            stagger: 0.08,
-            delay: 0.2,
-            ease: 'power3.out',
-          });
-        }
-    });
-
-  }, { scope: pageRef });
-
   return (
-    <Box ref={pageRef} sx={{ minHeight: '100dvh', bgcolor: BG, fontFamily: F }}>
+    <Box sx={{ minHeight: '100dvh', bgcolor: BG, fontFamily: F }}>
 
       <PageScaffold
         title="صندوق العهد"
@@ -385,7 +339,7 @@ export const FundPage = () => {
               </Button>
         ) : undefined}
         headerExtra={(
-          <Box ref={balanceCardRef} sx={{ 
+          <Box sx={{ 
               bgcolor: 'rgba(0,0,0,0.2)',
               backdropFilter: 'blur(20px)', 
               WebkitBackdropFilter: 'blur(20px)', 
@@ -426,7 +380,7 @@ export const FundPage = () => {
                     { label: 'إجمالي العهدات', value: formatCurrency(totalFund), color: '#ffffff' },
                     { label: 'المتبقي', value: totalRemaining < 0 ? `-${formatCurrency(Math.abs(totalRemaining))}` : formatCurrency(totalRemaining), color: remainingColor === '#6ee7b7' ? '#ffffff' : remainingColor },
                   ].map((s, i) => (
-                    <Box key={i} className="fund-stat-item" sx={{ textAlign: 'center', borderRight: i < 2 ? '1px solid rgba(255,255,255,0.15)' : 'none' }}>
+                    <Box key={i} sx={{ textAlign: 'center', borderRight: i < 2 ? '1px solid rgba(255,255,255,0.15)' : 'none' }}>
                       <Typography sx={{ color: s.color, fontSize: '0.9rem', fontWeight: 800, fontFamily: FN, lineHeight: 1.2 }}>
                         {s.value}
                       </Typography>
@@ -443,7 +397,7 @@ export const FundPage = () => {
       >
 
       {/* ══ BODY ═════════════════════════════════════════════════════════════ */}
-        {perUser.length === 0 ? (
+        {!fundBodyReady ? null : perUser.length === 0 ? (
           <Box sx={{ textAlign: 'center', py: 10 }}>
             <AccountBalanceWallet sx={{ fontSize: 60, color: 'text.disabled', opacity: 0.2, mb: 2 }} />
             <Typography sx={{ color: 'text.secondary', fontWeight: 700, fontFamily: F }}>لا توجد عهدات بعد</Typography>
@@ -454,9 +408,9 @@ export const FundPage = () => {
             )}
           </Box>
         ) : (
-          <Stack spacing={2} ref={bodyRef}>
+          <Stack spacing={2}>
             {perUser.map(([uid, userData]) => (
-              <Box key={uid} className="fund-user-card">
+              <Box key={uid}>
                 {/* User Title - Premium Card Look */}
                 <Box sx={{ 
                   bgcolor: USER_HDR, 
@@ -519,11 +473,25 @@ export const FundPage = () => {
                     const isOpen = openId === c.id;
 
                     return (
-                      <Box key={c.id} sx={{ borderBottom: ci < arr.length - 1 ? '1px solid' : 'none', borderColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.06)' }}>
+                      <Box
+                        key={c.id}
+                        sx={{
+                          borderBottom: ci < arr.length - 1 ? '1px solid' : 'none',
+                          borderColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.06)',
+                        }}
+                      >
 
                         {/* ── Custody Row (clickable to toggle) ── */}
                         <Box onClick={() => setOpenId(isOpen ? null : c.id)}
-                          sx={{ px: 2, py: 2, cursor: 'pointer', '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.015)' }, '&:active': { bgcolor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)' }, transition: 'background 0.2s cubic-bezier(0.4,0,0.2,1)', WebkitTapHighlightColor: 'transparent' }}>
+                          sx={{
+                            px: 2,
+                            py: 2,
+                            cursor: 'pointer',
+                            WebkitTapHighlightColor: 'transparent',
+                            '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.015)' },
+                            '&:active': { bgcolor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)' },
+                            transition: 'background 0.22s cubic-bezier(0.25, 0.8, 0.25, 1)',
+                          }}>
 
                           {/* Row 1: Ref Badge + Status Badge + Date (right-aligned) */}
                           <Stack direction="row" alignItems="center" spacing={1} mb={0.8}>
@@ -599,8 +567,8 @@ export const FundPage = () => {
                                   : pct > 70
                                     ? 'linear-gradient(90deg, #f59e0b, #fbbf24)'
                                     : 'linear-gradient(90deg, #059669, #10b981, #34d399)',
-                              transition: 'width 0.5s cubic-bezier(0.4,0,0.2,1)',
-                              boxShadow: pct > 0 ? '0 1px 4px rgba(0,0,0,0.15)' : 'none',
+                              transition: 'width 0.42s cubic-bezier(0.22, 0.95, 0.28, 1)',
+                              boxShadow: pct > 0 ? '0 1px 6px rgba(0,0,0,0.12)' : 'none',
                             }} />
                           </Box>
 
@@ -665,7 +633,7 @@ export const FundPage = () => {
                         </Box>
 
                         {/* ── Expenses Collapse ── */}
-                        <Collapse in={isOpen}>
+                        <Collapse in={isOpen} timeout={0} unmountOnExit>
                           <Box sx={{ bgcolor: isDark ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.02)', borderTop: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }}>
 
                             {/* Header */}
