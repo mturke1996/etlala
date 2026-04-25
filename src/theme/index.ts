@@ -308,6 +308,8 @@ export const createAppTheme = (mode: ThemeMode = 'light') => {
             zIndex: 1200,
             height: 'calc(70px + env(safe-area-inset-bottom, 0px))',
             paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+            gap: '6px',
+            justifyContent: 'space-around',
             background: isDark ? 'rgba(26, 34, 28, 0.92)' : 'rgba(255, 255, 255, 0.95)',
             backdropFilter: 'saturate(1.8) blur(20px)',
             WebkitBackdropFilter: 'saturate(1.8) blur(20px)',
@@ -321,7 +323,9 @@ export const createAppTheme = (mode: ThemeMode = 'light') => {
         styleOverrides: {
           root: {
             color: palette.text.secondary,
-            padding: '6px 0',
+            padding: '6px 4px',
+            minWidth: 0,
+            flex: '1 1 0',
             '&.Mui-selected': {
               color: isDark ? '#D4C9A3' : primary,
             },

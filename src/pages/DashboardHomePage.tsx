@@ -1,4 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+import "dayjs/locale/ar";
 import { useNavigate } from "react-router-dom";
 import {
   Avatar,
@@ -6,11 +9,14 @@ import {
   Box,
   Button,
   Card,
+  CircularProgress,
   Container,
   Drawer,
+  FormControlLabel,
   IconButton,
   Skeleton,
   Stack,
+  Switch,
   Tooltip,
   Typography,
   alpha,
@@ -33,10 +39,28 @@ import {
   Shield,
   Sparkles,
   Sun,
+  Trash2,
   UserCog,
   Users,
   Wallet,
 } from "lucide-react";
+import {
+  getNotificationPermission,
+  getPwaNotificationsUserEnabled,
+  isWebNotificationSupported,
+  requestNotificationPermission,
+  setPwaNotificationsUserEnabled,
+} from "../lib/pwaNotifications";
+import {
+  filterUndismissedNotifications,
+  loadDismissMap,
+  mergeDismissAfterClear,
+  saveDismissMap,
+} from "../lib/notificationDismissals";
+import { buildAppNotifications } from "../notifications/buildAppNotifications";
+import type { AppNotificationItem } from "../notifications/buildAppNotifications";
+import { usePwaNotificationBridge } from "../notifications/usePwaNotificationBridge";
+import { registerDeviceForFcmPush } from "../lib/fcmWebPush";
 import { useAuthStore } from "../store/useAuthStore";
 import { useThemeStore } from "../store/useThemeStore";
 import { useDataStore } from "../store/useDataStore";
@@ -47,6 +71,9 @@ import { useGlobalFundStore } from "../store/useGlobalFundStore";
 import { computeUserFundAllocTotals } from "../utils/custodyFundAlloc";
 import { formatCurrency } from "../utils/formatters";
 
+dayjs.extend(relativeTime);
+dayjs.locale("ar");
+
 const COLORS = {
   primary: "#1E3F36",
   primary2: "#2D5246",
@@ -56,6 +83,19 @@ const COLORS = {
   text: "#2A2E2C",
   muted: "#6E756F",
 };
+
+/**
+ * مقياس زوايا موحّد للوحة الإشعارات (Swiss / minimal dashboard — ui-ux-pro-max):
+ * ورقة علوية خفيفة، أسطح 12px، تحكم 10px، وسوم صغيرة 6px — بدل خلط 20–22px مع pills عشوائية.
+ */
+const NOTIF_R = {
+  sheetTop: "14px",
+  surface: "12px",
+  control: "10px",
+  meta: "6px",
+  /** مقبض السحب: كبسولة (نصف ارتفاع الشريط تقريباً) */
+  handle: "2.5px",
+} as const;
 
 /** بانر الصفحة الرئيسية — الملف: `public/home-hero-banner.png` */
 const HOME_HERO_BANNER_SRC = "/home-hero-banner.png";
@@ -271,7 +311,7 @@ export const DashboardHomePage = () => {
   const theme = useTheme();
   const isMuiDark = theme.palette.mode === "dark";
   const { user, logout } = useAuthStore();
-  const { clients, payments, expenses, isLoading } = useDataStore();
+  const { clients, payments, expenses, invoices, isLoading } = useDataStore();
   const {
     transactions,
     getUserStats,
@@ -281,9 +321,18 @@ export const DashboardHomePage = () => {
   const { isLocked, isSessionUnlocked, canAccess } = useAppLockStore();
   const [lockSettingsOpen, setLockSettingsOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [pwaNotifEnabled, setPwaNotifEnabled] = useState(() =>
+    getPwaNotificationsUserEnabled(),
+  );
+  const [browserNotifPerm, setBrowserNotifPerm] = useState(() =>
+    getNotificationPermission(),
+  );
+  const [notifPermLoading, setNotifPermLoading] = useState(false);
+  const [notifDismissMap, setNotifDismissMap] = useState(loadDismissMap);
 
   const canOpenFund = canAccess("balances");
   const canSeeStats = canAccess("stats");
+  const isTeamCustodyViewer = canAccess("stats");
   const sessionUnlocked = isSessionUnlocked();
 
   useEffect(() => {
@@ -329,71 +378,108 @@ export const DashboardHomePage = () => {
     return computeUserFundAllocTotals(depositRows, expenseRows);
   }, [transactions, expenses, user, getUserStats]);
 
-  /** تنبيهات مبنية على بيانات فعلية — تُفتح في لوحة جانبية */
-  const homeNotifications = useMemo(() => {
-    const list: {
-      id: string;
-      kind: "urgent" | "info" | "success" | "lock";
-      title: string;
-      body: string;
-    }[] = [];
+  const fundUserNameById = useMemo(() => {
+    const m: Record<string, string> = {};
+    transactions.forEach((t) => {
+      if (t.type === "deposit" && t.userId) {
+        m[t.userId] = t.userName || m[t.userId] || "مستخدم";
+      }
+    });
+    return m;
+  }, [transactions]);
 
-    if (isLocked && !sessionUnlocked) {
-      list.push({
-        id: "session-lock",
-        kind: "lock",
-        title: "جلسة القفل",
-        body: "أدخل رمز التطبيق للوصول للأقسام المحمية (العملاء، الصندوق، وغيرها) إن وُجدت بصلاحيتك.",
-      });
-    }
-    if (!canSeeStats) {
-      list.push({
-        id: "stats-hidden",
-        kind: "info",
-        title: "إحصائيات الشاشة الرئيسية",
-        body: "مؤشرات صافي الأرباح والمحصّل وعموم المصروفات معطّلة بإعدادات الأمان. يبقى بإمكانك استخدام باقي الأقسام المفعّلة لك وعرض عهدتك عندما تظهر أدناه.",
-      });
-    }
-    if (myCustodyFund && myCustodyFund.remaining < 0) {
-      list.push({
-        id: "custody-deficit",
-        kind: "urgent",
-        title: "عجز في عهدة صندوق العهدة",
-        body: `المتبقي المطلوب تسويته: ‎${formatCurrency(Math.abs(myCustodyFund.remaining))}‎. راجع العهدات في صندوق العهدة عند تفعيل صلاحيتك أو التواصل مع المسؤول.`,
-      });
-    } else if (
-      myCustodyFund &&
-      myCustodyFund.remaining > 0 &&
-      myCustodyFund.remaining < 300
-    ) {
-      list.push({
-        id: "custody-low",
-        kind: "info",
-        title: "تنبيه ميزانية عهدة",
-        body: `رصيدك المتبقي أقل من 300 ‎د.ل‎. خطط لإعادة التمويل عند الحاجة.`,
-      });
-    }
+  /** تنبيهات مبنية على بيانات فعلية + نشاط الفريق — لوحة جانبية وإشعارات PWA */
+  const homeNotifications = useMemo(
+    () =>
+      buildAppNotifications({
+        userId: user?.id,
+        userDisplayName: user?.displayName,
+        userEmail: user?.email,
+        isLocked,
+        sessionUnlocked,
+        canSeeStats,
+        canOpenFund,
+        isTeamCustodyViewer,
+        transactions,
+        expenses,
+        invoices,
+        payments,
+        clients,
+        getUserStats,
+        fundUserNameById,
+      }),
+    [
+      user?.id,
+      user?.displayName,
+      user?.email,
+      isLocked,
+      sessionUnlocked,
+      canSeeStats,
+      canOpenFund,
+      isTeamCustodyViewer,
+      transactions,
+      expenses,
+      invoices,
+      payments,
+      clients,
+      getUserStats,
+      fundUserNameById,
+    ],
+  );
 
-    if (list.length === 0) {
-      list.push({
-        id: "all-clear",
-        kind: "success",
-        title: "لا عناوين صادرة",
-        body: "لا إشعارات مالية مخصصة حالياً. سيتم إظهار تنبيهات عند تغيّر وضع عهادتك أو عند اصطفاف مهم.",
-      });
-    }
-    return list;
-  }, [isLocked, sessionUnlocked, canSeeStats, myCustodyFund]);
+  usePwaNotificationBridge(homeNotifications);
+
+  useEffect(() => {
+    if (notifOpen) setBrowserNotifPerm(getNotificationPermission());
+  }, [notifOpen]);
+
+  const visibleNotifications = useMemo(() => {
+    const v = filterUndismissedNotifications(homeNotifications, notifDismissMap);
+    const core = v.filter((n) => n.id !== "all-clear");
+    const hasBody = core.some(
+      (n) => n.id !== "session-lock" && n.id !== "stats-hidden",
+    );
+    if (hasBody) return v;
+    const meta = core.filter(
+      (n) => n.id === "session-lock" || n.id === "stats-hidden",
+    );
+    const placeholder: AppNotificationItem = {
+      id: "all-clear",
+      kind: "success",
+      title: "لا تنبيهات حالياً",
+      body:
+        meta.length > 0
+          ? "لا يوجد تنبيه جديد بعد المسح. سيظهر أي تحديث تلقائياً."
+          : "لا تنبيهات أو تم إخفاء المعروض. أي حدث جديد سيظهر هنا.",
+    };
+    return [...meta, placeholder];
+  }, [homeNotifications, notifDismissMap]);
+
+  const canBulkClearNotifications = useMemo(
+    () =>
+      visibleNotifications.some(
+        (n) =>
+          n.id !== "session-lock" &&
+          n.id !== "stats-hidden" &&
+          n.id !== "all-clear",
+      ),
+    [visibleNotifications],
+  );
 
   const urgentNotifCount = useMemo(
-    () => homeNotifications.filter((n) => n.kind === "urgent").length,
-    [homeNotifications],
+    () =>
+      visibleNotifications.filter(
+        (n) =>
+          n.kind === "urgent" ||
+          (n.kind === "team" && n.id.includes("deficit")),
+      ).length,
+    [visibleNotifications],
   );
 
   const relevantNotifCount = useMemo(() => {
     if (urgentNotifCount > 0) return urgentNotifCount;
-    return homeNotifications.filter((n) => n.id !== "all-clear").length;
-  }, [homeNotifications, urgentNotifCount]);
+    return visibleNotifications.filter((n) => n.id !== "all-clear").length;
+  }, [visibleNotifications, urgentNotifCount]);
 
   const primaryMenuVisible = useMemo(
     () => PRIMARY_MENU.filter((item) => canAccess(item.module)),
@@ -619,23 +705,25 @@ export const DashboardHomePage = () => {
           <Stack
             direction="row"
             alignItems="center"
-            spacing={2.5}
+            spacing={{ xs: 2, sm: 2.75 }}
             sx={{
               direction: "rtl",
               flexShrink: 0,
             }}
           >
-            {/* مسافة بسيطة جداً بين الإشعارات ووضع الليلي — ثم فراغ أوضح قبل القفل والخروج */}
             <Stack
               direction="row"
               alignItems="center"
-              spacing={0.5}
-              sx={{ flexShrink: 0 }}
+              sx={{
+                flexShrink: 0,
+                gap: { xs: 2.25, sm: 2.75 },
+              }}
             >
               <IconButton
                 onClick={() => setNotifOpen(true)}
                 aria-label="الإشعارات"
                 sx={{
+                  marginInlineEnd: { xs: 0.25, sm: 0.5 },
                   width: 44,
                   height: 44,
                   borderRadius: 2.5,
@@ -1262,25 +1350,56 @@ export const DashboardHomePage = () => {
         onClose={() => setNotifOpen(false)}
         PaperProps={{
           sx: {
-            width: { xs: "100%", sm: 380 },
+            width: { xs: "100%", sm: 360 },
             maxWidth: "100vw",
-            borderRadius: { xs: "20px 20px 0 0", sm: "0" },
-            borderLeft: {
-              sm: `1px solid ${alpha(theme.palette.divider, 0.9)}`,
+            height: "100dvh",
+            maxHeight: "100dvh",
+            display: "flex",
+            flexDirection: "column",
+            overflow: "hidden",
+            boxSizing: "border-box",
+            borderRadius: {
+              xs: `${NOTIF_R.sheetTop} ${NOTIF_R.sheetTop} 0 0`,
+              sm: 0,
             },
+            borderLeft: {
+              sm: `1px solid ${alpha(theme.palette.divider, 0.85)}`,
+            },
+            boxShadow: isMuiDark
+              ? "0 -8px 40px rgba(0,0,0,0.45)"
+              : "0 -12px 48px rgba(31, 61, 53, 0.12)",
+            pt: "max(8px, env(safe-area-inset-top, 0px))",
             background: isMuiDark
-              ? "linear-gradient(180deg, #1A1F1B 0%, #121814 100%)"
-              : "linear-gradient(180deg, #FDFDFB 0%, #F5F5F2 100%)",
+              ? "linear-gradient(165deg, #1c2420 0%, #141a17 48%, #0f1412 100%)"
+              : "linear-gradient(180deg, #fbfbf9 0%, #f2f4f1 55%, #eef1ee 100%)",
             color: "text.primary",
           },
         }}
+        ModalProps={{ keepMounted: false }}
       >
+        {/* مقبض ورقة — مألوف على iOS */}
+        <Box
+          aria-hidden
+          sx={{
+            display: { xs: "block", sm: "none" },
+            width: 40,
+            height: 5,
+            borderRadius: NOTIF_R.handle,
+            mx: "auto",
+            mt: 0.5,
+            mb: 0.25,
+            flexShrink: 0,
+            bgcolor: isMuiDark ? alpha("#fff", 0.12) : alpha("#1f3d35", 0.15),
+          }}
+        />
         <Box
           dir="rtl"
           sx={{
-            p: 2.25,
-            borderBottom: `1px solid ${alpha(theme.palette.divider, 0.9)}`,
-            background: `linear-gradient(120deg, ${alpha(COLORS.primary, 0.08)} 0%, transparent 55%)`,
+            flexShrink: 0,
+            px: 2,
+            pt: 1.35,
+            pb: 1.5,
+            borderBottom: `1px solid ${alpha(theme.palette.divider, isMuiDark ? 0.12 : 0.08)}`,
           }}
         >
           <Stack
@@ -1289,151 +1408,515 @@ export const DashboardHomePage = () => {
             justifyContent="space-between"
             gap={1}
           >
-            <Box>
-              <Typography
+            <Stack direction="row" alignItems="center" gap={1.25} sx={{ minWidth: 0 }}>
+              <Box
                 sx={{
-                  fontWeight: 800,
-                  fontSize: "1.05rem",
-                  color: "text.primary",
+                  width: 44,
+                  height: 44,
+                  borderRadius: NOTIF_R.surface,
+                  display: "grid",
+                  placeItems: "center",
+                  flexShrink: 0,
+                  background: isMuiDark
+                    ? `linear-gradient(145deg, ${alpha(COLORS.accent, 0.22)} 0%, ${alpha(COLORS.primary, 0.35)} 100%)`
+                    : `linear-gradient(145deg, ${alpha(COLORS.accent, 0.35)} 0%, ${alpha(COLORS.primary, 0.12)} 100%)`,
+                  border: `1px solid ${alpha(COLORS.accent, isMuiDark ? 0.35 : 0.45)}`,
+                  boxShadow: isMuiDark
+                    ? "inset 0 1px 0 rgba(255,255,255,0.06)"
+                    : "0 4px 14px rgba(31, 61, 53, 0.08), inset 0 1px 0 rgba(255,255,255,0.85)",
                 }}
               >
-                الإشعارات
-              </Typography>
-              <Typography
-                sx={{ fontSize: "0.78rem", color: "text.secondary", mt: 0.35 }}
-              >
-                مُحدَّثة من بياناتك الحالية
-              </Typography>
-            </Box>
-            <Box
-              sx={{
-                width: 40,
-                height: 40,
-                borderRadius: 2.5,
-                display: "grid",
-                placeItems: "center",
-                bgcolor: alpha(COLORS.accent, 0.2),
-                border: `1px solid ${alpha(COLORS.accent, 0.35)}`,
-              }}
-            >
-              <Bell
-                size={20}
-                color={theme.palette.primary.main}
-                strokeWidth={1.9}
-              />
-            </Box>
+                <Bell
+                  size={20}
+                  color={isMuiDark ? COLORS.accent : COLORS.primaryDeep}
+                  strokeWidth={2}
+                />
+              </Box>
+              <Box sx={{ minWidth: 0 }}>
+                <Typography
+                  sx={{
+                    fontWeight: 800,
+                    fontSize: "1.05rem",
+                    letterSpacing: "-0.02em",
+                    color: "text.primary",
+                    lineHeight: 1.2,
+                  }}
+                >
+                  الإشعارات
+                </Typography>
+                <Typography
+                  sx={{
+                    fontSize: "0.72rem",
+                    color: "text.secondary",
+                    mt: 0.35,
+                    lineHeight: 1.45,
+                    opacity: 0.92,
+                  }}
+                >
+                  تحديثات العهدة والفريق والنشاط
+                </Typography>
+              </Box>
+            </Stack>
+            <Tooltip title="مسح المعروض (لا يمس القفل ولا إخفاء الإحصائيات)">
+              <span>
+                <IconButton
+                  size="small"
+                  disabled={!canBulkClearNotifications}
+                  onClick={() => {
+                    const next = mergeDismissAfterClear(
+                      visibleNotifications,
+                      notifDismissMap,
+                    );
+                    saveDismissMap(next);
+                    setNotifDismissMap(next);
+                  }}
+                  aria-label="مسح جميع الإشعارات المعروضة"
+                  sx={{
+                    width: 42,
+                    height: 42,
+                    borderRadius: NOTIF_R.surface,
+                    bgcolor: canBulkClearNotifications
+                      ? isMuiDark
+                        ? alpha("#fff", 0.06)
+                        : alpha(COLORS.primary, 0.06)
+                      : "transparent",
+                    border: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
+                    color: canBulkClearNotifications
+                      ? theme.palette.text.secondary
+                      : theme.palette.action.disabled,
+                    transition: "background 0.2s ease, transform 0.15s ease",
+                    "@media (hover: hover) and (pointer: fine)": {
+                      "&:hover": {
+                        bgcolor: isMuiDark
+                          ? alpha("#fff", 0.1)
+                          : alpha(COLORS.primary, 0.1),
+                      },
+                    },
+                  }}
+                >
+                  <Trash2 size={18} strokeWidth={2} />
+                </IconButton>
+              </span>
+            </Tooltip>
           </Stack>
         </Box>
         <Box
           sx={{
-            p: 2,
-            pb: 3,
-            maxHeight: "calc(100dvh - 120px)",
-            overflow: "auto",
+            flexShrink: 0,
+            px: 2,
+            py: 1.25,
+            mx: 2,
+            mb: 1,
+            borderRadius: NOTIF_R.surface,
+            border: `1px solid ${alpha(theme.palette.divider, isMuiDark ? 0.14 : 0.1)}`,
+            background: isMuiDark
+              ? alpha("#fff", 0.04)
+              : alpha("#fff", 0.72),
+            backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
+            boxShadow: isMuiDark
+              ? "none"
+              : "0 4px 20px rgba(31, 61, 53, 0.06)",
           }}
         >
-          <Stack spacing={1.5}>
-            {homeNotifications.map((n) => {
+            <Stack
+              direction="row"
+              alignItems="center"
+              justifyContent="space-between"
+              gap={1}
+              flexWrap="wrap"
+            >
+              {browserNotifPerm !== "granted" ? (
+                <Button
+                  variant="contained"
+                  size="small"
+                  disabled={notifPermLoading}
+                  onClick={async () => {
+                    setNotifPermLoading(true);
+                    try {
+                      if (!isWebNotificationSupported()) {
+                        toast.error(
+                          "لا يمكن طلب الإشعارات من هنا. استخدم رابطاً يبدأ بـ https، أو Chrome/Safari، وعلى آيفون أضف الموقع للشاشة الرئيسية.",
+                        );
+                        return;
+                      }
+                      if (Notification.permission === "denied") {
+                        toast.error(
+                          "الإشعارات محظورة لهذا الموقع. افتح إعدادات المتصفح أو الهاتف واسمح بالإشعارات ثم أعد المحاولة.",
+                        );
+                        return;
+                      }
+                      setPwaNotifEnabled(true);
+                      setPwaNotificationsUserEnabled(true);
+
+                      const r = await requestNotificationPermission();
+                      setBrowserNotifPerm(r);
+
+                      if (r !== "granted") {
+                        if (r === "denied") {
+                          toast.error("لم يُسمح بالإشعارات.");
+                        } else {
+                          toast("لم يُكمل طلب الإذن. يمكنك الضغط مرة أخرى.");
+                        }
+                        return;
+                      }
+
+                      if (!user?.id) {
+                        toast.error("سجّل الدخول أولاً لتسجيل الجهاز.");
+                        return;
+                      }
+
+                      const vapid = import.meta.env.VITE_FCM_VAPID_KEY;
+                      if (!vapid || !String(vapid).trim()) {
+                        toast.error(
+                          "إشعارات الخلفية غير مهيأة على الخادم (مفتاح VAPID). أبلغ المطوّر لإضافة VITE_FCM_VAPID_KEY وإعادة النشر.",
+                        );
+                        return;
+                      }
+
+                      const ok = await registerDeviceForFcmPush(user.id, true);
+                      if (ok) {
+                        toast.success("تم تفعيل التنبيهات وتسجيل هذا الجهاز.");
+                      } else {
+                        toast.error(
+                          "تعذّر تسجيل الجهاز. أعد تحميل الصفحة، أو تحقق من الاتصال وملف firebase-messaging-sw.js.",
+                        );
+                      }
+                    } finally {
+                      setNotifPermLoading(false);
+                    }
+                  }}
+                  sx={{
+                    minWidth: 0,
+                    px: 1.5,
+                    py: 0.6,
+                    fontSize: "0.75rem",
+                    fontWeight: 800,
+                    textTransform: "none",
+                    borderRadius: NOTIF_R.control,
+                    boxShadow: "0 4px 14px rgba(31, 61, 53, 0.2)",
+                    bgcolor: COLORS.primary,
+                    "&:hover": { bgcolor: COLORS.primaryDeep },
+                  }}
+                  startIcon={
+                    notifPermLoading ? (
+                      <CircularProgress size={14} color="inherit" />
+                    ) : undefined
+                  }
+                >
+                  تفعيل تنبيهات الجهاز
+                </Button>
+              ) : (
+                <Box
+                  sx={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 0.75,
+                    px: 1.25,
+                    py: 0.5,
+                    borderRadius: NOTIF_R.control,
+                    bgcolor: alpha(theme.palette.success.main, 0.12),
+                    border: `1px solid ${alpha(theme.palette.success.main, 0.28)}`,
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width: 6,
+                      height: 6,
+                      borderRadius: "50%",
+                      bgcolor: "success.main",
+                      boxShadow: `0 0 0 3px ${alpha(theme.palette.success.main, 0.25)}`,
+                    }}
+                  />
+                  <Typography
+                    sx={{
+                      fontSize: "0.72rem",
+                      fontWeight: 700,
+                      color: "success.dark",
+                    }}
+                  >
+                    التنبيهات مفعّلة
+                  </Typography>
+                </Box>
+              )}
+              <FormControlLabel
+                sx={{ mr: 0, ml: 0, gap: 0.75 }}
+                control={
+                  <Switch
+                    size="small"
+                    checked={pwaNotifEnabled}
+                    onChange={(_, c) => {
+                      setPwaNotifEnabled(c);
+                      setPwaNotificationsUserEnabled(c);
+                      if (c && user?.id) void registerDeviceForFcmPush(user.id, true);
+                    }}
+                    color="primary"
+                  />
+                }
+                label={
+                  <Typography sx={{ fontSize: "0.75rem", fontWeight: 700 }}>
+                    وضع الخلفية
+                  </Typography>
+                }
+              />
+            </Stack>
+        </Box>
+        <Box
+          component="div"
+          sx={{
+            flex: 1,
+            minHeight: 0,
+            overflowY: "auto",
+            overflowX: "hidden",
+            WebkitOverflowScrolling: "touch",
+            overscrollBehaviorY: "contain",
+            touchAction: "pan-y",
+            px: 2,
+            pt: 0.5,
+            pb: 1,
+          }}
+        >
+          <Typography
+            sx={{
+              fontSize: "0.7rem",
+              fontWeight: 800,
+              color: "text.secondary",
+              letterSpacing: "0.06em",
+              textTransform: "uppercase",
+              mb: 1.25,
+              opacity: 0.85,
+            }}
+          >
+            اليوم
+          </Typography>
+          <Stack spacing={1.15} sx={{ pb: 1 }}>
+            {visibleNotifications.map((n) => {
               const kindStyles = {
                 urgent: {
-                  bg: "rgba(198, 40, 40, 0.08)",
-                  border: "rgba(198, 40, 40, 0.18)",
+                  cardBg: isMuiDark
+                    ? alpha("#ef5350", 0.1)
+                    : alpha("#ffebee", 0.95),
+                  cardBorder: alpha("#c62828", isMuiDark ? 0.35 : 0.22),
+                  iconBg: alpha("#c62828", isMuiDark ? 0.2 : 0.12),
+                  iconColor: "#c62828",
+                  bar: "linear-gradient(180deg, #e53935 0%, #b71c1c 100%)",
                 },
                 info: {
-                  bg: "rgba(200, 192, 176, 0.2)",
-                  border: "rgba(31, 61, 53, 0.1)",
+                  cardBg: isMuiDark
+                    ? alpha(COLORS.accent, 0.08)
+                    : alpha("#f5f3ef", 0.98),
+                  cardBorder: alpha(COLORS.primary, isMuiDark ? 0.22 : 0.12),
+                  iconBg: alpha(COLORS.primary, isMuiDark ? 0.28 : 0.1),
+                  iconColor: isMuiDark ? COLORS.accent : COLORS.primaryDeep,
+                  bar: `linear-gradient(180deg, ${COLORS.accent} 0%, ${alpha(COLORS.primary, 0.8)} 100%)`,
                 },
                 success: {
-                  bg: "rgba(46, 125, 50, 0.08)",
-                  border: "rgba(46, 125, 50, 0.15)",
+                  cardBg: isMuiDark
+                    ? alpha("#66bb6a", 0.1)
+                    : alpha("#e8f5e9", 0.92),
+                  cardBorder: alpha("#2e7d32", isMuiDark ? 0.35 : 0.2),
+                  iconBg: alpha("#2e7d32", isMuiDark ? 0.22 : 0.12),
+                  iconColor: "#2e7d32",
+                  bar: "linear-gradient(180deg, #43a047 0%, #2e7d32 100%)",
                 },
                 lock: {
-                  bg: "rgba(92, 107, 192, 0.1)",
-                  border: "rgba(92, 107, 192, 0.2)",
+                  cardBg: isMuiDark
+                    ? alpha("#7986cb", 0.12)
+                    : alpha("#e8eaf6", 0.95),
+                  cardBorder: alpha("#3949ab", isMuiDark ? 0.35 : 0.2),
+                  iconBg: alpha("#3949ab", isMuiDark ? 0.22 : 0.12),
+                  iconColor: "#3949ab",
+                  bar: "linear-gradient(180deg, #5c6bc0 0%, #3949ab 100%)",
+                },
+                team: {
+                  cardBg: isMuiDark
+                    ? alpha(COLORS.accent, 0.12)
+                    : alpha("#faf8f3", 0.98),
+                  cardBorder: alpha(COLORS.accent, isMuiDark ? 0.4 : 0.35),
+                  iconBg: alpha(COLORS.accent, isMuiDark ? 0.22 : 0.18),
+                  iconColor: isMuiDark ? COLORS.accent : "#7d6a44",
+                  bar: `linear-gradient(180deg, ${COLORS.accent} 0%, ${alpha("#8d7b52", 0.9)} 100%)`,
+                },
+                activity: {
+                  cardBg: isMuiDark
+                    ? alpha("#5c6bc0", 0.12)
+                    : alpha("#eef2ff", 0.95),
+                  cardBorder: alpha("#4361ee", isMuiDark ? 0.35 : 0.18),
+                  iconBg: alpha("#4361ee", isMuiDark ? 0.2 : 0.1),
+                  iconColor: "#4361ee",
+                  bar: "linear-gradient(180deg, #5c6bc0 0%, #3949ab 100%)",
                 },
               } as const;
               const s = kindStyles[n.kind] ?? kindStyles.info;
               const leftIcon =
                 n.kind === "urgent" ? (
-                  <AlertTriangle size={22} color="#B71C1C" />
+                  <AlertTriangle size={18} color={s.iconColor} strokeWidth={2} />
                 ) : n.kind === "success" ? (
-                  <CheckCircle2 size={22} color="#2E7D32" />
+                  <CheckCircle2 size={18} color={s.iconColor} strokeWidth={2} />
                 ) : n.kind === "lock" ? (
-                  <Shield size={22} color="#3949AB" />
+                  <Shield size={18} color={s.iconColor} strokeWidth={2} />
+                ) : n.kind === "team" ? (
+                  <Users size={18} color={s.iconColor} strokeWidth={2} />
+                ) : n.kind === "activity" ? (
+                  <Sparkles size={18} color={s.iconColor} strokeWidth={2} />
                 ) : (
                   <Sparkles
-                    size={22}
-                    color={alpha(theme.palette.primary.main, 0.9)}
+                    size={18}
+                    color={s.iconColor}
+                    strokeWidth={2}
                   />
                 );
               return (
                 <Box
                   key={n.id}
                   sx={{
-                    p: 1.75,
-                    borderRadius: 2.5,
-                    bgcolor: s.bg,
-                    border: `1px solid ${s.border}`,
                     position: "relative",
+                    pl: 1.25,
+                    pr: 1.35,
+                    py: 1.35,
+                    borderRadius: NOTIF_R.surface,
+                    bgcolor: s.cardBg,
+                    border: `1px solid ${s.cardBorder}`,
                     overflow: "hidden",
-                    "&::after":
-                      n.kind === "urgent"
-                        ? {
-                            content: '""',
-                            position: "absolute",
-                            left: 0,
-                            top: 0,
-                            bottom: 0,
-                            width: 3,
-                            bgcolor: "#c62828",
-                            borderRadius: "0 2px 2px 0",
-                          }
-                        : {},
+                    boxShadow: isMuiDark
+                      ? "0 1px 4px rgba(0,0,0,0.28)"
+                      : "0 1px 3px rgba(31, 61, 53, 0.08), 0 8px 24px rgba(31, 61, 53, 0.04)",
+                    transition:
+                      "box-shadow 0.2s cubic-bezier(0.2, 0.8, 0.2, 1)",
+                    "&::before": {
+                      content: '""',
+                      position: "absolute",
+                      insetInlineStart: 0,
+                      top: 12,
+                      bottom: 12,
+                      width: 3,
+                      borderRadius: `0 ${NOTIF_R.meta} ${NOTIF_R.meta} 0`,
+                      background: s.bar,
+                      opacity: n.kind === "info" && n.id === "all-clear" ? 0.45 : 1,
+                    },
                   }}
                 >
-                  <Stack direction="row" gap={1.5} alignItems="flex-start">
-                    <Box sx={{ pt: 0.15, flexShrink: 0 }}>{leftIcon}</Box>
-                    <Box sx={{ minWidth: 0 }}>
+                  <Stack direction="row" gap={1.25} alignItems="flex-start">
+                    <Box
+                      sx={{
+                        width: 42,
+                        height: 42,
+                        borderRadius: NOTIF_R.control,
+                        flexShrink: 0,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        bgcolor: s.iconBg,
+                        border: `1px solid ${alpha(s.iconColor, 0.15)}`,
+                      }}
+                    >
+                      {leftIcon}
+                    </Box>
+                    <Box sx={{ minWidth: 0, overflow: "hidden", flex: 1 }}>
                       <Typography
                         sx={{
                           fontWeight: 800,
-                          fontSize: "0.88rem",
+                          fontSize: "0.8125rem",
                           color: "text.primary",
                           lineHeight: 1.35,
+                          letterSpacing: "-0.01em",
+                          wordBreak: "break-word",
+                          overflowWrap: "anywhere",
                         }}
                       >
                         {n.title}
                       </Typography>
                       <Typography
                         sx={{
-                          fontSize: "0.8rem",
+                          fontSize: "0.78rem",
                           color: "text.secondary",
-                          mt: 0.75,
-                          lineHeight: 1.6,
+                          mt: 0.5,
+                          lineHeight: 1.55,
+                          wordBreak: "break-word",
+                          overflowWrap: "anywhere",
+                          opacity: 0.95,
                         }}
                       >
                         {n.body}
                       </Typography>
-                      {n.id === "custody-deficit" && canOpenFund && (
+                      {n.at && (
+                        <Typography
+                          component="span"
+                          sx={{
+                            display: "inline-block",
+                            mt: 0.75,
+                            fontSize: "0.68rem",
+                            fontWeight: 600,
+                            color: "text.secondary",
+                            px: 1,
+                            py: 0.25,
+                            borderRadius: NOTIF_R.meta,
+                            bgcolor: isMuiDark
+                              ? alpha("#fff", 0.06)
+                              : alpha(COLORS.primary, 0.06),
+                          }}
+                        >
+                          {dayjs(n.at).fromNow()}
+                        </Typography>
+                      )}
+                      {n.id === "custody-deficit-self" && canOpenFund && (
                         <Button
-                          size="small"
+                          fullWidth
                           variant="contained"
                           onClick={() => {
                             setNotifOpen(false);
                             navigate("/fund");
                           }}
                           sx={{
-                            mt: 1.25,
-                            borderRadius: 2,
+                            mt: 1.15,
+                            py: 0.85,
+                            minHeight: 44,
+                            fontSize: "0.8rem",
+                            borderRadius: NOTIF_R.control,
                             textTransform: "none",
                             fontWeight: 800,
-                            bgcolor: "primary.main",
-                            "&:hover": { bgcolor: "primary.dark" },
+                            bgcolor: COLORS.primary,
+                            boxShadow: `0 6px 20px ${alpha(COLORS.primary, 0.35)}`,
+                            "&:hover": {
+                              bgcolor: COLORS.primaryDeep,
+                              boxShadow: `0 8px 24px ${alpha(COLORS.primary, 0.4)}`,
+                            },
                           }}
                         >
                           فتح صندوق العهدة
                         </Button>
                       )}
+                      {n.actionPath &&
+                        n.id !== "custody-deficit-self" &&
+                        n.actionLabel && (
+                          <Button
+                            fullWidth
+                            variant="outlined"
+                            onClick={() => {
+                              setNotifOpen(false);
+                              navigate(n.actionPath!);
+                            }}
+                            sx={{
+                              mt: 1,
+                              py: 0.75,
+                              minHeight: 42,
+                              fontSize: "0.78rem",
+                              borderRadius: NOTIF_R.control,
+                              textTransform: "none",
+                              fontWeight: 800,
+                              borderWidth: 1.5,
+                              borderColor: alpha(COLORS.primary, 0.35),
+                              color: isMuiDark ? COLORS.accent : COLORS.primaryDeep,
+                              "&:hover": {
+                                borderWidth: 1.5,
+                                borderColor: COLORS.primary,
+                                bgcolor: alpha(COLORS.primary, 0.06),
+                              },
+                            }}
+                          >
+                            {n.actionLabel}
+                          </Button>
+                        )}
                     </Box>
                   </Stack>
                 </Box>
@@ -1443,23 +1926,39 @@ export const DashboardHomePage = () => {
         </Box>
         <Box
           sx={{
-            p: 2,
-            pt: 0,
-            pb: "calc(16px + env(safe-area-inset-bottom, 0px))",
+            flexShrink: 0,
+            px: 2,
+            pt: 1,
+            pb: "calc(14px + env(safe-area-inset-bottom, 0px))",
+            borderTop: `1px solid ${alpha(theme.palette.divider, isMuiDark ? 0.12 : 0.08)}`,
+            background: isMuiDark
+              ? alpha("#000", 0.2)
+              : alpha("#fff", 0.55),
+            backdropFilter: "blur(10px)",
           }}
         >
           <Button
             fullWidth
             onClick={() => setNotifOpen(false)}
             sx={{
-              borderRadius: 2,
+              py: 1.1,
+              borderRadius: NOTIF_R.control,
               fontWeight: 800,
+              fontSize: "0.84rem",
               textTransform: "none",
-              color: "text.secondary",
-              border: `1px solid ${alpha(theme.palette.divider, 0.9)}`,
+              color: isMuiDark ? alpha("#fff", 0.88) : COLORS.primaryDeep,
+              bgcolor: isMuiDark
+                ? alpha("#fff", 0.08)
+                : alpha(COLORS.primary, 0.08),
+              border: `1px solid ${alpha(theme.palette.divider, 0.45)}`,
+              "&:hover": {
+                bgcolor: isMuiDark
+                  ? alpha("#fff", 0.12)
+                  : alpha(COLORS.primary, 0.12),
+              },
             }}
           >
-            إغلاق
+            إغلاق اللوحة
           </Button>
         </Box>
       </Drawer>

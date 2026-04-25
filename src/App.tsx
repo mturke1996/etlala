@@ -12,6 +12,13 @@ import { Layout } from "./components/Layout";
 import { LoadingScreen } from "./components/LoadingScreen";
 import { AppLockGuard } from "./components/AppLockGuard";
 import { useAppLockStore } from "./store/useAppLockStore";
+import { registerNotificationServiceWorker } from "./lib/pwaNotifications";
+import { getFirebaseMessaging } from "./config/firebase";
+import {
+  registerDeviceForFcmPush,
+  subscribeForegroundFcmMessages,
+} from "./lib/fcmWebPush";
+import toast from "react-hot-toast";
 
 // ─── Direct imports (no lazy loading = instant transitions) ──
 import { LoginPage } from "./pages/LoginPage";
@@ -43,7 +50,12 @@ const queryClient = new QueryClient({
 
 function AppContent() {
   const { mode } = useThemeStore();
-  const { checkAuth, isAuthenticated, isLoading: authLoading } = useAuthStore();
+  const {
+    checkAuth,
+    isAuthenticated,
+    isLoading: authLoading,
+    user,
+  } = useAuthStore();
   const { initialize } = useDataStore();
 
   // ─── Memoize theme to avoid recreation on every render ────
@@ -60,6 +72,7 @@ function AppContent() {
 
   useEffect(() => {
     if (isAuthenticated) {
+      void registerNotificationServiceWorker();
       const unsubscribeData = initialize();
       const unsubscribeAppLock = useAppLockStore.getState().initAppLockSync();
       return () => {
@@ -68,6 +81,30 @@ function AppContent() {
       };
     }
   }, [isAuthenticated, initialize]);
+
+  useEffect(() => {
+    if (!isAuthenticated || !user?.id) return;
+    if (
+      typeof Notification !== "undefined" &&
+      Notification.permission === "granted"
+    ) {
+      void registerDeviceForFcmPush(user.id);
+    }
+  }, [isAuthenticated, user?.id]);
+
+  useEffect(() => {
+    let off: (() => void) | undefined;
+    void (async () => {
+      const messaging = await getFirebaseMessaging();
+      if (!messaging) return;
+      off = subscribeForegroundFcmMessages(messaging, (title, body) => {
+        toast(`${title}\n${body}`, { duration: 4500 });
+      });
+    })();
+    return () => {
+      off?.();
+    };
+  }, []);
 
   // ─── Memoize toast options to avoid recreation ────────────
   const toastOptions = useMemo(

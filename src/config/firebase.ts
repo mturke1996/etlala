@@ -1,6 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore';
+import { getMessaging, isSupported, type Messaging } from 'firebase/messaging';
 
 // Firebase configuration - Etlala
 export const firebaseConfig = {
@@ -24,5 +25,22 @@ export const db = initializeFirestore(app, {
     tabManager: persistentMultipleTabManager(),
   }),
 });
+
+let messagingPromise: Promise<Messaging | null> | null = null;
+
+/** جاهز للمتصفح فقط — مطلوب لـ FCM (آيفون 16.4+ مع التطبيق على الشاشة الرئيسية) */
+export function getFirebaseMessaging(): Promise<Messaging | null> {
+  if (messagingPromise) return messagingPromise;
+  messagingPromise = (async () => {
+    try {
+      if (typeof window === "undefined") return null;
+      if (!(await isSupported())) return null;
+      return getMessaging(app);
+    } catch {
+      return null;
+    }
+  })();
+  return messagingPromise;
+}
 
 export default app;
