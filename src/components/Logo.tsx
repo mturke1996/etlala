@@ -8,8 +8,14 @@ interface LogoProps {
   showSubtitle?: boolean;
 }
 
-const HERO_IMG_FILTER =
-  'drop-shadow(0 8px 24px rgba(0,0,0,0.5)) brightness(0) saturate(100%) invert(90%) sepia(14%) saturate(380%) hue-rotate(350deg) brightness(95%) contrast(90%)';
+/**
+ * ذهبي دافئ وواضح على خلفية داكنة (يُلون مسحوق الشعار: brightness(0) → ثم sepia/saturate).
+ * ضبط أدق من النسخة السابقة التي كانت مائلة للبُهتان (invert/sepia منخفض).
+ */
+export const LOGO_HERO_GOLD_FILTER =
+  'brightness(0) saturate(100%) invert(83%) sepia(42%) saturate(1750%) hue-rotate(1deg) brightness(1.14) contrast(1.06) drop-shadow(0 5px 18px rgba(0,0,0,0.5)) drop-shadow(0 0 26px rgba(231, 208, 150, 0.5))';
+
+const HERO_IMG_FILTER = LOGO_HERO_GOLD_FILTER;
 
 export const Logo: React.FC<LogoProps> = ({ size = 64, variant = 'color', showSubtitle = false }) => {
   const [imgError, setImgError] = useState(false);
@@ -62,30 +68,47 @@ export const Logo: React.FC<LogoProps> = ({ size = 64, variant = 'color', showSu
   }
 
   return (
-    <Box 
-      sx={{ 
-        display: 'flex', 
-        flexDirection: 'column', 
-        alignItems: 'center',
-        gap: 0.5 
-      }}
+    <Box
+      sx={
+        variant === 'hero' && !imgError
+          ? {
+              display: 'block',
+              lineHeight: 0,
+              width: 'fit-content',
+              maxWidth: '100%',
+              mx: 'auto',
+            }
+          : {
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 0.5,
+            }
+      }
     >
       <img
         src={defaultImgSrc}
         alt="Etlala Logo"
         onError={() => setImgError(true)}
-        style={{
-          width: safeSize,
-          height: safeSize,
-          objectFit: 'contain',
-          filter:
-            variant === 'hero'
-              ? HERO_IMG_FILTER
-              : variant === 'light'
-                ? 'brightness(1.5)'
-                : 'none',
-          transition: 'transform 0.3s ease, filter 0.4s ease',
-        }}
+        style={
+          variant === 'hero'
+            ? {
+                display: 'block',
+                maxWidth: safeSize,
+                width: 'auto',
+                height: 'auto',
+                objectFit: 'contain' as const,
+                filter: HERO_IMG_FILTER,
+                transition: 'transform 0.3s ease, filter 0.4s ease',
+              }
+            : {
+                width: safeSize,
+                height: safeSize,
+                objectFit: 'contain',
+                filter: variant === 'light' ? 'brightness(1.5)' : 'none',
+                transition: 'transform 0.3s ease, filter 0.4s ease',
+              }
+        }
       />
       {showSubtitle && !imgError && (
         <Box textAlign="center" mt={0.5}>
