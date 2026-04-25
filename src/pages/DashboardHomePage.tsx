@@ -28,9 +28,7 @@ import {
   Lock,
   LockOpen,
   LogOut,
-  MapPin,
   Moon,
-  Phone,
   Receipt,
   Shield,
   Sparkles,
@@ -44,8 +42,6 @@ import { useThemeStore } from "../store/useThemeStore";
 import { useDataStore } from "../store/useDataStore";
 import { useAppLockStore, type AppModule } from "../store/useAppLockStore";
 import { AppLockSettingsDialog } from "../components/AppLockSettingsDialog";
-import { Logo, LOGO_HERO_GOLD_FILTER } from "../components/Logo";
-import { COMPANY_INFO } from "../constants/companyInfo";
 import toast from "react-hot-toast";
 import { useGlobalFundStore } from "../store/useGlobalFundStore";
 import { computeUserFundAllocTotals } from "../utils/custodyFundAlloc";
@@ -61,60 +57,8 @@ const COLORS = {
   muted: "#6E756F",
 };
 
-/**
- * لازم تكون **صورة المبنى فقط** (ليل/واجهة). لا تستعمل صورة الـ mockup كاملة كخلفية —
- * فيُقص شكل عشوائي. الملف: `public/hero-building-ref.png`
- */
-const HERO_BUILDING_REF = "/hero-building-ref.png";
-/** نص الموقع كما في أصل التصميم (قد يختلف عن بيانات الشركة في companyInfo) */
-const HERO_DISPLAY_ADDRESS = "شارع الجرابه، طرابلس، ليبيا";
-const HERO = {
-  green0: "#0A1412",
-  green1: "#1F3D35",
-  gold1: "#E7D7A5",
-  gold2: "#C8B27D",
-  gold3: "#A8935F",
-  /** نصوص فوق خلفية داكنة */
-  onHero: "rgba(255, 255, 255, 0.94)",
-  onHeroSoft: "rgba(236, 232, 220, 0.78)",
-};
-
-const GoldDivider = ({
-  width = "70%",
-  spacing = 12,
-  marginTop: mtOverride,
-  marginBottom: mbOverride,
-}: {
-  width?: string | number;
-  spacing?: number;
-  marginTop?: number;
-  marginBottom?: number;
-}) => {
-  const mt = mtOverride ?? spacing;
-  const mb = mbOverride ?? spacing;
-  return (
-    <Box
-      aria-hidden
-      sx={{
-        width,
-        mx: "auto",
-        mt: `${mt}px`,
-        mb: `${mb}px`,
-        position: "relative",
-        display: "flex",
-        alignItems: "center",
-        gap: 0,
-      }}
-    >
-      {/* Left line */}
-      <Box sx={{ flex: 1, height: "1px", background: "linear-gradient(90deg, transparent 0%, rgba(200,178,125,0.15) 30%, #C8A85C 100%)", boxShadow: "0 0 8px rgba(200,168,92,0.2)" }} />
-      {/* Diamond ornament */}
-      <Box sx={{ width: 8, height: 8, mx: 1, transform: "rotate(45deg)", background: "linear-gradient(135deg, #E7D7A5 0%, #C8A85C 50%, #A8935F 100%)", boxShadow: "0 0 12px rgba(200,168,92,0.45)", borderRadius: "1px", flexShrink: 0 }} />
-      {/* Right line */}
-      <Box sx={{ flex: 1, height: "1px", background: "linear-gradient(90deg, #C8A85C 0%, rgba(200,178,125,0.15) 70%, transparent 100%)", boxShadow: "0 0 8px rgba(200,168,92,0.2)" }} />
-    </Box>
-  );
-};
+/** بانر الصفحة الرئيسية — الملف: `public/home-hero-banner.png` */
+const HOME_HERO_BANNER_SRC = "/home-hero-banner.png";
 
 const numberFormatter = new Intl.NumberFormat("ar-LY-u-nu-latn", {
   maximumFractionDigits: 0,
@@ -836,371 +780,22 @@ export const DashboardHomePage = () => {
         </Box>
 
         <Box sx={{ mb: 2.5 }}>
-          <Card
-            elevation={0}
+          <Box
+            component="img"
+            src={HOME_HERO_BANNER_SRC}
+            alt="إطلالة — لوحة تحكم موحدة لعملائك والفواتير والمدفوعات"
             sx={{
-              minHeight: 0,
+              width: "100%",
               height: "auto",
+              display: "block",
               borderRadius: "24px",
-              p: 0,
-              color: HERO.onHero,
-              position: "relative",
-              overflow: "hidden",
-              display: "flex",
-              flexDirection: "column",
               border: "1px solid",
-              borderColor: alpha(HERO.gold2, 0.18),
-              background: [
-                "radial-gradient(ellipse 120% 90% at 10% 15%, rgba(200, 178, 120, 0.06) 0%, transparent 50%)",
-                "radial-gradient(ellipse 80% 70% at 85% 85%, rgba(8, 22, 18, 0.5) 0%, transparent 55%)",
-                "linear-gradient(180deg, rgba(255,255,255,0.02) 0%, transparent 28%)",
-                `linear-gradient(108deg, ${HERO.green0} 0%, #0B1613 8%, #112018 28%, #1A3328 48%, #152922 62%, #0E1C17 82%, #070D0A 100%)`,
-              ].join(", "),
+              borderColor: alpha("#C8B27D", 0.12),
               boxShadow: isMuiDark
-                ? "0 28px 56px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.03) inset, 0 1px 0 rgba(255,255,255,0.05) inset"
-                : "0 22px 50px rgba(4, 18, 14, 0.22), 0 0 0 1px rgba(0,0,0,0.06)",
+                ? "0 28px 56px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.03) inset"
+                : "0 22px 50px rgba(4, 18, 14, 0.22)",
             }}
-          >
-            {/* ─── Top edge shimmer line ─── */}
-            <Box
-              aria-hidden
-              sx={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                right: 0,
-                height: "1px",
-                zIndex: 4,
-                background:
-                  "linear-gradient(90deg, transparent 0%, rgba(200,178,125,0.2) 25%, rgba(231,215,165,0.35) 50%, rgba(200,178,125,0.2) 75%, transparent 100%)",
-                pointerEvents: "none",
-              }}
-            />
-
-            {/* ─── Building image (left side, fading right) ─── */}
-            <Box
-              aria-hidden
-              sx={{
-                position: "absolute",
-                left: 0,
-                top: 0,
-                bottom: 0,
-                width: { xs: "65%", sm: "60%" },
-                zIndex: 0,
-                backgroundImage: `url('${HERO_BUILDING_REF}')`,
-                backgroundRepeat: "no-repeat",
-                backgroundSize: { xs: "cover", sm: "cover" },
-                backgroundPosition: { xs: "center center", sm: "center center" },
-                opacity: 1,
-                filter: "saturate(0.9) contrast(1.3) brightness(1.15)",
-                pointerEvents: "none",
-                maskImage:
-                  "linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 45%, rgba(0,0,0,0.6) 75%, rgba(0,0,0,0) 100%)",
-                WebkitMaskImage:
-                  "linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 45%, rgba(0,0,0,0.6) 75%, rgba(0,0,0,0) 100%)",
-              }}
-            />
-            {/* ─── Overlays for depth ─── */}
-            <Box
-              aria-hidden
-              sx={{
-                position: "absolute",
-                inset: 0,
-                zIndex: 0,
-                pointerEvents: "none",
-                background: [
-                  `linear-gradient(100deg, ${alpha(HERO.green0, 0.2)} 0%, transparent 35%)`,
-                  `linear-gradient(260deg, ${alpha("#060D0A", 0.7)} 0%, transparent 50%)`,
-                  "linear-gradient(180deg, rgba(0,0,0,0.1) 0%, transparent 25%, transparent 75%, rgba(0,0,0,0.2) 100%)",
-                ].join(", "),
-              }}
-            />
-            <Box
-              aria-hidden
-              sx={{
-                position: "absolute",
-                inset: 0,
-                zIndex: 0,
-                pointerEvents: "none",
-                background:
-                  "radial-gradient(ellipse 100% 80% at 60% 45%, rgba(5, 14, 11, 0) 0%, rgba(3, 8, 6, 0.35) 100%)",
-              }}
-            />
-
-            {/* ─── Decorative gold stars (bottom right) ─── */}
-            <Box
-              aria-hidden
-              sx={{
-                position: "absolute",
-                right: 0,
-                bottom: { xs: 32, sm: 48 },
-                zIndex: 1,
-                display: "flex",
-                alignItems: "flex-end",
-                justifyContent: "flex-end",
-                pr: { xs: 2.5, sm: 3.5 },
-                pointerEvents: "none",
-              }}
-            >
-              <Box
-                sx={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(3, 1fr)",
-                  columnGap: "14px",
-                  rowGap: "18px",
-                  opacity: 0.9,
-                }}
-              >
-                {Array.from({ length: 15 }).map((_, i) => {
-                  const isLarge = i % 4 === 0;
-                  const size = isLarge ? 6 : 3.5;
-                  return (
-                    <Box
-                      key={i}
-                      sx={{
-                        width: size,
-                        height: size,
-                        borderRadius: "1px",
-                        transform: "rotate(45deg)",
-                        background: `linear-gradient(135deg, #FDE6A2, ${HERO.gold3})`,
-                        boxShadow: isLarge 
-                          ? `0 0 16px ${HERO.gold1}, 0 0 8px #FDE6A2` 
-                          : `0 0 6px ${alpha(HERO.gold1, 0.5)}`,
-                        opacity: isLarge ? 1 : 0.5,
-                      }}
-                    />
-                  );
-                })}
-              </Box>
-            </Box>
-
-            {/* ─── Main content ─── */}
-            <Box
-              sx={{
-                position: "relative",
-                zIndex: 2,
-                flex: 1,
-                minHeight: 0,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                px: { xs: 2, sm: 3 },
-                py: { xs: 2.25, sm: 2.5 },
-                width: "100%",
-                boxSizing: "border-box",
-              }}
-            >
-              <Stack
-                alignItems="center"
-                textAlign="center"
-                spacing={0}
-                sx={{
-                  maxWidth: 420,
-                  width: 1,
-                  justifyContent: "center",
-                  gap: 0,
-                }}
-              >
-                {/* ─── Logo Icon ─── */}
-                <Box
-                  component="h1"
-                  aria-label="ETLALA"
-                  sx={{ m: 0, p: 0, lineHeight: 0, display: "flex", flexDirection: "column", alignItems: "center", width: 1 }}
-                >
-                    <Box
-                      component="img"
-                      src="/logo-hero-3d.png"
-                      alt="Etlala Logo"
-                      sx={{
-                        width: { xs: 80, sm: 90 },
-                        height: { xs: 80, sm: 90 },
-                        objectFit: "contain",
-                        display: "block",
-                      }}
-                    />
-                </Box>
-
-                {/* ─── ETLALA text ─── */}
-                <Typography
-                  sx={{
-                    fontFamily: '"Montserrat", "Outfit", sans-serif',
-                    fontSize: { xs: "1.75rem", sm: "2rem" },
-                    fontWeight: 700,
-                    letterSpacing: { xs: "0.45em", sm: "0.55em" },
-                    lineHeight: 1,
-                    mt: 1.25,
-                    mb: 0,
-                    ml: { xs: "0.45em", sm: "0.55em" }, // offset for letter-spacing to keep it centered
-                    textAlign: "center",
-                    textTransform: "uppercase",
-                    background: `linear-gradient(180deg, #FDE6A2 0%, #D8BA71 45%, #B39145 100%)`,
-                    WebkitBackgroundClip: "text",
-                    WebkitTextFillColor: "transparent",
-                    backgroundClip: "text",
-                    textShadow: "0 4px 16px rgba(0,0,0,0.4)",
-                    filter: "drop-shadow(0px 2px 4px rgba(0,0,0,0.5))",
-                  }}
-                >
-                  ETLALA
-                </Typography>
-
-                {/* ─── Subtitle ─── */}
-                <Typography
-                  sx={{
-                    fontFamily: '"Sora", "Outfit", "Inter", sans-serif',
-                    fontSize: { xs: "0.5rem", sm: "0.55rem" },
-                    fontWeight: 400,
-                    letterSpacing: { xs: "0.22em", sm: "0.28em" },
-                    lineHeight: 1.5,
-                    color: alpha(HERO.gold1, 0.7),
-                    mt: 1,
-                    mb: 0,
-                    ml: { xs: "0.22em", sm: "0.28em" }, // offset for letter-spacing
-                    textTransform: "uppercase",
-                    textAlign: "center",
-                  }}
-                >
-                  Architectural & Engineering Consultancy
-                </Typography>
-
-                {/* ─── Arabic tagline ─── */}
-                <Typography
-                  sx={{
-                    fontFamily: '"IBM Plex Sans Arabic", "Cairo", sans-serif',
-                    fontSize: { xs: "0.82rem", sm: "0.9rem" },
-                    fontWeight: 500,
-                    lineHeight: 1.65,
-                    color: HERO.onHeroSoft,
-                    mt: 1.5,
-                    mb: 0,
-                    maxWidth: 300,
-                    mx: "auto",
-                    textAlign: "center",
-                    textShadow: "0 1px 3px rgba(0,0,0,0.4)",
-                  }}
-                >
-                  لوحة تحكم موحدة لعملائك والفواتير والمدفوعات.
-                </Typography>
-
-                {/* ─── Gold divider ─── */}
-                <GoldDivider
-                  width="min(75%, 240px)"
-                  marginTop={10}
-                  marginBottom={10}
-                />
-
-                {/* ─── Address + Phone ─── */}
-                <Stack
-                  spacing={1}
-                  alignItems="center"
-                  sx={{ width: 1, mt: 0 }}
-                >
-                  {/* Address pill */}
-                  <Box
-                    dir="rtl"
-                    sx={{
-                      display: "inline-flex",
-                      flexDirection: "row",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: 1,
-                      px: 2.5,
-                      py: 0.85,
-                      borderRadius: "40px",
-                      maxWidth: "100%",
-                      bgcolor: alpha("#040A08", 0.6),
-                      border: `1px solid ${alpha(HERO.gold2, 0.3)}`,
-                      boxShadow: [
-                        "0 4px 20px rgba(0,0,0,0.4)",
-                        `inset 0 1px 0 ${alpha("#fff", 0.06)}`,
-                        `inset 0 0 10px ${alpha(HERO.gold2, 0.05)}`
-                      ].join(", "),
-                      backdropFilter: "blur(16px)",
-                      WebkitBackdropFilter: "blur(16px)",
-                    }}
-                  >
-                    <MapPin
-                      size={16}
-                      color={HERO.gold1}
-                      strokeWidth={2.2}
-                      style={{ flexShrink: 0, opacity: 0.95 }}
-                    />
-                    <Typography
-                      sx={{
-                        fontSize: { xs: "0.76rem", sm: "0.82rem" },
-                        fontWeight: 600,
-                        lineHeight: 1.4,
-                        textAlign: "center",
-                        color: HERO.onHero,
-                        letterSpacing: "0.01em",
-                      }}
-                    >
-                      {HERO_DISPLAY_ADDRESS}
-                    </Typography>
-                  </Box>
-
-                  {/* Phone row */}
-                  <Box
-                    component="a"
-                    href={`tel:${COMPANY_INFO.phone}`}
-                    dir="ltr"
-                    sx={{
-                      display: "inline-flex",
-                      flexDirection: "row",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: 1.25,
-                      textDecoration: "none",
-                      color: HERO.onHero,
-                      mt: 0.5,
-                      transition: "opacity 0.2s ease",
-                      "&:hover": { opacity: 0.85 },
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        width: 30,
-                        height: 30,
-                        borderRadius: "50%",
-                        display: "grid",
-                        placeItems: "center",
-                        flexShrink: 0,
-                        border: `1.5px solid ${alpha(HERO.gold2, 0.65)}`,
-                        background: `linear-gradient(150deg, ${HERO.gold1} 0%, ${HERO.gold2} 50%, ${HERO.gold3} 100%)`,
-                        boxShadow: [
-                          `inset 0 1px 0 ${alpha("#fff", 0.3)}`,
-                          "0 4px 10px rgba(0,0,0,0.25)",
-                          `0 0 16px ${alpha(HERO.gold1, 0.15)}`,
-                        ].join(", "),
-                      }}
-                    >
-                      <Phone
-                        size={13}
-                        color={HERO.green0}
-                        strokeWidth={2.2}
-                      />
-                    </Box>
-                    <Typography
-                      component="span"
-                      dir="ltr"
-                      sx={{
-                        fontFamily: '"Sora", "Outfit", sans-serif',
-                        fontSize: { xs: "0.95rem", sm: "1.02rem" },
-                        fontWeight: 600,
-                        letterSpacing: "0.06em",
-                        unicodeBidi: "embed",
-                        color: HERO.onHero,
-                        textShadow: "0 1px 2px rgba(0,0,0,0.3)",
-                      }}
-                    >
-                      {COMPANY_INFO.phone}
-                    </Typography>
-                  </Box>
-                </Stack>
-              </Stack>
-            </Box>
-          </Card>
+          />
         </Box>
 
         <Stack spacing={3.25} sx={{ width: 1, mt: 1.25 }} useFlexGap>

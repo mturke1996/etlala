@@ -1,7 +1,7 @@
 export const COMPANY_INFO = {
   name: 'إطلالة',
   fullName: 'إطلالة للعمارة والإستشارات الهندسية',
-  address: 'شارع الجرابه، طرابلس، ليبيا',
+  address: 'شارع الجرابه طرابلس ليبيا',
   phone: '0913033331',
   phone2: '',
   email: 'info@etlala.ly',
