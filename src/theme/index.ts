@@ -1,4 +1,4 @@
-import { createTheme, ThemeOptions } from '@mui/material/styles';
+import { alpha, createTheme, ThemeOptions } from '@mui/material/styles';
 import { premiumTokens } from './tokens';
 
 export type ThemeMode = 'light' | 'dark';
@@ -169,7 +169,16 @@ export const createAppTheme = (mode: ThemeMode = 'light') => {
             borderRadius: '14px',
             minHeight: 48,
             padding: '10px 24px',
-            transition: 'transform 0.12s ease, opacity 0.12s ease, background 0.2s ease, box-shadow 0.2s ease',
+            letterSpacing: '0.01em',
+            /** PWA / متصفحات الجوال: تقليل تأخير النقرة المزدوجة وتمييز اللمس */
+            touchAction: 'manipulation',
+            WebkitTapHighlightColor: 'transparent',
+            transition:
+              'transform 0.12s ease, opacity 0.12s ease, background 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease',
+            '&.Mui-focusVisible': {
+              outline: `3px solid ${isDark ? alpha('#D4C9A3', 0.55) : alpha(primary, 0.38)}`,
+              outlineOffset: 2,
+            },
             '&:active': {
               transform: 'scale(0.97)',
               opacity: 0.96,
@@ -177,15 +186,33 @@ export const createAppTheme = (mode: ThemeMode = 'light') => {
             '@media (prefers-reduced-motion: reduce)': {
               '&:active': { transform: 'none' },
             },
+            '&.Mui-disabled': {
+              opacity: 0.58,
+            },
+          },
+          sizeSmall: {
+            minHeight: 44,
+            padding: '8px 18px',
+            borderRadius: '12px',
+            fontSize: '0.875rem',
+          },
+          sizeLarge: {
+            minHeight: 52,
+            padding: '12px 28px',
+            borderRadius: '16px',
+            fontSize: '1rem',
           },
           contained: {
             boxShadow: 'none',
             '&:hover': {
               boxShadow: isDark ? '0 8px 20px rgba(0, 0, 0, 0.4)' : '0 4px 16px rgba(47, 62, 52, 0.18)',
             },
+            '&.Mui-disabled': {
+              opacity: 0.55,
+            },
           },
           containedPrimary: {
-            background: palette.primary.main,
+            background: `linear-gradient(180deg, ${palette.primary.main} 0%, ${isDark ? palette.primary.dark : premiumTokens.primaryDark} 100%)`,
             color: '#fff',
             '&:hover': {
               background: isDark ? palette.primary.light : premiumTokens.primaryDark,
@@ -198,6 +225,11 @@ export const createAppTheme = (mode: ThemeMode = 'light') => {
             '&:hover': {
               borderWidth: '1.5px',
               backgroundColor: isDark ? 'rgba(194, 178, 128, 0.12)' : 'rgba(194, 178, 128, 0.12)',
+            },
+          },
+          text: {
+            '&:hover': {
+              backgroundColor: isDark ? alpha('#D4C9A3', 0.08) : alpha(primary, 0.06),
             },
           },
         },
@@ -323,9 +355,12 @@ export const createAppTheme = (mode: ThemeMode = 'light') => {
         styleOverrides: {
           root: {
             color: palette.text.secondary,
-            padding: '6px 4px',
+            padding: '8px 6px',
             minWidth: 0,
+            minHeight: 48,
             flex: '1 1 0',
+            touchAction: 'manipulation',
+            WebkitTapHighlightColor: 'transparent',
             '&.Mui-selected': {
               color: isDark ? '#D4C9A3' : primary,
             },
@@ -389,10 +424,30 @@ export const createAppTheme = (mode: ThemeMode = 'light') => {
         styleOverrides: {
           root: {
             borderRadius: '12px',
-            transition: 'all 0.2s ease',
-            '&:active': {
-              transform: 'scale(0.9)',
+            minWidth: 44,
+            minHeight: 44,
+            padding: 10,
+            touchAction: 'manipulation',
+            WebkitTapHighlightColor: 'transparent',
+            transition: 'background 0.2s ease, transform 0.12s ease, opacity 0.12s ease',
+            '&.Mui-focusVisible': {
+              outline: `3px solid ${isDark ? alpha('#D4C9A3', 0.5) : alpha(primary, 0.35)}`,
+              outlineOffset: 2,
             },
+            '&:active': {
+              transform: 'scale(0.92)',
+            },
+            '@media (prefers-reduced-motion: reduce)': {
+              '&:active': { transform: 'none' },
+            },
+            '&.Mui-disabled': {
+              opacity: 0.45,
+            },
+          },
+          sizeSmall: {
+            minWidth: 40,
+            minHeight: 40,
+            padding: 8,
           },
         },
       },

@@ -17,7 +17,7 @@ interface Props {
 }
 
 const MODULES: { id: AppModule; label: string }[] = [
-  { id: 'stats', label: 'الإحصائيات والأرباح (الرئيسية)' },
+  { id: 'stats', label: 'الإحصائيات وصافي النسبة (الرئيسية)' },
   { id: 'clients', label: 'سجل العملاء' },
   { id: 'invoices', label: 'الفواتير' },
   { id: 'payments', label: 'المدفوعات' },

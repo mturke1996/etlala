@@ -481,7 +481,7 @@ export const ClientProfilePage = () => {
     { title: 'الديون', icon: CreditCard, color: '#c9a54e', bgColor: 'rgba(201,165,78,0.08)', borderColor: 'rgba(201,165,78,0.12)', module: 'debts', onClick: () => setDebtsListOpen(true) },
     { title: 'العمال', icon: PersonAdd, color: '#4A5E50', bgColor: 'rgba(74, 94, 80, 0.08)', borderColor: 'rgba(74, 94, 80, 0.12)', module: 'workers', onClick: () => setWorkersListOpen(true) },
     { title: 'إضافة رصيد (العهد)', icon: AccountBalanceWallet, color: '#f59e0b', bgColor: 'rgba(245,158,11,0.08)', borderColor: 'rgba(245,158,11,0.12)', module: 'balances', onClick: () => setBalancesListOpen(true) },
-    { title: 'حساب الأرباح', icon: TrendingUp, color: '#C2B280', bgColor: 'rgba(194, 178, 128, 0.08)', borderColor: 'rgba(194, 178, 128, 0.12)', module: 'stats', onClick: () => setProfitDialogOpen(true) },
+    { title: 'حساب صافي النسبة', icon: TrendingUp, color: '#C2B280', bgColor: 'rgba(194, 178, 128, 0.08)', borderColor: 'rgba(194, 178, 128, 0.12)', module: 'stats', onClick: () => setProfitDialogOpen(true) },
     { title: 'تحميل التقرير الشامل', icon: Business, color: '#2F3E34', bgColor: 'rgba(47, 62, 52, 0.1)', borderColor: 'rgba(47, 62, 52, 0.16)', module: 'stats', onClick: () => handleGeneratePDF() },
     { title: 'مشاركة التقرير الشامل', icon: Share, color: '#243028', bgColor: 'rgba(36, 48, 40, 0.08)', borderColor: 'rgba(36, 48, 40, 0.12)', module: 'stats', onClick: () => handleShareFullReport() },
   ].filter(item => canAccess(item.module as any));
@@ -754,7 +754,16 @@ export const ClientProfilePage = () => {
               </Box>
               <Grid container sx={{ position: 'relative' }}>
                 {[
-                  { label: 'الربح', value: formatCurrency(summary.profit), sub: summary.profitPercentage > 0 ? `${summary.profitPercentage}%` : '—' },
+                  {
+                    label: 'النسبة المتفق عليها',
+                    value: summary.profitPercentage > 0 ? `${summary.profitPercentage}%` : '—',
+                    sub:
+                      summary.profit > 0
+                        ? `مبلغ صافي النسبة: ${formatCurrency(summary.profit)}`
+                        : summary.profitPercentage > 0
+                          ? 'لا مدفوعات بعد'
+                          : 'حدّد النسبة من الحوار',
+                  },
                   { label: 'المصروفات', value: formatCurrency(summary.totalExpenses), sub: `${clientExpenses.length} سجل` },
                   { label: 'الديون', value: formatCurrency(summary.totalDebts), sub: `${clientDebts.length} بند` },
                   { label: 'المتبقي', value: formatCurrency(summary.remaining), sub: summary.remaining >= 0 ? 'رصيد' : 'عجز' },
@@ -767,7 +776,40 @@ export const ClientProfilePage = () => {
                       borderTop: i >= 2 ? '1px solid rgba(255,255,255,0.1)' : 'none',
                     }}
                   >
-                    <Box sx={{ p: 1.75, height: '100%' }}>
+                    <Box
+                      component={i === 0 ? motion.div : 'div'}
+                      {...(i === 0
+                        ? {
+                            initial: reduceMotion ? false : { opacity: 0, y: 8 },
+                            animate: { opacity: 1, y: 0 },
+                            transition: {
+                              duration: reduceMotion ? 0 : 0.5,
+                              ease: [0.16, 1, 0.3, 1],
+                            },
+                          }
+                        : {})}
+                      sx={{
+                        p: 1.75,
+                        height: '100%',
+                        position: 'relative',
+                        ...(i === 0
+                          ? {
+                              overflow: 'hidden',
+                              '&::after': {
+                                content: '""',
+                                position: 'absolute',
+                                bottom: 0,
+                                left: 0,
+                                right: 0,
+                                height: 3,
+                                borderRadius: '3px 3px 0 0',
+                                background: 'linear-gradient(90deg, transparent, rgba(228,213,184,0.55), transparent)',
+                                opacity: 0.85,
+                              },
+                            }
+                          : {}),
+                      }}
+                    >
                       <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', fontWeight: 700, fontSize: '0.6rem', letterSpacing: 0.6, display: 'block', mb: 0.4 }}>
                         {c.label}
                       </Typography>
@@ -776,9 +818,18 @@ export const ClientProfilePage = () => {
                         fontWeight={800}
                         sx={{
                           color: c.label === 'المتبقي' && summary.remaining < 0 ? '#fda4a4' : '#fff',
-                          fontSize: { xs: '0.8rem', sm: '0.88rem' },
+                          fontSize:
+                            i === 0
+                              ? { xs: '1.15rem', sm: '1.28rem' }
+                              : { xs: '0.8rem', sm: '0.88rem' },
                           fontFamily: 'Outfit, sans-serif',
                           lineHeight: 1.25,
+                          ...(i === 0 && summary.profitPercentage > 0
+                            ? {
+                                fontWeight: 900,
+                                textShadow: '0 2px 18px rgba(228,213,184,0.35)',
+                              }
+                            : {}),
                         }}
                       >
                         {c.value}
@@ -1704,10 +1755,10 @@ export const ClientProfilePage = () => {
 
       {/* ===== PROFIT DIALOG ===== */}
       <Dialog open={profitDialogOpen} onClose={() => setProfitDialogOpen(false)} maxWidth="sm" fullWidth PaperProps={{ style: { borderRadius: 20, padding: 16 } }}>
-        <Typography variant="h6" fontWeight={800} mb={2}>حساب الأرباح</Typography>
+        <Typography variant="h6" fontWeight={800} mb={2}>حساب صافي النسبة</Typography>
         <Stack spacing={2}>
-          <TextField fullWidth label="نسبة الربح (%)" type="number" value={profitPercentage} onChange={(e) => setProfitPercentage(e.target.value)} InputProps={{ endAdornment: <InputAdornment position="end">%</InputAdornment> }} />
-          {summary.profit > 0 && <Alert severity="info" sx={{ borderRadius: 2 }}>الربح الحالي: {formatCurrency(summary.profit)}</Alert>}
+          <TextField fullWidth label="نسبة صافي النسبة (%)" type="number" value={profitPercentage} onChange={(e) => setProfitPercentage(e.target.value)} InputProps={{ endAdornment: <InputAdornment position="end">%</InputAdornment> }} />
+          {summary.profit > 0 && <Alert severity="info" sx={{ borderRadius: 2 }}>صافي النسبة الحالية (المحسوبة): {formatCurrency(summary.profit)}</Alert>}
         </Stack>
         <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
           <Button fullWidth onClick={() => setProfitDialogOpen(false)} sx={{ borderRadius: 2.5 }}>إلغاء</Button>

@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/ar";
@@ -82,6 +83,12 @@ const COLORS = {
   accent: "#C4AE72",
   text: "#2A2E2C",
   muted: "#6E756F",
+  /** DESIGN.md success — محصّل / مكاسب */
+  success: "#0d9668",
+  successDeep: "#0a7a56",
+  /** مصروفات — لون دافئ مميز */
+  expense: "#8b5a2b",
+  expenseDeep: "#5c3d1f",
 };
 
 /**
@@ -102,6 +109,11 @@ const HOME_HERO_BANNER_SRC = "/home-hero-banner.png";
 
 const numberFormatter = new Intl.NumberFormat("ar-LY-u-nu-latn", {
   maximumFractionDigits: 0,
+});
+
+const percentDisplayFormatter = new Intl.NumberFormat("ar-LY-u-nu-latn", {
+  maximumFractionDigits: 1,
+  minimumFractionDigits: 0,
 });
 
 /**
@@ -329,6 +341,8 @@ export const DashboardHomePage = () => {
   );
   const [notifPermLoading, setNotifPermLoading] = useState(false);
   const [notifDismissMap, setNotifDismissMap] = useState(loadDismissMap);
+  const reduceMotion = useReducedMotion();
+  const netMarginWaveGradId = useId().replace(/:/g, "");
 
   const canOpenFund = canAccess("balances");
   const canSeeStats = canAccess("stats");
@@ -500,12 +514,15 @@ export const DashboardHomePage = () => {
       0,
     );
     const netProfit = collectedAmount - expensesAmount;
+    const netMarginPercent =
+      collectedAmount > 0 ? (netProfit / collectedAmount) * 100 : null;
     const hasData =
       clients.length > 0 || payments.length > 0 || expenses.length > 0;
     return {
       collectedAmount,
       expensesAmount,
       netProfit,
+      netMarginPercent,
       hasData,
       clientsCount: clients.length,
     };
@@ -867,7 +884,16 @@ export const DashboardHomePage = () => {
           </Stack>
         </Box>
 
-        <Box sx={{ mb: 2.5 }}>
+        <Box
+          component={motion.div}
+          sx={{ mb: 2.5 }}
+          initial={reduceMotion ? undefined : { opacity: 0, y: 14, scale: 0.985 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{
+            duration: reduceMotion ? 0 : 0.55,
+            ease: [0.2, 0.8, 0.2, 1],
+          }}
+        >
           <Box
             component="img"
             src={HOME_HERO_BANNER_SRC}
@@ -894,6 +920,7 @@ export const DashboardHomePage = () => {
                 sx={{
                   borderRadius: "22px",
                   p: 2.5,
+                  pb: 4.25,
                   overflow: "hidden",
                   position: "relative",
                   background: isMuiDark
@@ -915,145 +942,310 @@ export const DashboardHomePage = () => {
                   },
                 }}
               >
+                <Box
+                  sx={{
+                    position: "absolute",
+                    insetInline: 0,
+                    bottom: 0,
+                    height: 56,
+                    pointerEvents: "none",
+                    zIndex: 0,
+                    opacity: isMuiDark ? 0.92 : 1,
+                  }}
+                  aria-hidden
+                >
+                  <Box
+                    component="svg"
+                    viewBox="0 0 480 56"
+                    preserveAspectRatio="none"
+                    sx={{ display: "block", width: 1, height: 1 }}
+                  >
+                    <defs>
+                      <linearGradient
+                        id={netMarginWaveGradId}
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="0%"
+                          stopColor={alpha(COLORS.accent, isMuiDark ? 0.28 : 0.2)}
+                        />
+                        <stop
+                          offset="100%"
+                          stopColor={alpha(COLORS.accent, 0)}
+                        />
+                      </linearGradient>
+                    </defs>
+                    <motion.path
+                      d="M0,40 C72,14 144,52 216,26 S360,8 480,36 L480,56 L0,56 Z"
+                      fill={`url(#${netMarginWaveGradId})`}
+                      initial={reduceMotion ? false : { opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.5, ease: "easeOut" }}
+                    />
+                    <motion.path
+                      d="M0,40 C72,14 144,52 216,26 S360,8 480,36"
+                      fill="none"
+                      stroke={alpha(COLORS.accent, isMuiDark ? 0.55 : 0.42)}
+                      strokeWidth="1.75"
+                      strokeLinecap="round"
+                      initial={reduceMotion ? false : { pathLength: 0 }}
+                      animate={{ pathLength: 1 }}
+                      transition={{
+                        duration: reduceMotion ? 0 : 1.15,
+                        ease: [0.2, 0.8, 0.2, 1],
+                        delay: reduceMotion ? 0 : 0.08,
+                      }}
+                    />
+                  </Box>
+                </Box>
                 {isLoading ? (
-                  <Box sx={{ pr: 0.5 }}>
+                  <Box sx={{ pr: 0.5, position: "relative", zIndex: 1 }}>
                     <Skeleton variant="text" width={100} sx={{ mb: 1 }} />
                     <Skeleton variant="rounded" width={200} height={40} />
                   </Box>
                 ) : (
-                  <Box sx={{ pr: 1, textAlign: "right" }}>
+                  <Box
+                    sx={{ pr: 1, textAlign: "right", position: "relative", zIndex: 1 }}
+                  >
                     <Typography
                       sx={{
                         color: "text.secondary",
                         fontSize: "0.88rem",
                         fontWeight: 600,
-                        mb: 1,
+                        mb: 0.75,
                         letterSpacing: 0.02,
                       }}
                     >
-                      صافي الأرباح
+                      صافي النسبة
+                    </Typography>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        display: "block",
+                        color: "text.secondary",
+                        opacity: 0.85,
+                        fontWeight: 600,
+                        fontSize: "0.68rem",
+                        mb: 1,
+                        letterSpacing: 0.03,
+                      }}
+                    >
+                      المحصّل ناقص المصروفات
                     </Typography>
                     <Box
+                      component={motion.div}
                       dir="rtl"
+                      initial={
+                        reduceMotion
+                          ? undefined
+                          : { opacity: 0, y: 12, filter: "blur(6px)" }
+                      }
+                      animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                      transition={
+                        reduceMotion
+                          ? { duration: 0 }
+                          : { duration: 0.55, ease: [0.16, 1, 0.3, 1] }
+                      }
                       sx={{
                         display: "block",
                         textAlign: "right",
                         lineHeight: 1.2,
                       }}
                     >
-                      <MoneyLine value={stats.netProfit} size="lg" />
+                      <CustodyMoneyLine value={stats.netProfit} size="lg" />
                     </Box>
+                    {stats.netMarginPercent !== null ? (
+                      <Box
+                        component={motion.div}
+                        initial={reduceMotion ? undefined : { opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{
+                          delay: reduceMotion ? 0 : 0.2,
+                          duration: 0.4,
+                        }}
+                      >
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            mt: 1.1,
+                            mb: 0,
+                            display: "block",
+                            color: "text.secondary",
+                            fontWeight: 700,
+                            fontSize: "0.72rem",
+                            letterSpacing: 0.02,
+                            fontVariantNumeric: "tabular-nums",
+                          }}
+                        >
+                          هامش من المحصّل:{" "}
+                          {stats.netMarginPercent < 0 ? "−" : ""}
+                          {percentDisplayFormatter.format(
+                            Math.abs(stats.netMarginPercent),
+                          )}
+                          %
+                        </Typography>
+                      </Box>
+                    ) : null}
                   </Box>
                 )}
               </Card>
 
-              <Stack direction="row" spacing={2.5} sx={{ width: 1 }} useFlexGap>
+              <Stack direction="row" spacing={2} sx={{ width: 1 }} useFlexGap>
                 {(
                   [
                     {
                       key: "collected",
                       title: "المحصل",
                       value: stats.collectedAmount,
+                      stripe: `linear-gradient(180deg, ${alpha(COLORS.success, 0.95)} 0%, ${alpha(COLORS.successDeep, 0.45)} 100%)`,
+                      iconBg: `linear-gradient(145deg, ${COLORS.success} 0%, ${COLORS.successDeep} 100%)`,
+                      iconShadow: `0 8px 22px ${alpha(COLORS.success, 0.35)}`,
                       icon: (
-                        <Wallet size={18} color="#fff" strokeWidth={1.85} />
+                        <Wallet size={19} color="#fff" strokeWidth={1.85} />
                       ),
                     },
                     {
                       key: "expenses",
                       title: "المصروفات",
                       value: stats.expensesAmount,
+                      stripe: `linear-gradient(180deg, ${alpha(COLORS.expense, 0.88)} 0%, ${alpha(COLORS.expenseDeep, 0.42)} 100%)`,
+                      iconBg: `linear-gradient(145deg, ${COLORS.expense} 0%, ${COLORS.expenseDeep} 100%)`,
+                      iconShadow: `0 8px 22px ${alpha(COLORS.expense, 0.28)}`,
                       icon: (
-                        <CreditCard size={18} color="#fff" strokeWidth={1.85} />
+                        <CreditCard
+                          size={19}
+                          color="#fff"
+                          strokeWidth={1.85}
+                        />
                       ),
                     },
                   ] as const
-                ).map((item) => (
-                  <Card
+                ).map((item, itemIdx) => (
+                  <Box
                     key={item.key}
-                    elevation={0}
-                    sx={{
-                      flex: 1,
-                      minWidth: 0,
-                      borderRadius: "20px",
-                      p: 1.75,
-                      overflow: "hidden",
-                      position: "relative",
-                      background: isMuiDark
-                        ? "linear-gradient(165deg, #1C241E 0%, #181F1A 100%)"
-                        : "linear-gradient(165deg, #FFFFFF 0%, #F6F5F0 100%)",
-                      border: "none",
-                      boxShadow: isMuiDark
-                        ? "0 8px 28px rgba(0,0,0,0.32)"
-                        : "0 8px 26px rgba(25, 34, 29, 0.08)",
-                      textAlign: "right",
-                      transition: "transform 0.2s ease, box-shadow 0.2s ease",
-                      "&:hover": {
-                        boxShadow: isMuiDark
-                          ? "0 1px 0 rgba(255,255,255,0.06) inset, 0 14px 28px -8px rgba(0,0,0,0.5)"
-                          : "0 1px 0 rgba(255,255,255,0.9) inset, 0 14px 28px -8px rgba(25,34,29,0.16)",
-                      },
-                    }}
+                    component={motion.div}
+                    initial={
+                      reduceMotion
+                        ? undefined
+                        : { opacity: 0, y: 16, scale: 0.98 }
+                    }
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    transition={
+                      reduceMotion
+                        ? { duration: 0 }
+                        : {
+                            delay: 0.06 + itemIdx * 0.07,
+                            duration: 0.48,
+                            ease: [0.2, 0.8, 0.2, 1],
+                          }
+                    }
+                    sx={{ flex: 1, minWidth: 0 }}
                   >
-                    {isLoading ? (
-                      <Stack spacing={1}>
-                        <Skeleton variant="rounded" width={40} height={40} />
-                        <Skeleton variant="text" width="55%" />
-                        <Skeleton variant="text" width="80%" height={32} />
-                      </Stack>
-                    ) : (
-                      <Box>
-                        <Box
-                          dir="rtl"
-                          sx={{
-                            display: "flex",
-                            flexDirection: "row",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                            gap: 1,
-                            mb: 1.25,
-                          }}
-                        >
-                          <Typography
-                            sx={{
-                              color: "text.secondary",
-                              fontSize: "0.8rem",
-                              fontWeight: 700,
-                              letterSpacing: 0.03,
-                              lineHeight: 1.2,
-                              flex: 1,
-                              minWidth: 0,
-                            }}
-                          >
-                            {item.title}
-                          </Typography>
+                    <Card
+                      elevation={0}
+                      sx={{
+                        height: "100%",
+                        borderRadius: "22px",
+                        p: 2,
+                        overflow: "hidden",
+                        position: "relative",
+                        background: isMuiDark
+                          ? "linear-gradient(165deg, #1e2620 0%, #181f1a 100%)"
+                          : "linear-gradient(165deg, #ffffff 0%, #f7f5ef 100%)",
+                        border: isMuiDark
+                          ? `1px solid ${alpha("#fff", 0.06)}`
+                          : `1px solid ${alpha(COLORS.primary, 0.07)}`,
+                        boxShadow: isMuiDark
+                          ? "0 1px 0 rgba(255,255,255,0.05) inset, 0 12px 32px rgba(0,0,0,0.34)"
+                          : "0 1px 0 rgba(255,255,255,0.92) inset, 0 12px 28px rgba(25, 34, 29, 0.07)",
+                        textAlign: "right",
+                        transition:
+                          "transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 220ms cubic-bezier(0.2, 0.8, 0.2, 1)",
+                        "@media (hover: hover) and (pointer: fine)": {
+                          "&:hover": {
+                            transform: "translateY(-3px)",
+                            boxShadow: isMuiDark
+                              ? "0 1px 0 rgba(255,255,255,0.07) inset, 0 18px 36px -10px rgba(0,0,0,0.55)"
+                              : "0 1px 0 rgba(255,255,255,1) inset, 0 18px 36px -10px rgba(25,34,29,0.14)",
+                          },
+                        },
+                        "&::before": {
+                          content: '""',
+                          position: "absolute",
+                          insetInlineStart: 0,
+                          top: 0,
+                          width: 4,
+                          height: "100%",
+                          borderStartStartRadius: "22px",
+                          borderEndStartRadius: "22px",
+                          background: item.stripe,
+                        },
+                      }}
+                    >
+                      {isLoading ? (
+                        <Stack spacing={1}>
+                          <Skeleton variant="rounded" width={44} height={44} />
+                          <Skeleton variant="text" width="55%" />
+                          <Skeleton variant="text" width="80%" height={32} />
+                        </Stack>
+                      ) : (
+                        <Box sx={{ position: "relative", zIndex: 1 }}>
                           <Box
+                            dir="rtl"
                             sx={{
-                              width: 40,
-                              height: 40,
-                              borderRadius: 2.25,
-                              display: "grid",
-                              placeItems: "center",
-                              background: `linear-gradient(145deg, ${COLORS.primary} 0%, ${COLORS.primary2} 100%)`,
-                              boxShadow: "0 6px 16px rgba(31,61,53,0.24)",
-                              flexShrink: 0,
+                              display: "flex",
+                              flexDirection: "row",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              gap: 1,
+                              mb: 1.35,
                             }}
                           >
-                            {item.icon}
+                            <Typography
+                              sx={{
+                                color: "text.secondary",
+                                fontSize: "0.8rem",
+                                fontWeight: 800,
+                                letterSpacing: 0.04,
+                                lineHeight: 1.2,
+                                flex: 1,
+                                minWidth: 0,
+                              }}
+                            >
+                              {item.title}
+                            </Typography>
+                            <Box
+                              sx={{
+                                width: 44,
+                                height: 44,
+                                borderRadius: "14px",
+                                display: "grid",
+                                placeItems: "center",
+                                background: item.iconBg,
+                                boxShadow: `${item.iconShadow}, 0 1px 0 rgba(255,255,255,0.22) inset`,
+                                flexShrink: 0,
+                              }}
+                            >
+                              {item.icon}
+                            </Box>
+                          </Box>
+                          <Box
+                            dir="rtl"
+                            sx={{
+                              textAlign: "right",
+                              pr: 0.25,
+                              lineHeight: 1.15,
+                            }}
+                          >
+                            <MoneyLine value={item.value} size="md" />
                           </Box>
                         </Box>
-                        <Box
-                          dir="rtl"
-                          sx={{
-                            textAlign: "right",
-                            pr: 0.25,
-                            lineHeight: 1.15,
-                          }}
-                        >
-                          <MoneyLine value={item.value} size="md" />
-                        </Box>
-                      </Box>
-                    )}
-                  </Card>
+                      )}
+                    </Card>
+                  </Box>
                 ))}
               </Stack>
             </Stack>
@@ -1336,7 +1528,7 @@ export const DashboardHomePage = () => {
                 لا توجد بيانات مالية بعد
               </Typography>
               <Typography sx={{ color: "text.secondary", fontSize: "0.84rem" }}>
-                سيتم تحديث صافي الأرباح والمصروفات والتحصيل تلقائياً بمجرد إضافة
+                سيتم تحديث صافي النسبة والمصروفات والتحصيل تلقائياً بمجرد إضافة
                 بيانات جديدة.
               </Typography>
             </Card>

@@ -1,0 +1,26 @@
+---
+description: After substantive work, update the local knowledge base (codebase map + styling memory).
+alwaysApply: true
+---
+
+# Knowledge base (memory) updates
+
+This project keeps long-running context under `.cursor/memory/`. **Whenever you complete meaningful work** — new features, refactors, new routes or folders, or any change to **visual design, theme, tokens, or `DESIGN.md`** — do the following before ending the turn (or as part of the same change):
+
+## When to update
+- New/changed/removed **directories**, major **files** (e.g. new page areas, new `store`, new Firebase surface), or **routing** → refresh `.cursor/memory/maps/codebase.md`.
+- Any change to **colors, typography, MUI theme, `src/theme/`, `src/index.css`, or `DESIGN.md`** → refresh `.cursor/memory/maps/styling.md` so it still matches the canonical spec in repo-root `DESIGN.md` and the code.
+- Durable **architecture** choices → add `.cursor/memory/decisions/ADR-NNN-<slug>.md` and link it from `.cursor/memory/index.md`.
+
+## What to do each time
+1. **Edit** the relevant `maps/*.md` files (do not only append noise — replace outdated bullets).
+2. **Bump** the `**Last updated:**` line at the top of each edited map to today’s date (ISO: YYYY-MM-DD).
+3. **Update** `.cursor/memory/index.md`: one-line "Current state" if the project’s focus or stack meaningfully changed; add a line under "Recent sessions" pointing to `sessions/YYYY-MM-DD.md` if you are logging the session.
+4. **Optional but recommended:** append to **today’s** `.cursor/memory/sessions/YYYY-MM-DD.md` (create if missing) with: asked / changed / decisions / unfinished.
+
+## Privacy
+Do not store secrets, tokens, or PII in memory files. Use `[REDACTED]` if needed.
+
+## Scope
+- Small one-line typos: optional map touch.
+- Anything a future session would need to **re-find** structure or **re-apply** styling: **update the maps**.

@@ -64,7 +64,23 @@ function AppContent() {
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", mode);
     document.documentElement.style.setProperty("color-scheme", mode);
+    const themeColor = mode === "dark" ? "#1A221C" : "#2F3E34";
+    document
+      .querySelector('meta[name="theme-color"]')
+      ?.setAttribute("content", themeColor);
+    document
+      .querySelector('meta[name="msapplication-TileColor"]')
+      ?.setAttribute("content", themeColor);
+    document
+      .querySelector('meta[name="msapplication-navbutton-color"]')
+      ?.setAttribute("content", themeColor);
   }, [mode]);
+
+  /** تسجيل Service Worker مبكراً (HTTPS) لتحسين قابلية التثبيت PWA وعدم انتظار تسجيل الدخول */
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.isSecureContext) return;
+    void registerNotificationServiceWorker();
+  }, []);
 
   useEffect(() => {
     checkAuth();
@@ -72,7 +88,6 @@ function AppContent() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      void registerNotificationServiceWorker();
       const unsubscribeData = initialize();
       const unsubscribeAppLock = useAppLockStore.getState().initAppLockSync();
       return () => {

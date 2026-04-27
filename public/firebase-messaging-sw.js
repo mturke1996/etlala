@@ -1,13 +1,68 @@
-/* Service worker موحّد: FCM (إشعارات وهو التطبيق مغلق) + رسائل من التطبيق */
+/* Service worker موحّد: FCM + PWA خفيف (تخزين manifest والأيقونة فقط — بدون اعتراض التنقل أو الحزم) */
 importScripts("https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js");
 importScripts("https://www.gstatic.com/firebasejs/10.7.2/firebase-messaging-compat.js");
 
+const CACHE_STATIC = "etlala-pwa-static-v2";
+const PRECACHE_URLS = ["/manifest.json", "/logo-icon.jpg"];
+
 self.addEventListener("install", (event) => {
-  event.waitUntil(self.skipWaiting());
+  event.waitUntil(
+    (async () => {
+      try {
+        const cache = await caches.open(CACHE_STATIC);
+        await cache.addAll(PRECACHE_URLS);
+      } catch (e) {
+        console.warn("[SW] precache", e);
+      }
+      await self.skipWaiting();
+    })(),
+  );
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(
+    (async () => {
+      const keys = await caches.keys();
+      await Promise.all(
+        keys
+          .filter((k) => k.startsWith("etlala-pwa-static-") && k !== CACHE_STATIC)
+          .map((k) => caches.delete(k)),
+      );
+      await self.clients.claim();
+    })(),
+  );
+});
+
+/** قراءة سريعة لملفات الواجهة العامة فقط — لا يشمل index أو أصول البناء المُجزأة */
+self.addEventListener("fetch", (event) => {
+  const req = event.request;
+  if (req.method !== "GET") return;
+  if (req.mode === "navigate") return;
+
+  const url = new URL(req.url);
+  if (url.origin !== self.location.origin) return;
+
+  const path = url.pathname;
+  const allowed =
+    path === "/manifest.json" ||
+    path === "/logo-icon.jpg" ||
+    path.endsWith(".webmanifest");
+
+  if (!allowed) return;
+
+  event.respondWith(
+    caches.open(CACHE_STATIC).then(async (cache) => {
+      const hit = await cache.match(req);
+      if (hit) return hit;
+      const res = await fetch(req);
+      try {
+        if (res.ok) await cache.put(req, res.clone());
+      } catch (_) {
+        /* ignore */
+      }
+      return res;
+    }),
+  );
 });
 
 firebase.initializeApp({
@@ -72,10 +127,11 @@ self.addEventListener("notificationclick", (event) => {
       .then((clientList) => {
         for (const client of clientList) {
           if (client.url.startsWith(self.location.origin) && "focus" in client) {
-            if ("navigate" in client) {
-              return client.navigate(target).then(() => client.focus());
+            const w = /** @type {WindowClient} */ (client);
+            if (typeof w.navigate === "function") {
+              return w.navigate(target).then(() => w.focus()).catch(() => w.focus());
             }
-            return client.focus();
+            return w.focus();
           }
         }
         if (self.clients.openWindow) return self.clients.openWindow(target);

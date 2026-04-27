@@ -97,7 +97,7 @@ export function buildAppNotifications(a: BuildArgs): AppNotificationItem[] {
       id: "stats-hidden",
       kind: "info",
       title: "إحصائيات الشاشة الرئيسية",
-      body: "مؤشرات صافي الأرباح والمحصّل وعموم المصروفات معطّلة بإعدادات الأمان. يبقى بإمكانك استخدام باقي الأقسام المفعّلة لك.",
+      body: "مؤشرات صافي النسبة والمحصّل وعموم المصروفات معطّلة بإعدادات الأمان. يبقى بإمكانك استخدام باقي الأقسام المفعّلة لك.",
       dismissSignature: "stats",
     });
   }

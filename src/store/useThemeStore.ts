@@ -8,12 +8,12 @@ interface ThemeState {
 }
 
 export const useThemeStore = create<ThemeState>((set) => {
-  // Check local storage or system preference
-  const savedTheme = localStorage.getItem('theme-mode') as ThemeMode;
+  const raw = localStorage.getItem('theme-mode');
+  const savedTheme = raw === 'light' || raw === 'dark' ? raw : null;
   const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  
+
   return {
-    mode: savedTheme || systemTheme, // Default to system preference if no saved theme
+    mode: savedTheme ?? systemTheme,
     
     toggleTheme: () =>
       set((state) => {

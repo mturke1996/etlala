@@ -16,7 +16,7 @@ export interface Client {
   phone: string;
   address: string;
   type: 'company' | 'individual';
-  profitPercentage?: number; // نسبة الأرباح من المصروفات
+  profitPercentage?: number; // نسبة صافي النسبة من المدفوعات (متفق عليها)
   createdAt: string;
   updatedAt: string;
   createdBy?: string; // اسم المستخدم الذي أضاف العميل

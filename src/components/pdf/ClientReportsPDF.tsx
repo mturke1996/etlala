@@ -380,7 +380,7 @@ export const FullReportPDF: React.FC<FullReportPDFProps> = ({
           <CurrencyValue val={summary.totalPaid} color={C.success} />
         </View>
         <View style={[s.summaryCard, { borderTopWidth: 3, borderTopColor: C.warning, backgroundColor: '#fdfbfa' }]}>
-          <Text style={s.summaryLabel}>الربح ({summary.profitPercentage}%)</Text>
+          <Text style={s.summaryLabel}>صافي النسبة ({summary.profitPercentage}%)</Text>
           <CurrencyValue val={summary.profit} color={C.warning} />
         </View>
         <View style={[s.summaryCard, { borderTopWidth: 3, borderTopColor: C.danger, backgroundColor: '#fffcfc' }]}>

@@ -50,6 +50,8 @@ export async function registerNotificationServiceWorker(): Promise<ServiceWorker
   try {
     const reg = await navigator.serviceWorker.register(SW_URL, {
       scope: "/",
+      /** يقلّل احتمال خدمة قديمة من كاش المتصفح أثناء التطوير */
+      updateViaCache: "none",
     });
     return reg;
   } catch (e) {
