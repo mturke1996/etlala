@@ -1,4 +1,4 @@
-import dayjs from 'dayjs';
+import dayjs from "dayjs";
 
 /**
  * تقريب نقدي: يمنع بقايا فاصلة تمنع اكتشاف عجز صغير وترحيله.
@@ -26,7 +26,7 @@ type ExpenseRow = { createdAt: string; amount: number };
  */
 export function computeUserFundAllocTotals(
   depositRows: { createdAt: string; amount: number }[],
-  expenseRows: ExpenseRow[]
+  expenseRows: ExpenseRow[],
 ): { deposited: number; spent: number; remaining: number } {
   if (depositRows.length === 0) {
     if (expenseRows.length === 0) {
@@ -35,8 +35,8 @@ export function computeUserFundAllocTotals(
     const totalExp = round2(
       expenseRows.reduce(
         (s, e) => s + (Number.isFinite(e.amount) ? e.amount : 0),
-        0
-      )
+        0,
+      ),
     );
     // لا عهدات: كامل المصروف = عجز (سلبي)
     return { deposited: 0, spent: totalExp, remaining: -totalExp };
@@ -53,7 +53,7 @@ export function computeUserFundAllocTotals(
     }));
 
   const allExp = [...expenseRows].sort(
-    (a, b) => dayjs(a.createdAt).valueOf() - dayjs(b.createdAt).valueOf()
+    (a, b) => dayjs(a.createdAt).valueOf() - dayjs(b.createdAt).valueOf(),
   );
 
   allExp.forEach((exp) => {

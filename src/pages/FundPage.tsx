@@ -166,6 +166,7 @@ export const FundPage = () => {
     // ── خصم عجز عهدة سابقة من ميزانية العهدة التالية (حلقات حتى الاستقرار) ──
     // مهم: لا تقتصر على (next.remaining - deficit) — إن كانت next سالبة مسبقاً فُرَض اقتطاع العجز مرتين.
     // الصحيح: next.spent += عجز ثم next.remaining = amount − spent (واحدٌ يساوي اقتطاعاً من رصيد تلك العهدة).
+    // +++ FIX: عند ترحيل العجز، ننقل جزءاً من المصاريف الزائدة للعهدة التالية +++
     let moved = true;
     let pass = 0;
     while (moved && pass < 32) {
@@ -177,13 +178,55 @@ export const FundPage = () => {
           const next = userData.custodies[i + 1];
           const r = current.remaining;
           if (r < 0) {
-            const deficit = -r;
+            const deficit = -r; // مبلغ العجز المراد ترحيله
             const ns = round2(next.spent + deficit);
             next.spent = ns;
             next.remaining = round2(next.amount - ns);
             next.carryOver = round2(deficit);
             current.remaining = 0;
             current.debtRolledOut = true;
+
+            // +++ نقل المصاريف الزائدة من العهدة الحالية للتالية +++
+            // نحتاج لنقل جزء من المصاريف مساوٍ للعجز من العهدة الحالية للتالية
+            let remainingToMove = deficit;
+
+            // نعيد توزيع المصاريف: نأخذ من آخر المصاريف المسجلة على العهدة الحالية
+            // وننقلها للعهدة الجديدة (أو نقل جزء منها)
+            for (let j = current.expenses.length - 1; j >= 0 && remainingToMove > 0.01; j--) {
+              const exp = current.expenses[j];
+              const currentUsed = exp.usedAmount || exp.amount;
+
+              if (currentUsed > 0) {
+                const amountToMove = Math.min(currentUsed, remainingToMove);
+
+                // تقليل المبلغ المستخدم في العهدة الحالية
+                exp.usedAmount = round2(currentUsed - amountToMove);
+                if (exp.usedAmount <= 0) {
+                  // إذا أصبح المبلغ صفراً، نحذف المصروف من العهدة الحالية
+                  current.expenses.splice(j, 1);
+                }
+
+                // نبحث إذا كان نفس المصروف موجوداً في العهدة التالية
+                const existingExpense = next.expenses.find(e => e.id === exp.id);
+                if (existingExpense) {
+                  // إذا موجود، نزيد المبلغ المستخدم
+                  existingExpense.usedAmount = round2((existingExpense.usedAmount || 0) + amountToMove);
+                } else {
+                  // إذا غير موجود، نضيفه للعهدة التالية
+                  next.expenses.push({
+                    ...exp,
+                    usedAmount: amountToMove,
+                    isCarriedOver: true // علامة أنه مصروف منقول من عهدة سابقة
+                  });
+                }
+
+                remainingToMove = round2(remainingToMove - amountToMove);
+              }
+            }
+
+            // إعادة حساب المصروفات الفعلية للعهدة الحالية بعد التعديل
+            current.spent = round2(current.expenses.reduce((sum, e) => sum + (e.usedAmount || 0), 0));
+
             moved = true;
           }
         }
@@ -539,22 +582,6 @@ export const FundPage = () => {
                             </Stack>
                           )}
 
-                          {/* عجز سابق: مُنقَطع من رصيد هذه العهدة (موجود ضمن «المصروف»/«المتبقي» أعلاه) */}
-                          {c.carryOver > 0 && (
-                            <Box sx={{
-                              display: 'flex', flexDirection: 'column', gap: 0.3,
-                              bgcolor: isDark ? 'rgba(59, 130, 246, 0.12)' : 'rgba(59, 130, 246, 0.08)',
-                              border: '1px solid', borderColor: isDark ? 'rgba(59, 130, 246, 0.35)' : 'rgba(37, 99, 235, 0.25)',
-                              borderRadius: 1, px: 1.2, py: 0.5, mb: 1, width: 'fit-content', maxWidth: '100%',
-                            }}>
-                              <Typography sx={{ fontSize: '0.6rem', color: isDark ? '#93c5fd' : '#1d4ed8', fontWeight: 800, fontFamily: F, lineHeight: 1.35 }}>
-                                مُقتطع من رصيد هذه العهدة: {formatCurrency(c.carryOver)} د.ل
-                              </Typography>
-                              <Typography sx={{ fontSize: '0.55rem', fontWeight: 600, color: isDark ? 'rgba(147,197,253,0.85)' : 'rgba(29,78,216,0.8)', fontFamily: F, lineHeight: 1.35 }}>
-                                (يظهر داخل «المصروف» — تسوية عجز عهدة سابقة)
-                              </Typography>
-                            </Box>
-                          )}
 
                           {/* Progress Bar */}
                           <Box sx={{ height: 4, bgcolor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)', borderRadius: 3, overflow: 'hidden', mb: 1.4 }}>
