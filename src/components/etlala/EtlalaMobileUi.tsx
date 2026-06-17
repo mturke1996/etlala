@@ -1,6 +1,6 @@
 import type { ReactNode, ElementType } from 'react';
 import type { SxProps, Theme } from '@mui/material/styles';
-import { Box, Typography, Button, Stack } from '@mui/material';
+import { Box, Typography, Button, Stack, alpha } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { premiumTokens } from '../../theme/tokens';
 
@@ -309,4 +309,108 @@ export const etlalaContentFieldSx: SxProps<Theme> = {
     boxShadow: (t) =>
       t.palette.mode === 'dark' ? 'none' : '0 1px 0 rgba(255,255,255,0.9) inset, 0 2px 10px rgba(20,25,20,0.04)',
   },
+};
+
+/** زر إجراء على الهيدر الداكن — accent فاتح، نص primary (بدون تغيير اللون الأساسي) */
+export const etlalaHeroActionButtonSx: SxProps<Theme> = {
+  bgcolor: 'rgba(232, 224, 200, 0.97)',
+  color: premiumTokens.primary,
+  fontWeight: 800,
+  letterSpacing: '0.02em',
+  px: 2.25,
+  py: 0.85,
+  minHeight: 40,
+  borderRadius: '12px',
+  fontSize: '0.8125rem',
+  boxShadow: '0 2px 10px rgba(0,0,0,0.14), inset 0 1px 0 rgba(255,255,255,0.45)',
+  transition: 'transform 0.12s ease, background-color 0.2s ease, box-shadow 0.2s ease',
+  '&:hover': {
+    bgcolor: premiumTokens.accent,
+    color: premiumTokens.primaryDark,
+    boxShadow: '0 4px 16px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.35)',
+  },
+  '&:active': { transform: 'scale(0.96)' },
+  '@media (prefers-reduced-motion: reduce)': { '&:active': { transform: 'none' } },
+  '&.Mui-disabled': { opacity: 0.55, color: premiumTokens.primary },
+  '& .MuiButton-startIcon': { color: 'inherit', mr: 0.5, ml: -0.25 },
+};
+
+/** زر CTA أساسي — تدرج primary، نص أبيض واضح */
+export const etlalaPrimaryCtaButtonSx: SxProps<Theme> = {
+  py: 1.5,
+  borderRadius: '14px',
+  fontWeight: 800,
+  fontSize: '1rem',
+  letterSpacing: '0.02em',
+  color: '#FFFFFF',
+  background: `linear-gradient(180deg, ${premiumTokens.primary} 0%, ${premiumTokens.primaryDark} 100%)`,
+  boxShadow: '0 4px 16px rgba(47, 62, 52, 0.28), inset 0 1px 0 rgba(255,255,255,0.1)',
+  transition: 'transform 0.12s ease, box-shadow 0.2s ease, background 0.2s ease',
+  '&:hover': {
+    background: `linear-gradient(180deg, #3A4B40 0%, ${premiumTokens.primary} 100%)`,
+    boxShadow: '0 6px 22px rgba(47, 62, 52, 0.34)',
+    color: '#FFFFFF',
+  },
+  '&:active': { transform: 'scale(0.96)' },
+  '@media (prefers-reduced-motion: reduce)': { '&:active': { transform: 'none' } },
+  '&.Mui-disabled': { opacity: 0.52, color: 'rgba(255,255,255,0.9)' },
+  '& .MuiButton-startIcon': { color: '#FFFFFF' },
+};
+
+/** زر إصدار — زوايا حادة، أسلوب editorial (صفحة فاتورة جديدة) */
+export const etlalaSharpHeroActionButtonSx: SxProps<Theme> = {
+  bgcolor: 'rgba(232, 224, 200, 0.97)',
+  color: premiumTokens.primary,
+  fontWeight: 800,
+  letterSpacing: '0.08em',
+  textTransform: 'uppercase',
+  px: 2,
+  py: 0.9,
+  minHeight: 40,
+  borderRadius: 0,
+  fontSize: '0.68rem',
+  border: `1px solid ${alpha(premiumTokens.accent, 0.55)}`,
+  boxShadow: `inset 0 -2px 0 ${premiumTokens.primary}`,
+  transition: 'transform 0.12s ease, background-color 0.2s ease',
+  '&:hover': {
+    bgcolor: premiumTokens.accent,
+    color: premiumTokens.primaryDark,
+    boxShadow: `inset 0 -3px 0 ${premiumTokens.primaryDark}`,
+  },
+  '&:active': { transform: 'scale(0.97)' },
+  '@media (prefers-reduced-motion: reduce)': { '&:active': { transform: 'none' } },
+  '&.Mui-disabled': { opacity: 0.55, color: premiumTokens.primary },
+  '& .MuiButton-startIcon': { color: 'inherit', mr: 0.5, ml: -0.25 },
+};
+
+/** CTA إصدار سفلي — زوايا حادة + شريط accent علوي */
+export const etlalaSharpPrimaryCtaButtonSx: SxProps<Theme> = {
+  py: 1.65,
+  borderRadius: 0,
+  fontWeight: 800,
+  fontSize: '0.95rem',
+  letterSpacing: '0.06em',
+  color: '#FFFFFF',
+  background: `linear-gradient(180deg, ${premiumTokens.primary} 0%, ${premiumTokens.primaryDark} 100%)`,
+  boxShadow: `inset 0 1px 0 rgba(255,255,255,0.12), 0 8px 24px ${alpha(premiumTokens.primary, 0.32)}`,
+  transition: 'transform 0.12s ease, box-shadow 0.2s ease, background 0.2s ease',
+  '&:hover': {
+    background: `linear-gradient(180deg, #3A4B40 0%, ${premiumTokens.primary} 100%)`,
+    color: '#FFFFFF',
+  },
+  '&:active': { transform: 'scale(0.98)' },
+  '@media (prefers-reduced-motion: reduce)': { '&:active': { transform: 'none' } },
+  '&.Mui-disabled': { opacity: 0.52, color: 'rgba(255,255,255,0.9)' },
+  '& .MuiButton-startIcon': { color: '#FFFFFF' },
+};
+
+export const etlalaIssueStickyBarSx: SxProps<Theme> = {
+  position: 'fixed',
+  bottom: 'calc(70px + env(safe-area-inset-bottom, 0px))',
+  left: 0,
+  right: 0,
+  zIndex: 1100,
+  bgcolor: 'background.paper',
+  borderTop: `3px solid ${premiumTokens.accent}`,
+  boxShadow: `0 -8px 32px ${alpha(premiumTokens.primary, 0.08)}`,
 };

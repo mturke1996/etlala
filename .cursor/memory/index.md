@@ -10,6 +10,7 @@ React + Vite + TypeScript PWA; MUI; Firebase (Firestore, Cloud Functions, FCM). 
 
 ## Recent sessions
 
+- 2026-06-17 — Invoices mobile list redesign (grouped rows, FAB, filters) → `sessions/2026-06-17.md`
 - 2026-04-27 — Bootstrapped `.cursor/memory` + knowledge-base rule → `sessions/2026-04-27.md`
 
 ## Decisions (ADRs)

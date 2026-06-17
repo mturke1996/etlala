@@ -1,6 +1,6 @@
 # Codebase Map — Etlala
 
-**Last updated:** 2026-04-27
+**Last updated:** 2026-06-17
 
 ## Stack
 
@@ -30,6 +30,7 @@
 - `src/components/`
   - `Layout.tsx`, `PageScaffold.tsx` — shell / page frame
   - `etlala/` — mobile UI (`EtlalaMobileUi`)
+  - `invoices/` — `InvoiceListItem` (dense mobile row + month header for `InvoicesPage`)
   - `client/` — client profile / session UI
   - `pdf/` — PDF documents (`InvoicePDF`, `LetterPDF`, `ClientReportsPDF`, shared `pdfStyles`, `pdfFonts`)
   - Other shared: `LoadingScreen`, `Logo`, `HeroLogo`, `PrintableInvoice`, `AppLockGuard`, etc.
