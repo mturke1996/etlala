@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { useState } from 'react';
+import { forwardRef, useState } from 'react';
 import { Control, Controller } from 'react-hook-form';
 import {
   Box, Typography, TextField, IconButton, Stack, Chip, InputAdornment, alpha, Divider,
@@ -34,43 +34,43 @@ const fieldSx = {
   },
 };
 
-function DecimalField({
-  value,
-  onChange,
-  onBlur,
-  name,
-  inputRef,
-  label,
-  placeholder,
-  center = false,
-  endAdornment,
-  readOnly = false,
-}: {
-  value: unknown;
-  onChange: (v: string) => void;
-  onBlur?: () => void;
-  name?: string;
-  inputRef?: React.Ref<HTMLInputElement>;
-  label?: string;
-  placeholder?: string;
-  center?: boolean;
-  endAdornment?: React.ReactNode;
-  readOnly?: boolean;
-}) {
+const DecimalField = forwardRef(function DecimalField(
+  {
+    value,
+    onChange,
+    onBlur,
+    name,
+    label,
+    placeholder,
+    center = false,
+    endAdornment,
+    helperText,
+  }: {
+    value: unknown;
+    onChange: (v: string) => void;
+    onBlur?: () => void;
+    name?: string;
+    label?: string;
+    placeholder?: string;
+    center?: boolean;
+    endAdornment?: React.ReactNode;
+    helperText?: string;
+  },
+  ref: React.Ref<HTMLInputElement>,
+) {
   return (
     <TextField
       name={name}
-      inputRef={inputRef}
+      inputRef={ref}
       onBlur={onBlur}
       value={value ?? ''}
       label={label}
       placeholder={placeholder}
+      helperText={helperText}
       fullWidth
       type="text"
       inputMode="decimal"
-      disabled={readOnly}
       InputProps={{
-        readOnly,
         endAdornment,
         inputProps: {
           dir: 'ltr',
@@ -82,14 +82,13 @@ function DecimalField({
         },
       }}
       onChange={(e) => {
-        if (readOnly) return;
         const v = sanitizeDecimalTyping(e.target.value);
         if (isPartialDecimalInput(v)) onChange(v);
       }}
       sx={fieldSx}
     />
   );
-}
+});
 
 type Props = {
   control: Control<any>;
@@ -417,14 +416,16 @@ export function ExpenseQuantityChip({
 export function ExpenseAmountField({
   control,
   name = 'amount',
-  label = 'المبلغ الإجمالي',
-  readOnly = false,
+  label,
+  qtyActive = false,
 }: {
   control: Control<any>;
   name?: string;
   label?: string;
-  readOnly?: boolean;
+  /** true when quantity × unit price is active — label/hint only, field stays editable */
+  qtyActive?: boolean;
 }) {
+  const resolvedLabel = label ?? (qtyActive ? 'المبلغ الإجمالي (يُحدَّث تلقائياً)' : 'المبلغ الإجمالي');
   return (
     <Controller
       name={name}
@@ -432,9 +433,9 @@ export function ExpenseAmountField({
       render={({ field }) => (
         <DecimalField
           {...field}
-          label={label}
+          label={resolvedLabel}
           placeholder="0"
-          readOnly={readOnly}
+          helperText={qtyActive ? 'يمكنك تعديل المبلغ يدوياً إذا لزم الأمر' : undefined}
           endAdornment={<InputAdornment position="end"><Typography variant="caption" fontWeight={700}>{CURRENCY_SYMBOL}</Typography></InputAdornment>}
           onChange={field.onChange}
         />

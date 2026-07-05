@@ -51,7 +51,7 @@ import { PROFILE_MODULE } from '../components/client/profileSessionTokens';
 import { premiumTokens } from '../theme/tokens';
 import { computeUserFundAllocTotals } from '../utils/custodyFundAlloc';
 import { ExpenseQuantityBlock, ExpenseQuantityChip, ExpenseAmountField } from '../components/expense/ExpenseQuantityBlock';
-import { expenseHasQuantityLine, multiplyQuantityPrice, parseDecimalInput, parseFormAmount } from '../utils/pdfFormatters';
+import { expenseHasQuantityLine, multiplyQuantityPrice, parseDecimalInput, buildExpenseQuantityPayload } from '../utils/pdfFormatters';
 import { motion, useReducedMotion } from 'framer-motion';
 
 const Grid = MuiGrid as any;
@@ -151,8 +151,8 @@ export const ClientProfilePage = () => {
   useEffect(() => {
     const q = parseDecimalInput(expQuantity);
     const p = parseDecimalInput(expUnitPrice);
-    if (expenseHasQuantityLine({ quantity: q, unitPrice: p })) {
-      setExpVal('amount', String(multiplyQuantityPrice(q!, p!)));
+    if (q != null && q > 0 && p != null && p >= 0) {
+      setExpVal('amount', String(multiplyQuantityPrice(q, p)));
     }
   }, [expQuantity, expUnitPrice, setExpVal]);
 
@@ -521,18 +521,19 @@ export const ClientProfilePage = () => {
   };
 
   const onSubmitExpense = async (data: any) => {
+    const amount = parseDecimalInput(data.amount) ?? 0;
+    if (amount <= 0) {
+      msg('أدخل المبلغ الإجمالي');
+      return;
+    }
     const q = parseDecimalInput(data.quantity);
     const p = parseDecimalInput(data.unitPrice);
     const unit = data.unit?.trim() || undefined;
-    const hasQty = expenseHasQuantityLine({ quantity: q, unitPrice: p });
-    const amount = hasQty ? multiplyQuantityPrice(q!, p!) : parseFormAmount(data.amount);
+    const qtyPayload = buildExpenseQuantityPayload(q, p, unit, { editing: !!editingExpense });
     const workerId = data.workerId || null;
     const workerName = workerId ? workers.find(w => w.id === workerId)?.name : null;
     const userId = editingExpense ? (editingExpense.userId || user?.id || '') : (user?.id || '');
     const createdBy = editingExpense ? (editingExpense.createdBy || user?.displayName || 'المستخدم') : (user?.displayName || 'المستخدم');
-    const qtyPayload = hasQty
-      ? { quantity: q, unitPrice: p, unit }
-      : { quantity: undefined, unitPrice: undefined, unit: undefined };
     try {
       if (editingExpense) {
         await updateExpense(editingExpense.id, { description: data.description, amount, category: data.category, date: data.date, invoiceNumber: data.invoiceNumber, notes: data.notes, workerId, workerName, userId, createdBy, ...qtyPayload });
@@ -1726,7 +1727,7 @@ export const ClientProfilePage = () => {
               />
               <ExpenseAmountField
                 control={expCtrl}
-                readOnly={expenseHasQuantityLine({ quantity: parseDecimalInput(expQuantity), unitPrice: parseDecimalInput(expUnitPrice) })}
+                qtyActive={expenseHasQuantityLine({ quantity: parseDecimalInput(expQuantity), unitPrice: parseDecimalInput(expUnitPrice) })}
               />
               <Controller name="category" control={expCtrl} render={({ field }) => <FormControl fullWidth><InputLabel>التصنيف</InputLabel><Select {...field} label="التصنيف" sx={{ borderRadius: 2.5, bgcolor: 'background.paper' }}>{Object.entries(expenseCategories).map(([key, label]) => <MenuItem key={key} value={key}>{label}</MenuItem>)}</Select></FormControl>} />
               <Controller name="invoiceNumber" control={expCtrl} render={({ field }) => <TextField {...field} fullWidth label="رقم الفاتورة (اختياري)" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2.5, bgcolor: 'background.paper' } }} />} />

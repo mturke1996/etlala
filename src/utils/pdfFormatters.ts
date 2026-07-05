@@ -1,5 +1,7 @@
 /** تنسيقات مساعدة لجداول PDF ونموذج المصروف (كمية × سعر وحدة) */
 
+import { deleteField } from 'firebase/firestore';
+
 export const CURRENCY_SYMBOL = 'د.ل';
 
 /** تحويل الفاصلة العربية و٫ إلى ASCII قبل التحقق */
@@ -146,4 +148,28 @@ export function parseDecimalInput(raw: unknown): number | undefined {
 /** قيمة رقمية من حقل النموذج (نص أو رقم) */
 export function parseFormAmount(raw: unknown): number {
   return parseDecimalInput(raw) ?? 0;
+}
+
+/** حقول الكمية لـ Firestore — بدون undefined (يُستخدم deleteField عند التعديل لمسح الكمية) */
+export function buildExpenseQuantityPayload(
+  q: number | null | undefined,
+  p: number | null | undefined,
+  unit: string | undefined,
+  { editing = false }: { editing?: boolean } = {},
+): Record<string, unknown> {
+  if (expenseHasQuantityLine({ quantity: q ?? undefined, unitPrice: p ?? undefined })) {
+    return {
+      quantity: q,
+      unitPrice: p,
+      ...(unit ? { unit } : {}),
+    };
+  }
+  if (editing) {
+    return {
+      quantity: deleteField(),
+      unitPrice: deleteField(),
+      unit: deleteField(),
+    };
+  }
+  return {};
 }

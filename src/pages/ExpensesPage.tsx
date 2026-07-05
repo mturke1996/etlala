@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { useState, useMemo, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import {
   Box,
   Button,
@@ -53,7 +54,7 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import 'dayjs/locale/ar';
 import { useForm, Controller, useWatch } from 'react-hook-form';
 import { ExpenseQuantityBlock, ExpenseQuantityChip, ExpenseAmountField } from '../components/expense/ExpenseQuantityBlock';
-import { expenseHasQuantityLine, multiplyQuantityPrice, parseDecimalInput, parseFormAmount } from '../utils/pdfFormatters';
+import { expenseHasQuantityLine, multiplyQuantityPrice, parseDecimalInput, buildExpenseQuantityPayload } from '../utils/pdfFormatters';
 
 export const ExpensesPage = () => {
   const theme = useTheme();
@@ -91,8 +92,8 @@ export const ExpensesPage = () => {
   useEffect(() => {
     const q = parseDecimalInput(expFormQuantity);
     const p = parseDecimalInput(expFormUnitPrice);
-    if (expenseHasQuantityLine({ quantity: q, unitPrice: p })) {
-      setExpFormVal('amount', String(multiplyQuantityPrice(q!, p!)));
+    if (q != null && q > 0 && p != null && p >= 0) {
+      setExpFormVal('amount', String(multiplyQuantityPrice(q, p)));
     }
   }, [expFormQuantity, expFormUnitPrice, setExpFormVal]);
 
@@ -146,12 +147,16 @@ export const ExpensesPage = () => {
   }, [transactions, expenses, user, getUserStats]);
 
   const handleAddExpense = async (data: any) => {
+    const amount = parseDecimalInput(data.amount) ?? 0;
+    if (!data.description?.trim() || !data.clientId) return;
+    if (amount <= 0) {
+      toast.error('أدخل المبلغ الإجمالي');
+      return;
+    }
     const q = parseDecimalInput(data.quantity);
     const p = parseDecimalInput(data.unitPrice);
     const unit = data.unit?.trim() || undefined;
-    const hasQty = expenseHasQuantityLine({ quantity: q, unitPrice: p });
-    const amount = hasQty ? multiplyQuantityPrice(q!, p!) : parseFormAmount(data.amount);
-    if (!amount || !data.description || !data.clientId) return;
+    const qtyFields = buildExpenseQuantityPayload(q, p, unit);
     setLoading(true);
     try {
       await addExpense({
@@ -168,7 +173,7 @@ export const ExpensesPage = () => {
         updatedAt: new Date().toISOString(),
         userId: user?.id || '',
         createdBy: user?.displayName || 'غير معروف',
-        ...(hasQty ? { quantity: q, unitPrice: p, unit } : {}),
+        ...qtyFields,
       });
       setDialogOpen(false);
       resetExpForm();
@@ -567,7 +572,7 @@ export const ExpensesPage = () => {
               />
               <ExpenseAmountField
                 control={expFormCtrl}
-                readOnly={expenseHasQuantityLine({ quantity: parseDecimalInput(expFormQuantity), unitPrice: parseDecimalInput(expFormUnitPrice) })}
+                qtyActive={expenseHasQuantityLine({ quantity: parseDecimalInput(expFormQuantity), unitPrice: parseDecimalInput(expFormUnitPrice) })}
               />
               <Controller
                 name="category"
