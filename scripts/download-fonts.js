@@ -24,8 +24,12 @@ const fonts = [
     url: 'https://fonts.gstatic.com/s/cairo/v28/SLXvc1nY6HkvamImRTo9Tq4v.ttf',
   },
   {
-    name: 'Cairo-SemiBold.ttf',
-    url: 'https://fonts.gstatic.com/s/cairo/v28/SLXvc1nY6HkvamImRTo9TqEv.ttf',
+    name: 'Tajawal-Regular.ttf',
+    url: 'https://raw.githubusercontent.com/googlefonts/tajawal/main/fonts/ttf/Tajawal-Regular.ttf',
+  },
+  {
+    name: 'Tajawal-Bold.ttf',
+    url: 'https://raw.githubusercontent.com/googlefonts/tajawal/main/fonts/ttf/Tajawal-Bold.ttf',
   },
 ];
 

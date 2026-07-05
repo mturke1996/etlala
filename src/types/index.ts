@@ -110,6 +110,10 @@ export interface Expense {
   closedAt?: string; // تاريخ الإغلاق
   expenseInvoiceId?: string; // رقم فاتورة المصروفات المجمعة
   notes?: string;
+  /** كمية × سعر وحدة (اختياري — للتقارير PDF) */
+  quantity?: number;
+  unitPrice?: number;
+  unit?: string;
   createdAt: string;
   updatedAt: string;
   createdBy?: string; // اسم المستخدم الذي سجل المصروف

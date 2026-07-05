@@ -15,8 +15,7 @@ import {
 import { useAuthStore } from '../store/useAuthStore';
 import { useDataStore } from '../store/useDataStore';
 import { PageScaffold } from '../components/layout/PageScaffold';
-import { downloadPdf, sharePdf } from '../utils/pdfService';
-import { LetterPDF } from '../components/pdf/LetterPDF';
+import { downloadLetterPdf, shareLetterPdf } from '../components/pdf/lazyPdf';
 import type { Letter, LetterType } from '../types';
 import toast from 'react-hot-toast';
 import dayjs from 'dayjs';
@@ -147,8 +146,8 @@ export const LettersPage = () => {
   };
 
   const withPdf = async (fn: () => Promise<void>) => { setPdfLoading(true); try { await fn(); } finally { setPdfLoading(false); } };
-  const handleDownload = (l: Letter) => withPdf(() => downloadPdf(React.createElement(LetterPDF, { letter: l }), `${typeLabels[l.type]}-${l.refNumber}`));
-  const handleShare = (l: Letter) => withPdf(() => sharePdf(React.createElement(LetterPDF, { letter: l }), `${typeLabels[l.type]}-${l.refNumber}`, `${typeLabels[l.type]} - ${l.subject}`));
+  const handleDownload = (l: Letter) => withPdf(() => downloadLetterPdf(l, `${typeLabels[l.type]}-${l.refNumber}`));
+  const handleShare = (l: Letter) => withPdf(() => shareLetterPdf(l, `${typeLabels[l.type]}-${l.refNumber}`, { title: `${typeLabels[l.type]} - ${l.subject}`, text: `${typeLabels[l.type]} - ${l.subject}` }));
 
   return (
     <>

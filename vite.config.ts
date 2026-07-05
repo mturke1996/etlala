@@ -55,6 +55,9 @@ export default defineConfig({
 
           // Charts & utilities
           'vendor-utils': ['recharts', 'dayjs', 'framer-motion', 'xlsx'],
+
+          // PDF generation — lazy-loaded
+          'vendor-pdf': ['@react-pdf/renderer'],
         },
       },
     },

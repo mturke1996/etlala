@@ -1,18 +1,51 @@
 /**
- * PDF Service - Client-side PDF generation
- * Uses @react-pdf/renderer with Cairo Arabic font from gstatic CDN
+ * PDF Service — @react-pdf/renderer + Tajawal Arabic font
  */
 import React from 'react';
-import { pdf } from '@react-pdf/renderer';
 import toast from 'react-hot-toast';
+import { ensurePdfFontsLoaded } from '../components/pdf/pdfFonts';
+import { preparePdfTree } from '../components/pdf/prepare-pdf-tree';
+
+export type PdfShareOptions = {
+  title?: string;
+  /** نص المشاركة فقط — بدون أي رابط للنظام */
+  text?: string;
+};
 
 export const generatePdfBlob = async (component: React.ReactElement): Promise<Blob> => {
-  // Fix for react-pdf hanging on second generation: 
-  // Initialize with false/null, then use updateContainer
+  await ensurePdfFontsLoaded();
+  const wrapped = await preparePdfTree(component);
+  const { pdf } = await import('@react-pdf/renderer');
   const asPdf = pdf();
-  asPdf.updateContainer(component);
+  asPdf.updateContainer(wrapped);
   const blob = await asPdf.toBlob();
   return blob;
+};
+
+const pdfBaseName = (filename: string) => filename.replace(/\.pdf$/i, '');
+
+const normalizeShareOptions = (options?: string | PdfShareOptions): PdfShareOptions => {
+  if (typeof options === 'string') return { title: options, text: options };
+  return options ?? {};
+};
+
+const isShareAbort = (error: unknown) =>
+  typeof error === 'object' &&
+  error !== null &&
+  'name' in error &&
+  (error as { name?: string }).name === 'AbortError';
+
+const savePdfBlob = (blob: Blob, filename: string) => {
+  const name = `${pdfBaseName(filename)}.pdf`;
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = name;
+  anchor.rel = 'noopener';
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
 };
 
 export const downloadPdf = async (
@@ -24,19 +57,16 @@ export const downloadPdf = async (
     const blob = await generatePdfBlob(component);
     const url = URL.createObjectURL(blob);
 
-    // Always open in new tab — user can save/print from browser
     const tab = window.open(url, '_blank');
     if (!tab) {
-      // Popup blocked — fallback to same window
-      window.location.href = url;
+      savePdfBlob(blob, filename);
     }
-    // Keep URL alive for 2 minutes so the tab can load
     setTimeout(() => URL.revokeObjectURL(url), 120_000);
 
     toast.success('تم فتح PDF', { id: toastId });
   } catch (error: any) {
     console.error('PDF generation error:', error);
-    toast.error('فشل في إنشاء PDF - تحقق من الاتصال بالإنترنت', { id: toastId });
+    toast.error('فشل في إنشاء PDF — تحقق من الخطوط والصور', { id: toastId });
     throw error;
   }
 };
@@ -44,23 +74,28 @@ export const downloadPdf = async (
 export const sharePdf = async (
   component: React.ReactElement,
   filename: string,
-  title?: string
+  options?: string | PdfShareOptions
 ): Promise<void> => {
   const toastId = toast.loading('جاري تحضير الملف للمشاركة...');
   try {
-    const blob = await generatePdfBlob(component);
-    const file = new File([blob], `${filename}.pdf`, { type: 'application/pdf' });
+    const opts = normalizeShareOptions(options);
+    const baseName = pdfBaseName(filename);
+    const title = opts.title || baseName;
+    const text = opts.text || title;
 
-    if (navigator.share && navigator.canShare({ files: [file] })) {
-      await navigator.share({ files: [file], title: title || filename });
+    const blob = await generatePdfBlob(component);
+    const file = new File([blob], `${baseName}.pdf`, { type: 'application/pdf' });
+
+    if (navigator.share && navigator.canShare?.({ files: [file] })) {
+      await navigator.share({ files: [file], title, text });
       toast.success('تمت المشاركة', { id: toastId });
-    } else {
-      // Fallback: download instead
-      toast.dismiss(toastId);
-      await downloadPdf(component, filename);
+      return;
     }
+
+    savePdfBlob(blob, filename);
+    toast.success('تم تنزيل الملف — شاركه من تطبيق الملفات أو واتساب', { id: toastId });
   } catch (error: any) {
-    if (error?.name === 'AbortError') {
+    if (isShareAbort(error)) {
       toast.dismiss(toastId);
       return;
     }

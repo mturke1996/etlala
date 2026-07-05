@@ -13,8 +13,7 @@ import {
 import { useAuthStore } from '../store/useAuthStore';
 import { useDataStore } from '../store/useDataStore';
 import { PrintableInvoice } from '../components/PrintableInvoice';
-import { InvoicePDF } from '../components/pdf/InvoicePDF';
-import { downloadPdf, sharePdf } from '../utils/pdfService';
+import { downloadInvoicePdf, shareInvoicePdf } from '../components/pdf/lazyPdf';
 import { getStatusLabel } from '../utils/formatters';
 import toast from 'react-hot-toast';
 import React from 'react';
@@ -45,29 +44,23 @@ export const InvoiceDetailsPage = () => {
     if (!invoice || !client) return;
     setPdfLoading(true);
     try {
-      await downloadPdf(
-        React.createElement(InvoicePDF, { invoice, client }),
-        `فاتورة-${invoice.invoiceNumber}`
-      );
-      toast.success('تم تحميل PDF بنجاح');
-    } catch (err) {
+      await downloadInvoicePdf(invoice, client);
+    } catch {
       toast.error('فشل في إنشاء PDF');
     } finally {
       setPdfLoading(false);
     }
   };
 
-  // ─── PDF Share (Mobile) ──────────────────────────
   const handleSharePdf = async () => {
     if (!invoice || !client) return;
     setPdfLoading(true);
     try {
-      await sharePdf(
-        React.createElement(InvoicePDF, { invoice, client }),
-        `فاتورة-${invoice.invoiceNumber}`,
-        `فاتورة #${invoice.invoiceNumber} - ${client.name}`
-      );
-    } catch (err) {
+      await shareInvoicePdf(invoice, client, {
+        title: `فاتورة #${invoice.invoiceNumber}`,
+        text: `فاتورة #${invoice.invoiceNumber} - ${client.name}`,
+      });
+    } catch {
       toast.error('فشل في مشاركة PDF');
     } finally {
       setPdfLoading(false);

@@ -10,6 +10,15 @@ import {
 const VAPID_KEY = import.meta.env.VITE_FCM_VAPID_KEY as string | undefined;
 
 const REGISTER_THROTTLE_MS = 30 * 60 * 1000;
+let vapidWarned = false;
+
+function warnMissingVapidOnce() {
+  if (vapidWarned || import.meta.env.PROD) return;
+  vapidWarned = true;
+  console.warn(
+    "[FCM] أضف VITE_FCM_VAPID_KEY في ملف .env.local (Firebase Console → Cloud Messaging → Web Push certificates).",
+  );
+}
 
 function regThrottleKey(uid: string) {
   return `etlala-fcm-reg-ts-${uid}`;
@@ -25,9 +34,7 @@ export async function registerDeviceForFcmPush(
 ): Promise<boolean> {
   if (!authUid) return false;
   if (!VAPID_KEY || !VAPID_KEY.trim()) {
-    console.warn(
-      "[FCM] أضف VITE_FCM_VAPID_KEY (مفتاح VAPID من Firebase Console → Cloud Messaging → Web Push).",
-    );
+    warnMissingVapidOnce();
     return false;
   }
   if (getNotificationPermission() !== "granted") return false;

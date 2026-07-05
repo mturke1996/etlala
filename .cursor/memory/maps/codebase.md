@@ -1,6 +1,6 @@
 # Codebase Map — Etlala
 
-**Last updated:** 2026-06-17
+**Last updated:** 2026-07-05
 
 ## Stack
 
@@ -32,7 +32,12 @@
   - `etlala/` — mobile UI (`EtlalaMobileUi`)
   - `invoices/` — `InvoiceListItem` (dense mobile row + month header for `InvoicesPage`)
   - `client/` — client profile / session UI
-  - `pdf/` — PDF documents (`InvoicePDF`, `LetterPDF`, `ClientReportsPDF`, shared `pdfStyles`, `pdfFonts`)
+  - `pdf/` — PDF stack (from rkeaz-group pattern, Etlala branding):
+    - Templates: `InvoicePDF`, `LetterPDF`, `ClientReportsPDF` (5 report types)
+    - Kit: `pdfKit.tsx`, `PdfTable.tsx`, `pdfBrand.ts`, `pdfCompanyInfo.ts`, `arabicPDF.ts`
+    - Runtime: `pdfFonts.ts`, `fetch-brand-assets.ts`, `prepare-pdf-tree.tsx`, `pdf-logo-context.tsx`, `lazyPdf.ts`
+    - Service: `src/utils/pdfService.ts` (generate/download/share + font preload + brand assets)
+    - Formatters: `src/utils/pdfFormatters.ts` (qty/unit columns for expense PDFs)
   - Other shared: `LoadingScreen`, `Logo`, `HeroLogo`, `PrintableInvoice`, `AppLockGuard`, etc.
 - `src/store/` — Zustand stores (`useAuthStore`, `useDataStore`, `useThemeStore`, `useAppLockStore`, `useGlobalFundStore`, …)
 - `src/theme/` — MUI theme + `tokens.ts` (premium color tokens)

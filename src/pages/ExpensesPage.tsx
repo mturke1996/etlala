@@ -51,7 +51,9 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import 'dayjs/locale/ar';
-import { computeUserFundAllocTotals } from '../utils/custodyFundAlloc';
+import { useForm, Controller, useWatch } from 'react-hook-form';
+import { ExpenseQuantityBlock, ExpenseQuantityChip, ExpenseAmountField } from '../components/expense/ExpenseQuantityBlock';
+import { expenseHasQuantityLine, multiplyQuantityPrice, parseDecimalInput, parseFormAmount } from '../utils/pdfFormatters';
 
 export const ExpensesPage = () => {
   const theme = useTheme();
@@ -67,15 +69,32 @@ export const ExpensesPage = () => {
   // Init global fund store
   useEffect(() => { const u = initFund(); return u; }, []);
 
-  const [expenseForm, setExpenseForm] = useState({
-    description: '',
-    amount: '',
-    category: 'materials',
-    date: dayjs(),
-    invoiceNumber: '',
-    notes: '',
-    clientId: '',
+  const { control: expFormCtrl, handleSubmit: handleExpFormSubmit, reset: resetExpForm, setValue: setExpFormVal, watch: watchExpForm } = useForm({
+    defaultValues: {
+      description: '',
+      amount: '',
+      category: 'materials',
+      date: dayjs(),
+      invoiceNumber: '',
+      notes: '',
+      clientId: '',
+      quantity: '',
+      unit: '',
+      unitPrice: '',
+    },
   });
+
+  const expFormQuantity = useWatch({ control: expFormCtrl, name: 'quantity' });
+  const expFormUnit = useWatch({ control: expFormCtrl, name: 'unit' });
+  const expFormUnitPrice = useWatch({ control: expFormCtrl, name: 'unitPrice' });
+
+  useEffect(() => {
+    const q = parseDecimalInput(expFormQuantity);
+    const p = parseDecimalInput(expFormUnitPrice);
+    if (expenseHasQuantityLine({ quantity: q, unitPrice: p })) {
+      setExpFormVal('amount', String(multiplyQuantityPrice(q!, p!)));
+    }
+  }, [expFormQuantity, expFormUnitPrice, setExpFormVal]);
 
   const filteredExpenses = useMemo(() => {
     return expenses.filter(exp =>
@@ -126,27 +145,33 @@ export const ExpensesPage = () => {
     return computeUserFundAllocTotals(depositRows, expenseRows);
   }, [transactions, expenses, user, getUserStats]);
 
-  const handleAddExpense = async () => {
-    if (!expenseForm.amount || !expenseForm.description || !expenseForm.clientId) return;
+  const handleAddExpense = async (data: any) => {
+    const q = parseDecimalInput(data.quantity);
+    const p = parseDecimalInput(data.unitPrice);
+    const unit = data.unit?.trim() || undefined;
+    const hasQty = expenseHasQuantityLine({ quantity: q, unitPrice: p });
+    const amount = hasQty ? multiplyQuantityPrice(q!, p!) : parseFormAmount(data.amount);
+    if (!amount || !data.description || !data.clientId) return;
     setLoading(true);
     try {
       await addExpense({
         id: crypto.randomUUID(),
-        clientId: expenseForm.clientId,
-        description: expenseForm.description,
-        amount: parseFloat(expenseForm.amount),
-        category: expenseForm.category as any,
-        date: expenseForm.date.toISOString(),
-        invoiceNumber: expenseForm.invoiceNumber || undefined,
+        clientId: data.clientId,
+        description: data.description,
+        amount,
+        category: data.category as any,
+        date: dayjs(data.date).toISOString(),
+        invoiceNumber: data.invoiceNumber || undefined,
         isClosed: false,
-        notes: expenseForm.notes,
+        notes: data.notes,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        userId: user?.id || '',    // user.id = Firebase Auth UID ✅
+        userId: user?.id || '',
         createdBy: user?.displayName || 'غير معروف',
+        ...(hasQty ? { quantity: q, unitPrice: p, unit } : {}),
       });
       setDialogOpen(false);
-      setExpenseForm({ description: '', amount: '', category: 'materials', date: dayjs(), invoiceNumber: '', notes: '', clientId: '' });
+      resetExpForm();
     } catch (error) {
       console.error(error);
     } finally {
@@ -483,6 +508,7 @@ export const ExpensesPage = () => {
                           <Typography variant="caption" color="text.disabled" fontWeight={600}>{exp.invoiceNumber}</Typography>
                         </Stack>
                       )}
+                      <ExpenseQuantityChip quantity={exp.quantity} unit={exp.unit} unitPrice={exp.unitPrice} amount={exp.amount} />
                     </Box>
                   </Stack>
                   </Box>
@@ -512,71 +538,89 @@ export const ExpensesPage = () => {
           </IconButton>
         </Box>
 
-        <Box sx={{ p: 3 }}>
+        <Box component="form" onSubmit={handleExpFormSubmit(handleAddExpense)} sx={{ p: 3 }}>
           <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="ar">
             <Stack spacing={2.5}>
-              <TextField
-                label="وصف المصروف"
-                fullWidth
-                value={expenseForm.description}
-                onChange={(e) => setExpenseForm({ ...expenseForm, description: e.target.value })}
-                InputProps={{ startAdornment: <InputAdornment position="start" sx={{ ml: 1 }}><NoteAlt sx={{ color: 'text.secondary', fontSize: 20 }} /></InputAdornment> }}
+              <Controller
+                name="description"
+                control={expFormCtrl}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    label="وصف المصروف"
+                    fullWidth
+                    InputProps={{ startAdornment: <InputAdornment position="start" sx={{ ml: 1 }}><NoteAlt sx={{ color: 'text.secondary', fontSize: 20 }} /></InputAdornment> }}
+                  />
+                )}
               />
-              <TextField
-                label="المبلغ"
-                type="number"
-                fullWidth
-                value={expenseForm.amount}
-                onChange={(e) => setExpenseForm({ ...expenseForm, amount: e.target.value })}
-                InputProps={{
-                  startAdornment: <InputAdornment position="start" sx={{ ml: 1 }}><AttachMoney sx={{ color: 'text.secondary', fontSize: 20 }} /></InputAdornment>,
-                  endAdornment: <InputAdornment position="end">د.ل</InputAdornment>,
+              <ExpenseQuantityBlock
+                control={expFormCtrl}
+                quantity={expFormQuantity}
+                unit={expFormUnit}
+                unitPrice={expFormUnitPrice}
+                amount={watchExpForm('amount')}
+                onClear={() => {
+                  setExpFormVal('quantity', '');
+                  setExpFormVal('unit', '');
+                  setExpFormVal('unitPrice', '');
                 }}
               />
-              <FormControl fullWidth>
-                <InputLabel>الفئة</InputLabel>
-                <Select
-                  value={expenseForm.category}
-                  label="الفئة"
-                  onChange={(e) => setExpenseForm({ ...expenseForm, category: e.target.value })}
-                >
-                  {Object.entries(expenseCategories).map(([key, label]) => (
-                    <MenuItem key={key} value={key}>{label}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              <FormControl fullWidth>
-                <InputLabel>العميل / المشروع</InputLabel>
-                <Select
-                  value={expenseForm.clientId}
-                  label="العميل / المشروع"
-                  onChange={(e) => setExpenseForm({ ...expenseForm, clientId: e.target.value })}
-                  startAdornment={<InputAdornment position="start" sx={{ ml: 1 }}><BusinessCenter sx={{ color: 'text.secondary', fontSize: 18 }} /></InputAdornment>}
-                >
-                  {clients.map(c => (
-                    <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              <DatePicker
-                label="تاريخ المصروف"
-                value={expenseForm.date}
-                onChange={(newValue) => newValue && setExpenseForm({ ...expenseForm, date: newValue })}
-                slotProps={{ textField: { fullWidth: true } }}
+              <ExpenseAmountField
+                control={expFormCtrl}
+                readOnly={expenseHasQuantityLine({ quantity: parseDecimalInput(expFormQuantity), unitPrice: parseDecimalInput(expFormUnitPrice) })}
               />
-              <TextField
-                label="ملاحظات (اختياري)"
-                multiline
-                rows={2}
-                value={expenseForm.notes}
-                onChange={(e) => setExpenseForm({ ...expenseForm, notes: e.target.value })}
+              <Controller
+                name="category"
+                control={expFormCtrl}
+                render={({ field }) => (
+                  <FormControl fullWidth>
+                    <InputLabel>الفئة</InputLabel>
+                    <Select {...field} label="الفئة">
+                      {Object.entries(expenseCategories).map(([key, label]) => (
+                        <MenuItem key={key} value={key}>{label}</MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                )}
+              />
+              <Controller
+                name="clientId"
+                control={expFormCtrl}
+                render={({ field }) => (
+                  <FormControl fullWidth>
+                    <InputLabel>العميل / المشروع</InputLabel>
+                    <Select {...field} label="العميل / المشروع" startAdornment={<InputAdornment position="start" sx={{ ml: 1 }}><BusinessCenter sx={{ color: 'text.secondary', fontSize: 18 }} /></InputAdornment>}>
+                      {clients.map(c => (
+                        <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                )}
+              />
+              <Controller
+                name="date"
+                control={expFormCtrl}
+                render={({ field }) => (
+                  <DatePicker
+                    label="تاريخ المصروف"
+                    value={field.value}
+                    onChange={(newValue) => field.onChange(newValue || dayjs())}
+                    slotProps={{ textField: { fullWidth: true } }}
+                  />
+                )}
+              />
+              <Controller
+                name="notes"
+                control={expFormCtrl}
+                render={({ field }) => (
+                  <TextField {...field} label="ملاحظات (اختياري)" multiline rows={2} fullWidth />
+                )}
               />
             </Stack>
           </LocalizationProvider>
-        </Box>
 
         {/* Dialog actions */}
-        <Box sx={{ px: 3, pb: 3, pt: 0, display: 'flex', gap: 1.5 }}>
+        <Box sx={{ pt: 2.5, display: 'flex', gap: 1.5 }}>
           <Button
             fullWidth
             onClick={() => setDialogOpen(false)}
@@ -587,9 +631,9 @@ export const ExpensesPage = () => {
           </Button>
           <Button
             fullWidth
+            type="submit"
             variant="contained"
-            onClick={handleAddExpense}
-            disabled={loading || !expenseForm.description || !expenseForm.amount || !expenseForm.clientId}
+            disabled={loading}
             size="large"
             sx={{
               borderRadius: 2, fontWeight: 800,
@@ -601,6 +645,7 @@ export const ExpensesPage = () => {
           >
             {loading ? 'جاري الحفظ...' : 'حفظ المصروف'}
           </Button>
+        </Box>
         </Box>
       </Dialog>
     </>

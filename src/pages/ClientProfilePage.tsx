@@ -50,6 +50,8 @@ import {
 import { PROFILE_MODULE } from '../components/client/profileSessionTokens';
 import { premiumTokens } from '../theme/tokens';
 import { computeUserFundAllocTotals } from '../utils/custodyFundAlloc';
+import { ExpenseQuantityBlock, ExpenseQuantityChip, ExpenseAmountField } from '../components/expense/ExpenseQuantityBlock';
+import { expenseHasQuantityLine, multiplyQuantityPrice, parseDecimalInput, parseFormAmount } from '../utils/pdfFormatters';
 import { motion, useReducedMotion } from 'framer-motion';
 
 const Grid = MuiGrid as any;
@@ -138,9 +140,21 @@ export const ClientProfilePage = () => {
     defaultValues: { amount: '' as any, paymentMethod: 'cash' as const, paymentDate: dayjs().format('YYYY-MM-DD'), invoiceId: '', notes: '' },
   });
 
-  const { control: expCtrl, handleSubmit: handleExpSubmit, reset: resetExp, setValue: setExpVal } = useForm({
-    defaultValues: { description: '', amount: '' as any, category: 'materials', date: dayjs().format('YYYY-MM-DD'), invoiceNumber: '', notes: '', workerId: '', userId: '' },
+  const { control: expCtrl, handleSubmit: handleExpSubmit, reset: resetExp, setValue: setExpVal, watch: watchExp } = useForm({
+    defaultValues: { description: '', amount: '' as any, category: 'materials', date: dayjs().format('YYYY-MM-DD'), invoiceNumber: '', notes: '', workerId: '', userId: '', quantity: '' as any, unit: '', unitPrice: '' as any },
   });
+
+  const expQuantity = useWatch({ control: expCtrl, name: 'quantity' });
+  const expUnit = useWatch({ control: expCtrl, name: 'unit' });
+  const expUnitPrice = useWatch({ control: expCtrl, name: 'unitPrice' });
+
+  useEffect(() => {
+    const q = parseDecimalInput(expQuantity);
+    const p = parseDecimalInput(expUnitPrice);
+    if (expenseHasQuantityLine({ quantity: q, unitPrice: p })) {
+      setExpVal('amount', String(multiplyQuantityPrice(q!, p!)));
+    }
+  }, [expQuantity, expUnitPrice, setExpVal]);
 
   const { control: debtCtrl, handleSubmit: handleDebtSubmit, reset: resetDebt, setValue: setDebtVal } = useForm({
     defaultValues: { partyName: '', description: '', amount: '' as any, date: dayjs().format('YYYY-MM-DD'), notes: '' },
@@ -507,15 +521,30 @@ export const ClientProfilePage = () => {
   };
 
   const onSubmitExpense = async (data: any) => {
-    const amount = parseFloat(data.amount) || 0;
+    const q = parseDecimalInput(data.quantity);
+    const p = parseDecimalInput(data.unitPrice);
+    const unit = data.unit?.trim() || undefined;
+    const hasQty = expenseHasQuantityLine({ quantity: q, unitPrice: p });
+    const amount = hasQty ? multiplyQuantityPrice(q!, p!) : parseFormAmount(data.amount);
     const workerId = data.workerId || null;
     const workerName = workerId ? workers.find(w => w.id === workerId)?.name : null;
     const userId = editingExpense ? (editingExpense.userId || user?.id || '') : (user?.id || '');
     const createdBy = editingExpense ? (editingExpense.createdBy || user?.displayName || 'المستخدم') : (user?.displayName || 'المستخدم');
+    const qtyPayload = hasQty
+      ? { quantity: q, unitPrice: p, unit }
+      : { quantity: undefined, unitPrice: undefined, unit: undefined };
     try {
-      if (editingExpense) { await updateExpense(editingExpense.id, { description: data.description, amount, category: data.category, date: data.date, invoiceNumber: data.invoiceNumber, notes: data.notes, workerId, workerName, userId, createdBy }); setEditingExpense(null); msg('تم التعديل'); }
-      else { await addExpense({ id: crypto.randomUUID(), clientId: clientId!, description: data.description, amount, category: data.category, date: data.date, invoiceNumber: data.invoiceNumber || '', notes: data.notes, isClosed: false, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), workerId, workerName, userId, createdBy }); msg('تمت الإضافة'); }
-      setExpenseDialogOpen(false); resetExp(); setExpensesListOpen(true);
+      if (editingExpense) {
+        await updateExpense(editingExpense.id, { description: data.description, amount, category: data.category, date: data.date, invoiceNumber: data.invoiceNumber, notes: data.notes, workerId, workerName, userId, createdBy, ...qtyPayload });
+        setEditingExpense(null);
+        msg('تم التعديل');
+      } else {
+        await addExpense({ id: crypto.randomUUID(), clientId: clientId!, description: data.description, amount, category: data.category, date: data.date, invoiceNumber: data.invoiceNumber || '', notes: data.notes, isClosed: false, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), workerId, workerName, userId, createdBy, ...qtyPayload });
+        msg('تمت الإضافة');
+      }
+      setExpenseDialogOpen(false);
+      resetExp();
+      setExpensesListOpen(true);
     } catch { msg('خطأ'); }
   };
 
@@ -1172,6 +1201,7 @@ export const ClientProfilePage = () => {
                               {exp.notes}
                             </Typography>
                           )}
+                          <ExpenseQuantityChip quantity={exp.quantity} unit={exp.unit} unitPrice={exp.unitPrice} amount={exp.amount} />
                         </Box>
 
                         {/* ▎ Left: amount + actions */}
@@ -1186,7 +1216,7 @@ export const ClientProfilePage = () => {
                           <Stack direction="row" spacing={0.25}>
                             <IconButton
                               size="small"
-                              onClick={(e) => { e.stopPropagation(); setEditingExpense(exp); setExpVal('description', exp.description); setExpVal('amount', exp.amount); setExpVal('category', exp.category); setExpVal('date', exp.date); setExpVal('invoiceNumber', exp.invoiceNumber || ''); setExpVal('notes', exp.notes || ''); setExpVal('userId', exp.userId || ''); setExpenseDialogOpen(true); }}
+                              onClick={(e) => { e.stopPropagation(); setEditingExpense(exp); setExpVal('description', exp.description); setExpVal('amount', exp.amount); setExpVal('category', exp.category); setExpVal('date', exp.date); setExpVal('invoiceNumber', exp.invoiceNumber || ''); setExpVal('notes', exp.notes || ''); setExpVal('userId', exp.userId || ''); setExpVal('quantity', exp.quantity ?? ''); setExpVal('unit', exp.unit ?? ''); setExpVal('unitPrice', exp.unitPrice ?? ''); setExpenseDialogOpen(true); }}
                               sx={{
                                 color: 'text.secondary',
                                 p: 0.35,
@@ -1681,7 +1711,23 @@ export const ClientProfilePage = () => {
               )}
               
               <Controller name="description" control={expCtrl} render={({ field }) => <TextField {...field} fullWidth label="الوصف" InputProps={{ startAdornment: <InputAdornment position="start" sx={{ ml: 1, mr: 1.5 }}><NoteAlt sx={{ color: '#4a5d4a' }} /></InputAdornment> }} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2.5, bgcolor: 'background.paper' } }} />} />
-              <Controller name="amount" control={expCtrl} render={({ field }) => <TextField {...field} fullWidth label="المبلغ" type="number" InputProps={{ startAdornment: <InputAdornment position="start" sx={{ ml: 1, mr: 1.5 }}><Payment sx={{ color: '#4a5d4a' }} /></InputAdornment>, endAdornment: <InputAdornment position="end">د.ل</InputAdornment> }} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2.5, bgcolor: 'background.paper' } }} />} />
+              <ExpenseQuantityBlock
+                control={expCtrl}
+                quantity={expQuantity}
+                unit={expUnit}
+                unitPrice={expUnitPrice}
+                amount={watchExp('amount')}
+                defaultOpen={Boolean(editingExpense && expenseHasQuantityLine(editingExpense))}
+                onClear={() => {
+                  setExpVal('quantity', '');
+                  setExpVal('unit', '');
+                  setExpVal('unitPrice', '');
+                }}
+              />
+              <ExpenseAmountField
+                control={expCtrl}
+                readOnly={expenseHasQuantityLine({ quantity: parseDecimalInput(expQuantity), unitPrice: parseDecimalInput(expUnitPrice) })}
+              />
               <Controller name="category" control={expCtrl} render={({ field }) => <FormControl fullWidth><InputLabel>التصنيف</InputLabel><Select {...field} label="التصنيف" sx={{ borderRadius: 2.5, bgcolor: 'background.paper' }}>{Object.entries(expenseCategories).map(([key, label]) => <MenuItem key={key} value={key}>{label}</MenuItem>)}</Select></FormControl>} />
               <Controller name="invoiceNumber" control={expCtrl} render={({ field }) => <TextField {...field} fullWidth label="رقم الفاتورة (اختياري)" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2.5, bgcolor: 'background.paper' } }} />} />
               <Controller name="workerId" control={expCtrl} render={({ field }) => <FormControl fullWidth><InputLabel>العامل (اختياري)</InputLabel><Select {...field} label="العامل (اختياري)" sx={{ borderRadius: 2.5, bgcolor: 'background.paper' }}><MenuItem value=""><em>لا يوجد</em></MenuItem>{workers.filter(w=>w.clientId===clientId).map(w=><MenuItem key={w.id} value={w.id}>{w.name}</MenuItem>)}</Select></FormControl>} />
