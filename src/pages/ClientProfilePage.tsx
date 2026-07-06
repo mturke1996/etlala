@@ -50,7 +50,8 @@ import {
 import { PROFILE_MODULE } from '../components/client/profileSessionTokens';
 import { premiumTokens } from '../theme/tokens';
 import { computeUserFundAllocTotals } from '../utils/custodyFundAlloc';
-import { ExpenseQuantityBlock, ExpenseQuantityChip, ExpenseAmountField } from '../components/expense/ExpenseQuantityBlock';
+import { ExpenseQuantityBlock, ExpenseQuantityChip } from '../components/expense/ExpenseQuantityBlock';
+import { ClientExpenseFormDialog } from '../components/expense/ClientExpenseFormDialog';
 import { expenseHasQuantityLine, multiplyQuantityPrice, parseDecimalInput, buildExpenseQuantityPayload } from '../utils/pdfFormatters';
 import { motion, useReducedMotion } from 'framer-motion';
 
@@ -1683,79 +1684,35 @@ export const ClientProfilePage = () => {
         </DialogActions>
       </Dialog>
 
-      {/* ===== ADD/EDIT EXPENSE DIALOG ===== */}
-      <Dialog open={expenseDialogOpen} onClose={() => setExpenseDialogOpen(false)} fullScreen sx={{ '& .MuiDialog-paper': { bgcolor: theme.palette.mode === 'dark' ? '#1a1f1a' : '#f5f3ef' } }}>
-        <form onSubmit={handleExpSubmit(onSubmitExpense)}>
-          <Box sx={{ background: headerGradient, color: 'white', p: 2, pt: 'calc(max(env(safe-area-inset-top), 50px) + 16px)' }}>
-            <Stack direction="row" alignItems="center" spacing={2}><IconButton onClick={() => setExpenseDialogOpen(false)} sx={{ color: 'white' }}><ArrowBack /></IconButton><Typography variant="h6" fontWeight={700}>{editingExpense ? 'تعديل مصروف' : 'إضافة مصروف'}</Typography></Stack>
-          </Box>
-          <Box sx={{ p: 3.5 }}>
-            <Stack spacing={3}>
-              {expenseDialogWallet && (
-                <Box sx={{ p: 2, borderRadius: 3, background: expenseDialogWallet.remaining >= 0 ? 'linear-gradient(135deg, rgba(16,185,129,0.1) 0%, rgba(16,185,129,0.05) 100%)' : 'linear-gradient(135deg, rgba(225,29,72,0.1) 0%, rgba(225,29,72,0.05) 100%)', border: `1px solid ${expenseDialogWallet.remaining >= 0 ? 'rgba(16,185,129,0.2)' : 'rgba(225,29,72,0.2)'}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                 <Box>
-                     <Typography variant="caption" sx={{ color: expenseDialogWallet.remaining >= 0 ? '#0d9668' : '#f87171', fontWeight: 800 }}>
-                       {expenseDialogWallet.isGlobalFund
-                         ? (expenseDialogWallet.remaining >= 0
-                           ? `الرصيد المتاح (صندوق العهدة) — ${user?.displayName || expenseDialogWallet.name}`
-                           : `عجز في صندوق العهدة — ${user?.displayName || expenseDialogWallet.name}`)
-                         : (expenseDialogWallet.remaining >= 0
-                           ? `الرصيد المتاح للعهدة (${user?.displayName || expenseDialogWallet.name})`
-                           : `عجز عهدة (${user?.displayName || expenseDialogWallet.name})`)}
-                     </Typography>
-                     <Typography variant="h6" sx={{ color: expenseDialogWallet.remaining >= 0 ? '#0d9668' : '#f87171', fontWeight: 900, lineHeight: 1, mt: 0.5 }}>
-                       {expenseDialogWallet.remaining < 0 ? `-${formatCurrency(Math.abs(expenseDialogWallet.remaining))}` : formatCurrency(expenseDialogWallet.remaining)}
-                     </Typography>
-                   </Box>
-                   <AccountBalanceWallet sx={{ fontSize: 32, color: expenseDialogWallet.remaining >= 0 ? 'rgba(16,185,129,0.5)' : 'rgba(225,29,72,0.5)' }} />
-                </Box>
-              )}
-              
-              <Controller name="description" control={expCtrl} render={({ field }) => <TextField {...field} fullWidth label="الوصف" InputProps={{ startAdornment: <InputAdornment position="start" sx={{ ml: 1, mr: 1.5 }}><NoteAlt sx={{ color: '#4a5d4a' }} /></InputAdornment> }} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2.5, bgcolor: 'background.paper' } }} />} />
-              <ExpenseQuantityBlock
-                control={expCtrl}
-                quantity={expQuantity}
-                unit={expUnit}
-                unitPrice={expUnitPrice}
-                amount={watchExp('amount')}
-                defaultOpen={Boolean(editingExpense && expenseHasQuantityLine(editingExpense))}
-                onClear={() => {
-                  setExpVal('quantity', '');
-                  setExpVal('unit', '');
-                  setExpVal('unitPrice', '');
-                }}
-              />
-              <ExpenseAmountField
-                control={expCtrl}
-                qtyActive={expenseHasQuantityLine({ quantity: parseDecimalInput(expQuantity), unitPrice: parseDecimalInput(expUnitPrice) })}
-              />
-              <Controller name="category" control={expCtrl} render={({ field }) => <FormControl fullWidth><InputLabel>التصنيف</InputLabel><Select {...field} label="التصنيف" sx={{ borderRadius: 2.5, bgcolor: 'background.paper' }}>{Object.entries(expenseCategories).map(([key, label]) => <MenuItem key={key} value={key}>{label}</MenuItem>)}</Select></FormControl>} />
-              <Controller name="invoiceNumber" control={expCtrl} render={({ field }) => <TextField {...field} fullWidth label="رقم الفاتورة (اختياري)" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2.5, bgcolor: 'background.paper' } }} />} />
-              <Controller name="workerId" control={expCtrl} render={({ field }) => <FormControl fullWidth><InputLabel>العامل (اختياري)</InputLabel><Select {...field} label="العامل (اختياري)" sx={{ borderRadius: 2.5, bgcolor: 'background.paper' }}><MenuItem value=""><em>لا يوجد</em></MenuItem>{workers.filter(w=>w.clientId===clientId).map(w=><MenuItem key={w.id} value={w.id}>{w.name}</MenuItem>)}</Select></FormControl>} />
-              <Controller name="date" control={expCtrl} render={({ field }) => <TextField {...field} fullWidth label="التاريخ" type="date" InputProps={{ startAdornment: <InputAdornment position="start" sx={{ ml: 1, mr: 1.5 }}><CalendarToday sx={{ color: '#4a5d4a' }} /></InputAdornment> }} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2.5, bgcolor: 'background.paper' } }} />} />
-              <Controller name="notes" control={expCtrl} render={({ field }) => <TextField {...field} fullWidth label="ملاحظات" multiline rows={2} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2.5, bgcolor: 'background.paper' } }} />} />
-            </Stack>
-            <Stack direction="row" spacing={2} sx={{ mt: 4 }}>
-              {editingExpense ? (
-                <>
-                  <IconButton 
-                    onClick={() => { if(window.confirm('حذف هذا المصروف؟')) { deleteExpense(editingExpense.id).then(() => { setExpenseDialogOpen(false); msg('تم الحذف'); }); } }} 
-                    sx={{ bgcolor: 'rgba(225,29,72,0.1)', color: '#e11d48', borderRadius: 2.5, width: 56, height: 56, '&:hover': { bgcolor: 'rgba(225,29,72,0.2)' } }}
-                  >
-                    <Delete />
-                  </IconButton>
-                  <Button type="submit" variant="contained" fullWidth size="large" sx={{ borderRadius: 2.5, bgcolor: '#4a5d4a', '&:hover': { bgcolor: '#364036' } }}>تحديث وحفظ</Button>
-                </>
-              ) : (
-                <>
-                  <Button onClick={() => setExpenseDialogOpen(false)} fullWidth size="large" sx={{ borderRadius: 2.5 }}>إلغاء</Button>
-                  <Button type="submit" variant="contained" fullWidth size="large" sx={{ borderRadius: 2.5, bgcolor: '#4a5d4a', '&:hover': { bgcolor: '#364036' } }}>حفظ وإصدار</Button>
-                </>
-              )}
-            </Stack>
-          </Box>
-        </form>
-      </Dialog>
+      <ClientExpenseFormDialog
+        open={expenseDialogOpen}
+        onClose={() => setExpenseDialogOpen(false)}
+        editingExpense={editingExpense}
+        control={expCtrl}
+        onSubmit={handleExpSubmit(onSubmitExpense)}
+        onDelete={editingExpense ? () => {
+          if (window.confirm('حذف هذا المصروف؟')) {
+            deleteExpense(editingExpense.id).then(() => {
+              setExpenseDialogOpen(false);
+              msg('تم الحذف');
+            });
+          }
+        } : undefined}
+        expenseDialogWallet={expenseDialogWallet}
+        formatCurrency={formatCurrency}
+        workers={workers}
+        clientId={clientId}
+        userDisplayName={user?.displayName}
+        expQuantity={expQuantity}
+        expUnit={expUnit}
+        expUnitPrice={expUnitPrice}
+        watchAmount={watchExp('amount')}
+        onClearQuantity={() => {
+          setExpVal('quantity', '');
+          setExpVal('unit', '');
+          setExpVal('unitPrice', '');
+        }}
+      />
 
       {/* ===== ADD/EDIT PAYMENT DIALOG ===== */}
       <Dialog open={paymentDialogOpen} onClose={() => setPaymentDialogOpen(false)} fullScreen sx={{ '& .MuiDialog-paper': { bgcolor: theme.palette.mode === 'dark' ? '#1a1f1a' : '#f5f3ef' } }}>

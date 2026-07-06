@@ -2,9 +2,9 @@
 import { forwardRef, useState } from 'react';
 import { Control, Controller } from 'react-hook-form';
 import {
-  Box, Typography, TextField, IconButton, Stack, Chip, InputAdornment, alpha, Divider,
+  Box, Typography, TextField, IconButton, Stack, Chip, alpha, Divider,
 } from '@mui/material';
-import { Add, Close, Inventory2, Straighten, Calculate } from '@mui/icons-material';
+import { Close } from '@mui/icons-material';
 import {
   formatCurrencyDisplay,
   formatMeasureUnit,
@@ -14,16 +14,11 @@ import {
   sanitizeDecimalTyping,
   multiplyQuantityPrice,
   EXPENSE_MEASURE_UNIT_GROUPS,
-  CURRENCY_SYMBOL,
   formatQuantityDisplay,
 } from '../../utils/pdfFormatters';
+import { ExpenseMoneyField, EXPENSE_FORM } from './ExpenseFormKit';
 
-const ETLALA = {
-  primary: '#1F3D35',
-  primarySoft: '#2C4A42',
-  accent: '#C8B27D',
-  surface: '#FAFAF8',
-} as const;
+const ETLALA = { ...EXPENSE_FORM, surface: '#FAFAF8' };
 
 const fieldSx = {
   '& .MuiOutlinedInput-root': {
@@ -131,49 +126,24 @@ export function ExpenseQuantityBlock({
         onClick={() => setOpen(true)}
         sx={{
           width: '100%',
-          p: 2,
-          borderRadius: 3,
+          px: 1.5,
+          py: 1,
+          borderRadius: 2,
           border: '1px dashed',
-          borderColor: alpha(ETLALA.primary, 0.25),
-          bgcolor: alpha(ETLALA.primary, 0.03),
+          borderColor: alpha(ETLALA.primary, 0.22),
+          bgcolor: 'transparent',
           textAlign: 'right',
           cursor: 'pointer',
-          transition: 'all 0.2s ease',
-          '&:hover': {
-            borderColor: ETLALA.primary,
-            bgcolor: alpha(ETLALA.primary, 0.06),
-            boxShadow: `0 4px 16px ${alpha(ETLALA.primary, 0.08)}`,
-          },
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 1,
+          '&:hover': { borderColor: ETLALA.primary, bgcolor: alpha(ETLALA.primary, 0.04) },
         }}
       >
-        <Stack direction="row" spacing={1.5} alignItems="center">
-          <Box
-            sx={{
-              width: 44,
-              height: 44,
-              borderRadius: 2.5,
-              bgcolor: 'background.paper',
-              border: `1px solid ${alpha(ETLALA.primary, 0.15)}`,
-              display: 'grid',
-              placeItems: 'center',
-              flexShrink: 0,
-              color: ETLALA.primary,
-            }}
-          >
-            <Add sx={{ fontSize: 22 }} />
-          </Box>
-          <Box sx={{ flex: 1, minWidth: 0, textAlign: 'right' }}>
-            <Stack direction="row" spacing={1} alignItems="center" justifyContent="flex-end" flexWrap="wrap">
-              <Chip label="اختياري" size="small" sx={{ height: 20, fontSize: '0.62rem', fontWeight: 700, bgcolor: alpha(ETLALA.accent, 0.15), color: ETLALA.primarySoft }} />
-              <Typography variant="body2" fontWeight={800} color={ETLALA.primary}>
-                تفصيل الكمية × السعر
-              </Typography>
-            </Stack>
-            <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
-              يدعم الفواصل: 12,5 أو 1,234.50 — يظهر في PDF
-            </Typography>
-          </Box>
-        </Stack>
+        <Typography variant="body2" fontWeight={600} color="text.secondary">
+          + كمية × سعر (اختياري)
+        </Typography>
       </Box>
     );
   }
@@ -181,182 +151,94 @@ export function ExpenseQuantityBlock({
   return (
     <Box
       sx={{
-        borderRadius: 3,
-        border: `1px solid ${active ? alpha(ETLALA.accent, 0.55) : alpha(ETLALA.primary, 0.12)}`,
+        borderRadius: 2,
+        border: `1px solid ${alpha(ETLALA.primary, 0.12)}`,
+        bgcolor: 'background.paper',
         overflow: 'hidden',
-        bgcolor: ETLALA.surface,
-        boxShadow: active ? `0 8px 28px ${alpha(ETLALA.primary, 0.1)}` : `0 2px 8px ${alpha(ETLALA.primary, 0.04)}`,
       }}
     >
-      <Box
-        sx={{
-          px: 2,
-          py: 1.5,
-          bgcolor: ETLALA.primary,
-          color: '#fff',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}
-      >
-        <Stack direction="row" spacing={1} alignItems="center">
-          <Inventory2 sx={{ fontSize: 20, opacity: 0.9 }} />
-          <Typography variant="subtitle2" fontWeight={800}>جدول الكميات</Typography>
-        </Stack>
-        <IconButton size="small" onClick={handleClose} sx={{ color: 'rgba(255,255,255,0.85)' }} aria-label="إغلاق">
-          <Close fontSize="small" />
+      <Box sx={{ px: 1.5, py: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: `1px solid ${alpha(ETLALA.primary, 0.08)}` }}>
+        <Typography variant="caption" fontWeight={700} color={ETLALA.primary}>
+          كمية × سعر
+        </Typography>
+        <IconButton size="small" onClick={handleClose} aria-label="إغلاق" sx={{ p: 0.5 }}>
+          <Close sx={{ fontSize: 16 }} />
         </IconButton>
       </Box>
 
-      <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
-        {/* صف الجدول: كمية | سعر | إجمالي */}
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: '1fr', sm: '1fr auto 1fr auto 1fr' },
-            gap: 1.5,
-            alignItems: 'end',
-            p: 2,
-            borderRadius: 2.5,
-            bgcolor: 'background.paper',
-            border: `1px solid ${alpha(ETLALA.primary, 0.1)}`,
-          }}
-        >
+      <Box sx={{ p: 1.5, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}>
           <Box>
-            <Typography variant="caption" fontWeight={800} color={ETLALA.primarySoft} sx={{ mb: 0.75, display: 'block' }}>
-              الكمية
-            </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block' }}>الكمية</Typography>
             <Controller
               name="quantity"
               control={control}
               render={({ field }) => (
-                <DecimalField
-                  {...field}
-                  center
-                  placeholder="2,5"
-                  onChange={field.onChange}
-                />
+                <DecimalField {...field} center placeholder="2,5" onChange={field.onChange} />
               )}
             />
           </Box>
-
-          <Typography sx={{ display: { xs: 'none', sm: 'block' }, pb: 1.5, color: 'text.disabled', fontWeight: 300, fontSize: '1.4rem' }}>×</Typography>
-
           <Box>
-            <Typography variant="caption" fontWeight={800} color={ETLALA.primarySoft} sx={{ mb: 0.75, display: 'block' }}>
-              {priceLabel}
-            </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block' }}>{priceLabel}</Typography>
             <Controller
               name="unitPrice"
               control={control}
               render={({ field }) => (
-                <DecimalField
-                  {...field}
-                  placeholder="120,75"
-                  endAdornment={<InputAdornment position="end"><Typography variant="caption" fontWeight={700}>{CURRENCY_SYMBOL}</Typography></InputAdornment>}
-                  onChange={field.onChange}
+                <ExpenseMoneyField
+                  ref={field.ref}
+                  name={field.name}
+                  value={field.value}
+                  onBlur={field.onBlur}
+                  variant="compact"
+                  placeholder="120"
+                  onChange={(v) => {
+                    const sanitized = sanitizeDecimalTyping(v);
+                    if (isPartialDecimalInput(sanitized)) field.onChange(sanitized);
+                  }}
                 />
               )}
             />
           </Box>
-
-          <Typography sx={{ display: { xs: 'none', sm: 'block' }, pb: 1.5, color: 'text.disabled', fontWeight: 300, fontSize: '1.4rem' }}>=</Typography>
-
-          <Box>
-            <Typography variant="caption" fontWeight={800} color={ETLALA.primarySoft} sx={{ mb: 0.75, display: 'block' }}>
-              الإجمالي
-            </Typography>
-            <Box
-              sx={{
-                minHeight: 56,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderRadius: 2.5,
-                border: `1px dashed ${active ? ETLALA.accent : alpha(ETLALA.primary, 0.2)}`,
-                bgcolor: active ? alpha(ETLALA.accent, 0.08) : alpha(ETLALA.primary, 0.02),
-                px: 1,
-              }}
-            >
-              {active ? (
-                <Typography fontWeight={900} color={ETLALA.primary} fontSize="1rem">
-                  {formatCurrencyDisplay(computed || total)}
-                </Typography>
-              ) : (
-                <Stack direction="row" spacing={0.5} alignItems="center" color="text.secondary">
-                  <Calculate sx={{ fontSize: 16 }} />
-                  <Typography variant="caption" fontWeight={600}>تلقائي</Typography>
-                </Stack>
-              )}
-            </Box>
-          </Box>
         </Box>
 
-        <Divider sx={{ borderColor: alpha(ETLALA.primary, 0.08) }} />
+        {active ? (
+          <Typography variant="caption" color={ETLALA.primary} fontWeight={700} textAlign="center">
+            {formatQuantityDisplay(q, unitKey || undefined)} × {formatCurrencyDisplay(p)} = {formatCurrencyDisplay(computed || total)}
+          </Typography>
+        ) : null}
 
-        {/* وحدات القياس */}
         <Box>
-          <Stack direction="row" alignItems="center" spacing={0.75} sx={{ mb: 1.25 }}>
-            <Straighten sx={{ fontSize: 16, color: ETLALA.accent }} />
-            <Typography variant="caption" fontWeight={800} color={ETLALA.primary}>
-              وحدة القياس (اختياري)
-            </Typography>
-          </Stack>
+          <Typography variant="caption" color="text.secondary" sx={{ mb: 0.75, display: 'block' }}>الوحدة (اختياري)</Typography>
           <Controller
             name="unit"
             control={control}
             render={({ field }) => (
-              <Stack spacing={1.25}>
-                {EXPENSE_MEASURE_UNIT_GROUPS.map((group) => (
-                  <Box key={group.title}>
-                    <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ mb: 0.5, display: 'block' }}>
-                      {group.title}
-                    </Typography>
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }}>
-                      {group.units.map((u) => {
-                        const selected = field.value === u;
-                        return (
-                          <Chip
-                            key={u}
-                            label={formatMeasureUnit(u)}
-                            size="small"
-                            clickable
-                            onClick={() => field.onChange(selected ? '' : u)}
-                            sx={{
-                              fontWeight: 700,
-                              fontSize: '0.72rem',
-                              ...(selected
-                                ? { bgcolor: ETLALA.primary, color: '#fff', '&:hover': { bgcolor: ETLALA.primarySoft } }
-                                : { borderColor: alpha(ETLALA.primary, 0.2) }),
-                            }}
-                            variant={selected ? 'filled' : 'outlined'}
-                          />
-                        );
-                      })}
-                    </Box>
-                  </Box>
-                ))}
-              </Stack>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                {EXPENSE_MEASURE_UNIT_GROUPS.flatMap((g) => g.units).map((u) => {
+                  const selected = field.value === u;
+                  return (
+                    <Chip
+                      key={u}
+                      label={formatMeasureUnit(u)}
+                      size="small"
+                      clickable
+                      onClick={() => field.onChange(selected ? '' : u)}
+                      sx={{
+                        height: 24,
+                        fontSize: '0.68rem',
+                        fontWeight: 600,
+                        ...(selected
+                          ? { bgcolor: ETLALA.primary, color: '#fff' }
+                          : { borderColor: alpha(ETLALA.primary, 0.15) }),
+                      }}
+                      variant={selected ? 'filled' : 'outlined'}
+                    />
+                  );
+                })}
+              </Box>
             )}
           />
         </Box>
-
-        {active ? (
-          <Box
-            sx={{
-              textAlign: 'center',
-              py: 1.25,
-              px: 1.5,
-              borderRadius: 2,
-              bgcolor: alpha(ETLALA.accent, 0.1),
-              border: `1px solid ${alpha(ETLALA.accent, 0.25)}`,
-            }}
-          >
-            <Typography variant="body2" fontWeight={800} color={ETLALA.primary}>
-              {formatQuantityDisplay(q, unitKey || undefined)} × {formatCurrencyDisplay(p)} = {formatCurrencyDisplay(computed || total)}
-            </Typography>
-          </Box>
-        ) : null}
       </Box>
     </Box>
   );
@@ -416,29 +298,44 @@ export function ExpenseQuantityChip({
 export function ExpenseAmountField({
   control,
   name = 'amount',
-  label,
   qtyActive = false,
+  hideLabel = false,
 }: {
   control: Control<any>;
   name?: string;
-  label?: string;
-  /** true when quantity × unit price is active — label/hint only, field stays editable */
   qtyActive?: boolean;
+  hideLabel?: boolean;
 }) {
-  const resolvedLabel = label ?? (qtyActive ? 'المبلغ الإجمالي (يُحدَّث تلقائياً)' : 'المبلغ الإجمالي');
+  const resolvedLabel = qtyActive ? 'المبلغ الإجمالي (يُحدَّث تلقائياً)' : 'المبلغ الإجمالي';
   return (
     <Controller
       name={name}
       control={control}
       render={({ field }) => (
-        <DecimalField
-          {...field}
-          label={resolvedLabel}
-          placeholder="0"
-          helperText={qtyActive ? 'يمكنك تعديل المبلغ يدوياً إذا لزم الأمر' : undefined}
-          endAdornment={<InputAdornment position="end"><Typography variant="caption" fontWeight={700}>{CURRENCY_SYMBOL}</Typography></InputAdornment>}
-          onChange={field.onChange}
-        />
+        <Box>
+          {!hideLabel ? (
+            <Typography variant="caption" fontWeight={600} color="text.secondary" sx={{ mb: 0.5, display: 'block' }}>
+              {resolvedLabel}
+            </Typography>
+          ) : null}
+          <ExpenseMoneyField
+            ref={field.ref}
+            name={field.name}
+            value={field.value}
+            onBlur={field.onBlur}
+            placeholder="0"
+            variant="compact"
+            onChange={(v) => {
+              const sanitized = sanitizeDecimalTyping(v);
+              if (isPartialDecimalInput(sanitized)) field.onChange(sanitized);
+            }}
+          />
+          {!hideLabel && qtyActive ? (
+            <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block', fontSize: '0.68rem' }}>
+              يُحدَّث تلقائياً — يمكنك تعديله
+            </Typography>
+          ) : null}
+        </Box>
       )}
     />
   );
