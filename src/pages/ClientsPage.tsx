@@ -18,16 +18,16 @@ import {
   useTheme,
 } from '@mui/material';
 import {
-  Add,
-  Search,
-  Edit,
-  Delete,
-  Business,
-  Person,
+  ArrowRight,
+  Building2,
   ChevronLeft,
-  ArrowBack,
-  People,
-} from '@mui/icons-material';
+  Pencil,
+  Plus,
+  Search,
+  Trash2,
+  User,
+  Users,
+} from 'lucide-react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useDataStore } from '../store/useDataStore';
@@ -37,7 +37,7 @@ import { z } from 'zod';
 import type { SxProps, Theme } from '@mui/material/styles';
 import type { Client } from '../types';
 import { PageScaffold } from '../components/layout/PageScaffold';
-import { EtlalaEmptyState, EtlalaAccentSurface, etlalaContentFieldSx } from '../components/etlala/EtlalaMobileUi';
+import { EtlalaEmptyState, EtlalaAccentSurface, etlalaContentFieldSx, etlalaHeroActionButtonSx } from '../components/etlala/EtlalaMobileUi';
 
 const clientSchema = z.object({
   name: z.string().min(2, 'الاسم يجب أن يكون حرفين على الأقل'),
@@ -131,25 +131,12 @@ export const ClientsPage = () => {
       rightAction={
         <Button
           variant="contained"
-          color="primary"
           onClick={() => handleOpenDialog()}
           size="small"
-          sx={{
-            fontWeight: 800,
-            color: '#ffffff',
-            borderRadius: 2.5,
-            px: 2.5,
-            boxShadow: '0 4px 14px -3px rgba(0,0,0,0.25)',
-            transition: 'background 0.2s ease, box-shadow 0.2s ease',
-            '&:hover': {
-              color: '#ffffff',
-              boxShadow: '0 6px 18px -4px rgba(0,0,0,0.3)',
-            },
-            '& .MuiButton-startIcon': { color: '#ffffff' },
-          }}
-          startIcon={<Add />}
+          sx={etlalaHeroActionButtonSx}
+          startIcon={<Plus size={16} strokeWidth={2.2} />}
         >
-          جديد
+          عميل جديد
         </Button>
       }
       headerExtra={(
@@ -164,7 +151,7 @@ export const ClientsPage = () => {
             {
               '& .MuiOutlinedInput-root': {
                 bgcolor: 'rgba(255,255,255,0.96)',
-                borderRadius: '12px',
+                borderRadius: '16px',
                 '& fieldset': { border: 'none' },
               },
             },
@@ -172,7 +159,7 @@ export const ClientsPage = () => {
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
-                <Search sx={{ color: 'rgba(0,0,0,0.35)' }} />
+                <Search size={18} strokeWidth={2} color="rgba(0,0,0,0.4)" />
               </InputAdornment>
             ),
           }}
@@ -183,7 +170,7 @@ export const ClientsPage = () => {
         <Stack spacing={1.25} sx={{ mt: 0.5 }}>
           {filteredClients.length === 0 ? (
             <EtlalaEmptyState
-              icon={<People />}
+              icon={<Users size={46} strokeWidth={1.6} />}
               title={searchQuery ? 'لا نتائج للبحث' : 'لا يوجد عملاء'}
               hint={searchQuery ? 'جرّب كلمات أوسع أو امسح البحث' : 'أضف أول عميل للبدء في تتبع المشاريع والمدفوعات'}
               actionLabel={!searchQuery ? 'إضافة عميل' : undefined}
@@ -218,9 +205,9 @@ export const ClientsPage = () => {
                         }}
                       >
                         {client.type === 'company' ? (
-                          <Business sx={{ color: theme.palette.mode === 'dark' ? '#6b7f6b' : '#4a5d4a', fontSize: 22 }} />
+                          <Building2 size={21} color={theme.palette.mode === 'dark' ? '#6b7f6b' : '#4a5d4a'} strokeWidth={2} />
                         ) : (
-                          <Person sx={{ color: '#c8c0b0', fontSize: 22 }} />
+                          <User size={21} color="#c8c0b0" strokeWidth={2} />
                         )}
                       </Avatar>
                       <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -264,16 +251,16 @@ export const ClientsPage = () => {
                           sx={{
                             bgcolor: theme.palette.mode === 'dark' ? 'rgba(107, 127, 107, 0.1)' : 'rgba(74, 93, 74, 0.06)',
                             color: theme.palette.mode === 'dark' ? '#6b7f6b' : '#4a5d4a',
-                            width: 38,
-                            height: 38,
-                            borderRadius: 2,
+                            width: 40,
+                            height: 40,
+                            borderRadius: '50%',
                             border: '1px solid rgba(74, 93, 74, 0.12)',
                             '&:hover': { bgcolor: 'rgba(74, 93, 74, 0.12)' },
                           }}
                         >
-                          <Edit sx={{ fontSize: 18 }} />
+                          <Pencil size={16} strokeWidth={2} />
                         </IconButton>
-                        <ChevronLeft sx={{ color: 'text.secondary', opacity: 0.35, fontSize: 22 }} />
+                        <ChevronLeft size={20} color={theme.palette.text.secondary} strokeWidth={2} style={{ opacity: 0.4 }} />
                       </Stack>
                     </Stack>
                   </CardContent>
@@ -316,8 +303,8 @@ export const ClientsPage = () => {
             }}
           >
             <Stack direction="row" alignItems="center" spacing={2} sx={{ position: 'relative', zIndex: 1 }}>
-              <IconButton onClick={handleCloseDialog} sx={{ color: 'rgba(255,255,255,0.9)', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
-                <ArrowBack />
+              <IconButton onClick={handleCloseDialog} aria-label="رجوع" sx={{ color: 'rgba(255,255,255,0.9)', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
+                <ArrowRight size={20} strokeWidth={2} />
               </IconButton>
               <Typography variant="h6" fontWeight={700} sx={{ letterSpacing: 0.3 }}>
                 {editingClient ? 'تعديل عميل' : 'إضافة عميل جديد'}
@@ -337,7 +324,7 @@ export const ClientsPage = () => {
                     label="الاسم"
                     error={!!errors.name}
                     helperText={errors.name?.message}
-                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2.5, bgcolor: 'background.paper' } }}
+                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '16px', bgcolor: 'background.paper' } }}
                   />
                 )}
               />
@@ -348,7 +335,7 @@ export const ClientsPage = () => {
                 render={({ field }) => (
                   <FormControl fullWidth>
                     <InputLabel>النوع</InputLabel>
-                    <Select {...field} label="النوع" sx={{ borderRadius: 2.5, bgcolor: 'background.paper' }}>
+                    <Select {...field} label="النوع" sx={{ borderRadius: '16px', bgcolor: 'background.paper' }}>
                       <MenuItem value="individual">فرد</MenuItem>
                       <MenuItem value="company">شركة</MenuItem>
                     </Select>
@@ -366,7 +353,7 @@ export const ClientsPage = () => {
                     label="رقم الهاتف"
                     error={!!errors.phone}
                     helperText={errors.phone?.message}
-                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2.5, bgcolor: 'background.paper' } }}
+                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '16px', bgcolor: 'background.paper' } }}
                   />
                 )}
               />
@@ -382,7 +369,7 @@ export const ClientsPage = () => {
                     type="email"
                     error={!!errors.email}
                     helperText={errors.email?.message}
-                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2.5, bgcolor: 'background.paper' } }}
+                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '16px', bgcolor: 'background.paper' } }}
                   />
                 )}
               />
@@ -399,7 +386,7 @@ export const ClientsPage = () => {
                     rows={3}
                     error={!!errors.address}
                     helperText={errors.address?.message}
-                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2.5, bgcolor: 'background.paper' } }}
+                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '16px', bgcolor: 'background.paper' } }}
                   />
                 )}
               />
@@ -411,7 +398,7 @@ export const ClientsPage = () => {
                 fullWidth
                 size="large"
                 sx={{
-                  borderRadius: 2.5, py: 1.5, fontWeight: 600,
+                  borderRadius: '18px', py: 1.5, fontWeight: 600,
                   border: theme.palette.mode === 'dark'
                     ? '1px solid rgba(107, 127, 107, 0.2)'
                     : '1px solid rgba(74, 93, 74, 0.15)',
@@ -425,7 +412,7 @@ export const ClientsPage = () => {
                 fullWidth
                 size="large"
                 sx={{
-                  borderRadius: 2.5, py: 1.5,
+                  borderRadius: '18px', py: 1.5,
                   bgcolor: '#4a5d4a',
                   fontWeight: 700,
                   boxShadow: '0 4px 14px -3px rgba(74, 93, 74, 0.35)',
@@ -445,7 +432,7 @@ export const ClientsPage = () => {
                 color="error"
                 fullWidth
                 size="large"
-                startIcon={<Delete />}
+                startIcon={<Trash2 size={17} strokeWidth={2} />}
                 onClick={() => {
                   if (window.confirm(`هل أنت متأكد من حذف العميل "${editingClient.name}"؟`)) {
                     deleteClient(editingClient.id);
@@ -454,7 +441,7 @@ export const ClientsPage = () => {
                 }}
                 sx={{
                   mt: 2,
-                  borderRadius: 2.5, py: 1.5, fontWeight: 700,
+                  borderRadius: '18px', py: 1.5, fontWeight: 700,
                   border: '1px solid rgba(211, 47, 47, 0.4)',
                   '&:hover': { bgcolor: 'rgba(211, 47, 47, 0.04)', border: '1px solid rgba(211, 47, 47, 0.8)' },
                 }}

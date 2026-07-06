@@ -126,10 +126,11 @@ export const InvoicesPage = () => {
             onClick={() => navigate('/invoices/new')}
             sx={{
               ...etlalaHeroActionButtonSx,
-              display: { xs: 'none', sm: 'inline-flex' },
+              minHeight: 38,
+              px: 1.85,
             }}
           >
-            جديد
+            فاتورة جديدة
           </Button>
         }
         headerExtra={

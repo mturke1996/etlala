@@ -6,7 +6,7 @@
    ═══════════════════════════════════════════════════════════ */
 
 :root {
-  /* Premium architecture — dark green + gold */
+  /* Premium architecture — dark green + gold on clean white */
   --etlala-primary: #2F3E34;
   --etlala-primary-light: #4A5E50;
   --etlala-primary-dark: #243028;
@@ -14,11 +14,11 @@
   --etlala-cream: #E5E3DD;
   --etlala-cream-light: #EEEDE9;
   --etlala-taupe: #6B736E;
-  --etlala-bg: #F7F7F5;
+  --etlala-bg: #F8F8F8;
   --etlala-paper: #FFFFFF;
   --etlala-text: #1F2521;
   --etlala-text-secondary: #6B736E;
-  --etlala-dot: rgba(47, 62, 52, 0.06);
+  --etlala-dot: rgba(47, 62, 52, 0.045);
 
   /* Timing */
   --ease-spring: cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -58,6 +58,15 @@ html[data-theme="dark"] {
 /* ── Base ── */
 *, *::before, *::after {
   box-sizing: border-box;
+}
+
+/* iOS Safari يقرّب الصفحة تلقائياً عند التركيز على حقل خطه أصغر من 16px — نثبّت 16px على اللمس */
+@media (pointer: coarse) {
+  input:not([type='checkbox']):not([type='radio']),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
 }
 
 html {
@@ -275,12 +284,11 @@ input, button, textarea, select {
   animation: float 3s ease-in-out infinite;
 }
 
-/* خلفية تطبيق — غسل لوني خفيف يتنفس */
+/* خلفية تطبيق — أبيض نظيف مع غسل لوني شبه محسوس */
 .etlala-app-ambient {
   background:
-    radial-gradient(ellipse 90% 70% at 0% 0%, rgba(47, 62, 52, 0.06) 0%, transparent 55%),
-    radial-gradient(ellipse 60% 50% at 100% 30%, rgba(194, 178, 128, 0.05) 0%, transparent 50%),
-    radial-gradient(ellipse 50% 40% at 50% 100%, rgba(47, 62, 52, 0.04) 0%, transparent 45%);
+    radial-gradient(ellipse 90% 70% at 0% 0%, rgba(47, 62, 52, 0.028) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 50% at 100% 30%, rgba(194, 178, 128, 0.025) 0%, transparent 50%);
   animation: none;
 }
 .etlala-app-ambient--dark {
@@ -490,6 +498,12 @@ input, button, textarea, select {
   border-radius: 14px !important;
 }
 
+/* حقول التاريخ: أرقام وشرطات LTR حتى لا تتبعثر في واجهة RTL */
+.MuiPickersSectionList-root,
+.MuiPickersInputBase-sectionsContainer {
+  direction: ltr !important;
+}
+
 .MuiCollapse-root,
 .MuiCollapse-wrapper,
 .MuiCollapse-wrapperInner {
@@ -660,9 +674,11 @@ body.MuiDialog-open {
   overflow: hidden !important;
 }
 
-/* —— بدون أنيميشن/انتقالات (طلب صريح) + أقل تعارض مع التمرير —— */
-*, *::before, *::after {
-  animation: none !important;
-  transition: none !important;
-  scroll-behavior: auto !important;
+/* الحركة تكون محسّنة بشكل افتراضي، وتُعطَّل فقط لمن يفضّل تقليلها */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
 }

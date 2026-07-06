@@ -45,6 +45,12 @@ const compactFieldSx = {
   },
 };
 
+const MONEY_SX = {
+  fontFamily: "'Sora','Montserrat','Outfit','Inter',sans-serif",
+  fontVariantNumeric: 'tabular-nums lining-nums',
+  fontFeatureSettings: '"tnum" 1, "lnum" 1',
+} as const;
+
 export function ClientExpenseFormDialog({
   open,
   onClose,
@@ -72,6 +78,7 @@ export function ClientExpenseFormDialog({
     quantity: parseDecimalInput(expQuantity),
     unitPrice: parseDecimalInput(expUnitPrice),
   });
+  const amountPreview = parseDecimalInput(watchAmount) ?? 0;
 
   const clientWorkers = workers.filter((w) => w.clientId === clientId);
 
@@ -83,7 +90,6 @@ export function ClientExpenseFormDialog({
       slotProps={{
         paper: {
           sx: {
-            bgcolor: theme.palette.mode === 'dark' ? '#1a1f1a' : '#f5f3ef',
             display: 'flex',
             flexDirection: 'column',
           },
@@ -100,23 +106,47 @@ export function ClientExpenseFormDialog({
             flexShrink: 0,
             background: headerGradient,
             color: '#fff',
-            px: 1.5,
-            py: 1.5,
+            px: 1.75,
+            py: 1.65,
             pt: 'calc(max(env(safe-area-inset-top), 48px) + 8px)',
+            borderBottom: `1px solid ${alpha('#fff', 0.14)}`,
           }}
         >
-          <Stack direction="row" alignItems="center" spacing={1}>
+          <Stack direction="row" alignItems="center" spacing={1.1}>
             <IconButton onClick={onClose} size="small" sx={{ color: '#fff' }} aria-label="رجوع">
               <ArrowBack fontSize="small" />
             </IconButton>
-            <Typography variant="subtitle1" fontWeight={700}>
-              {editingExpense ? 'تعديل مصروف' : 'إضافة مصروف'}
-            </Typography>
+            <Box sx={{ minWidth: 0, flex: 1 }}>
+              <Typography variant="subtitle1" fontWeight={800} sx={{ lineHeight: 1.15 }}>
+                {editingExpense ? 'تعديل مصروف' : 'إضافة مصروف'}
+              </Typography>
+              <Typography sx={{ fontSize: '0.66rem', opacity: 0.82, fontWeight: 500, mt: 0.25 }}>
+                تسجيل مصروف نظيف وسريع داخل ملف العميل
+              </Typography>
+            </Box>
+            <Box
+              sx={{
+                px: 1.1,
+                py: 0.7,
+                borderRadius: '11px',
+                bgcolor: alpha('#fff', 0.14),
+                border: `1px solid ${alpha('#fff', 0.2)}`,
+                textAlign: 'center',
+                minWidth: 88,
+              }}
+            >
+              <Typography sx={{ fontSize: '0.58rem', opacity: 0.8, lineHeight: 1 }}>
+                الإجمالي
+              </Typography>
+              <Typography sx={{ fontSize: '0.78rem', fontWeight: 850, mt: 0.2, lineHeight: 1.1, ...MONEY_SX }}>
+                {Math.round(amountPreview).toLocaleString('ar-LY')} د.ل
+              </Typography>
+            </Box>
           </Stack>
         </Box>
 
         <Box sx={{ flex: 1, overflow: 'auto', px: 2, py: 2 }}>
-          <Stack spacing={2}>
+          <Stack spacing={1.75}>
             {expenseDialogWallet && (
               <Box
                 sx={{
@@ -155,89 +185,117 @@ export function ClientExpenseFormDialog({
               </Box>
             )}
 
-            <Controller
-              name="description"
-              control={control}
-              render={({ field }) => (
-                <TextField {...field} fullWidth size="small" label="الوصف" placeholder="مثال: شراء مواد" sx={compactFieldSx} />
-              )}
-            />
+            <Box
+              sx={{
+                p: 1.5,
+                borderRadius: 2.5,
+                bgcolor: 'background.paper',
+                border: `1px solid ${alpha(EXPENSE_FORM.primary, 0.1)}`,
+              }}
+            >
+              <Stack spacing={1.5}>
+                <Typography sx={{ fontSize: '0.68rem', fontWeight: 800, color: 'text.secondary', letterSpacing: '0.06em' }}>
+                  البيانات الأساسية
+                </Typography>
+                <Controller
+                  name="description"
+                  control={control}
+                  render={({ field }) => (
+                    <TextField {...field} fullWidth size="small" label="الوصف" placeholder="مثال: شراء مواد" sx={compactFieldSx} />
+                  )}
+                />
 
-            <ExpenseAmountField control={control} qtyActive={qtyActive} />
+                <ExpenseAmountField control={control} qtyActive={qtyActive} />
 
-            <ExpenseQuantityBlock
-              control={control}
-              quantity={expQuantity}
-              unit={expUnit}
-              unitPrice={expUnitPrice}
-              amount={watchAmount}
-              defaultOpen={Boolean(editingExpense && expenseHasQuantityLine(editingExpense))}
-              onClear={onClearQuantity}
-            />
+                <ExpenseQuantityBlock
+                  control={control}
+                  quantity={expQuantity}
+                  unit={expUnit}
+                  unitPrice={expUnitPrice}
+                  amount={watchAmount}
+                  defaultOpen={Boolean(editingExpense && expenseHasQuantityLine(editingExpense))}
+                  onClear={onClearQuantity}
+                />
 
-            <Controller
-              name="category"
-              control={control}
-              render={({ field }) => (
-                <FormControl fullWidth size="small" sx={compactFieldSx}>
-                  <InputLabel>التصنيف</InputLabel>
-                  <Select {...field} label="التصنيف">
-                    {Object.entries(expenseCategories).map(([key, label]) => (
-                      <MenuItem key={key} value={key}>{label}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              )}
-            />
-
-            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5 }}>
-              <Controller
-                name="date"
-                control={control}
-                render={({ field }) => (
-                  <TextField
-                    {...field}
-                    fullWidth
-                    size="small"
-                    label="التاريخ"
-                    type="date"
-                    InputLabelProps={{ shrink: true }}
-                    sx={compactFieldSx}
-                  />
-                )}
-              />
-              <Controller
-                name="invoiceNumber"
-                control={control}
-                render={({ field }) => (
-                  <TextField {...field} fullWidth size="small" label="رقم الفاتورة" sx={compactFieldSx} />
-                )}
-              />
+                <Controller
+                  name="category"
+                  control={control}
+                  render={({ field }) => (
+                    <FormControl fullWidth size="small" sx={compactFieldSx}>
+                      <InputLabel>التصنيف</InputLabel>
+                      <Select {...field} label="التصنيف">
+                        {Object.entries(expenseCategories).map(([key, label]) => (
+                          <MenuItem key={key} value={key}>{label}</MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  )}
+                />
+              </Stack>
             </Box>
 
-            <Controller
-              name="workerId"
-              control={control}
-              render={({ field }) => (
-                <FormControl fullWidth size="small" sx={compactFieldSx}>
-                  <InputLabel>العامل (اختياري)</InputLabel>
-                  <Select {...field} label="العامل (اختياري)">
-                    <MenuItem value=""><em>لا يوجد</em></MenuItem>
-                    {clientWorkers.map((w) => (
-                      <MenuItem key={w.id} value={w.id}>{w.name}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              )}
-            />
+            <Box
+              sx={{
+                p: 1.5,
+                borderRadius: 2.5,
+                bgcolor: 'background.paper',
+                border: `1px solid ${alpha(EXPENSE_FORM.primary, 0.1)}`,
+              }}
+            >
+              <Stack spacing={1.5}>
+                <Typography sx={{ fontSize: '0.68rem', fontWeight: 800, color: 'text.secondary', letterSpacing: '0.06em' }}>
+                  تفاصيل إضافية
+                </Typography>
+                <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5 }}>
+                  <Controller
+                    name="date"
+                    control={control}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        fullWidth
+                        size="small"
+                        label="التاريخ"
+                        type="date"
+                        InputLabelProps={{ shrink: true }}
+                        sx={compactFieldSx}
+                      />
+                    )}
+                  />
+                  <Controller
+                    name="invoiceNumber"
+                    control={control}
+                    render={({ field }) => (
+                      <TextField {...field} fullWidth size="small" label="رقم الفاتورة" sx={compactFieldSx} />
+                    )}
+                  />
+                </Box>
 
-            <Controller
-              name="notes"
-              control={control}
-              render={({ field }) => (
-                <TextField {...field} fullWidth size="small" label="ملاحظات" multiline rows={2} sx={compactFieldSx} />
-              )}
-            />
+                <Controller
+                  name="workerId"
+                  control={control}
+                  render={({ field }) => (
+                    <FormControl fullWidth size="small" sx={compactFieldSx}>
+                      <InputLabel>العامل (اختياري)</InputLabel>
+                      <Select {...field} label="العامل (اختياري)">
+                        <MenuItem value=""><em>لا يوجد</em></MenuItem>
+                        {clientWorkers.map((w) => (
+                          <MenuItem key={w.id} value={w.id}>{w.name}</MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  )}
+                />
+
+                <Controller
+                  name="notes"
+                  control={control}
+                  render={({ field }) => (
+                    <TextField {...field} fullWidth size="small" label="ملاحظات" multiline rows={2} sx={compactFieldSx} />
+                  )}
+                />
+              </Stack>
+            </Box>
           </Stack>
         </Box>
 
@@ -269,7 +327,7 @@ export function ClientExpenseFormDialog({
                   <Delete fontSize="small" />
                 </IconButton>
                 <Button type="submit" variant="contained" fullWidth sx={{ borderRadius: 2, minHeight: 44, fontWeight: 700, bgcolor: EXPENSE_FORM.primary, '&:hover': { bgcolor: EXPENSE_FORM.primarySoft } }}>
-                  حفظ
+                  حفظ التعديلات
                 </Button>
               </>
             ) : (
@@ -278,7 +336,7 @@ export function ClientExpenseFormDialog({
                   إلغاء
                 </Button>
                 <Button type="submit" variant="contained" fullWidth sx={{ borderRadius: 2, minHeight: 44, fontWeight: 700, bgcolor: EXPENSE_FORM.primary, '&:hover': { bgcolor: EXPENSE_FORM.primarySoft } }}>
-                  حفظ
+                  حفظ المصروف
                 </Button>
               </>
             )}

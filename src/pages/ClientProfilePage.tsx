@@ -1715,7 +1715,7 @@ export const ClientProfilePage = () => {
       />
 
       {/* ===== ADD/EDIT PAYMENT DIALOG ===== */}
-      <Dialog open={paymentDialogOpen} onClose={() => setPaymentDialogOpen(false)} fullScreen sx={{ '& .MuiDialog-paper': { bgcolor: theme.palette.mode === 'dark' ? '#1a1f1a' : '#f5f3ef' } }}>
+      <Dialog open={paymentDialogOpen} onClose={() => setPaymentDialogOpen(false)} fullScreen>
         <form onSubmit={handlePaySubmit(onSubmitPayment)}>
           <Box sx={{ background: headerGradient, color: 'white', p: 2, pt: 'calc(max(env(safe-area-inset-top), 50px) + 16px)' }}>
             <Stack direction="row" alignItems="center" spacing={2}><IconButton onClick={() => setPaymentDialogOpen(false)} sx={{ color: 'white' }}><ArrowBack /></IconButton><Typography variant="h6" fontWeight={700}>{editingPayment ? 'تعديل دفعة' : 'إضافة دفعة'}</Typography></Stack>
@@ -1728,15 +1728,15 @@ export const ClientProfilePage = () => {
               <Controller name="notes" control={payCtrl} render={({ field }) => <TextField {...field} fullWidth label="ملاحظات" multiline rows={2} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2.5, bgcolor: 'background.paper' } }} />} />
             </Stack>
             <Stack direction="row" spacing={2} sx={{ mt: 4 }}>
-              <Button onClick={() => setPaymentDialogOpen(false)} fullWidth size="large" sx={{ borderRadius: 2.5 }}>إلغاء</Button>
-              <Button type="submit" variant="contained" fullWidth size="large" sx={{ borderRadius: 2.5, bgcolor: '#4a5d4a', '&:hover': { bgcolor: '#364036' } }}>حفظ</Button>
+              <Button onClick={() => setPaymentDialogOpen(false)} fullWidth size="large" sx={{ borderRadius: 1.5, fontWeight: 700 }}>إلغاء</Button>
+              <Button type="submit" variant="contained" fullWidth size="large" sx={{ borderRadius: 1.5, fontWeight: 800 }}>حفظ</Button>
             </Stack>
           </Box>
         </form>
       </Dialog>
 
       {/* ===== ADD/EDIT DEBT DIALOG ===== */}
-      <Dialog open={debtDialogOpen} onClose={() => setDebtDialogOpen(false)} fullScreen sx={{ '& .MuiDialog-paper': { bgcolor: theme.palette.mode === 'dark' ? '#1a1f1a' : '#f5f3ef' } }}>
+      <Dialog open={debtDialogOpen} onClose={() => setDebtDialogOpen(false)} fullScreen>
         <form onSubmit={handleDebtSubmit(onSubmitDebt)}>
           <Box sx={{ background: headerGradient, color: 'white', p: 2, pt: 'calc(max(env(safe-area-inset-top), 50px) + 16px)' }}>
             <Stack direction="row" alignItems="center" spacing={2}><IconButton onClick={() => setDebtDialogOpen(false)} sx={{ color: 'white' }}><ArrowBack /></IconButton><Typography variant="h6" fontWeight={700}>{editingDebt ? 'تعديل دين' : 'إضافة دين'}</Typography></Stack>
@@ -1750,28 +1750,28 @@ export const ClientProfilePage = () => {
               <Controller name="notes" control={debtCtrl} render={({ field }) => <TextField {...field} fullWidth label="ملاحظات" multiline rows={2} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2.5, bgcolor: 'background.paper' } }} />} />
             </Stack>
             <Stack direction="row" spacing={2} sx={{ mt: 4 }}>
-              <Button onClick={() => setDebtDialogOpen(false)} fullWidth size="large" sx={{ borderRadius: 2.5 }}>إلغاء</Button>
-              <Button type="submit" variant="contained" fullWidth size="large" sx={{ borderRadius: 2.5, bgcolor: '#4a5d4a', '&:hover': { bgcolor: '#364036' } }}>حفظ</Button>
+              <Button onClick={() => setDebtDialogOpen(false)} fullWidth size="large" sx={{ borderRadius: 1.5, fontWeight: 700 }}>إلغاء</Button>
+              <Button type="submit" variant="contained" fullWidth size="large" sx={{ borderRadius: 1.5, fontWeight: 800 }}>حفظ</Button>
             </Stack>
           </Box>
         </form>
       </Dialog>
 
       {/* ===== PROFIT DIALOG ===== */}
-      <Dialog open={profitDialogOpen} onClose={() => setProfitDialogOpen(false)} maxWidth="sm" fullWidth PaperProps={{ style: { borderRadius: 20, padding: 16 } }}>
+      <Dialog open={profitDialogOpen} onClose={() => setProfitDialogOpen(false)} maxWidth="sm" fullWidth>
         <Typography variant="h6" fontWeight={800} mb={2}>حساب صافي النسبة</Typography>
         <Stack spacing={2}>
           <TextField fullWidth label="نسبة صافي النسبة (%)" type="number" value={profitPercentage} onChange={(e) => setProfitPercentage(e.target.value)} InputProps={{ endAdornment: <InputAdornment position="end">%</InputAdornment> }} />
           {summary.profit > 0 && <Alert severity="info" sx={{ borderRadius: 2 }}>صافي النسبة الحالية (المحسوبة): {formatCurrency(summary.profit)}</Alert>}
         </Stack>
         <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
-          <Button fullWidth onClick={() => setProfitDialogOpen(false)} sx={{ borderRadius: 2.5 }}>إلغاء</Button>
-          <Button fullWidth variant="contained" onClick={handleSaveProfit} sx={{ borderRadius: 2.5, bgcolor: '#4a5d4a', '&:hover': { bgcolor: '#364036' } }}>حفظ النسبة</Button>
+          <Button fullWidth onClick={() => setProfitDialogOpen(false)} sx={{ borderRadius: 1.5, fontWeight: 700 }}>إلغاء</Button>
+          <Button fullWidth variant="contained" onClick={handleSaveProfit} sx={{ borderRadius: 1.5, fontWeight: 800 }}>حفظ النسبة</Button>
         </Stack>
       </Dialog>
 
       {/* ===== EDIT CLIENT DIALOG ===== */}
-      <Dialog open={editClientOpen} onClose={() => setEditClientOpen(false)} fullScreen sx={{ '& .MuiDialog-paper': { bgcolor: theme.palette.mode === 'dark' ? '#1a1f1a' : '#f5f3ef' } }}>
+      <Dialog open={editClientOpen} onClose={() => setEditClientOpen(false)} fullScreen>
         <form onSubmit={handleClientSubmit(onSubmitClient)}>
           <Box sx={{ background: headerGradient, color: 'white', p: 2, pt: 'calc(max(env(safe-area-inset-top), 50px) + 16px)' }}>
             <Stack direction="row" alignItems="center" spacing={2}><IconButton onClick={() => setEditClientOpen(false)} sx={{ color: 'white' }}><ArrowBack /></IconButton><Typography variant="h6" fontWeight={700}>تعديل بيانات العميل</Typography></Stack>
@@ -1784,8 +1784,8 @@ export const ClientProfilePage = () => {
               <Controller name="address" control={clientControl} render={({ field }) => <TextField {...field} fullWidth label="العنوان" multiline rows={2} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2.5, bgcolor: 'background.paper' } }} />} />
             </Stack>
             <Stack direction="row" spacing={2} sx={{ mt: 4 }}>
-              <Button onClick={() => setEditClientOpen(false)} fullWidth size="large" sx={{ borderRadius: 2.5 }}>إلغاء</Button>
-              <Button type="submit" variant="contained" fullWidth size="large" sx={{ borderRadius: 2.5, bgcolor: '#4a5d4a', '&:hover': { bgcolor: '#364036' } }}>حفظ</Button>
+              <Button onClick={() => setEditClientOpen(false)} fullWidth size="large" sx={{ borderRadius: 1.5, fontWeight: 700 }}>إلغاء</Button>
+              <Button type="submit" variant="contained" fullWidth size="large" sx={{ borderRadius: 1.5, fontWeight: 800 }}>حفظ</Button>
             </Stack>
             <Divider sx={{ my: 4 }} />
             <Button fullWidth variant="outlined" color="error" startIcon={<Delete />} onClick={handleDeleteClient} sx={{ borderRadius: 2.5 }}>حذف العميل</Button>
@@ -2223,7 +2223,7 @@ export const ClientProfilePage = () => {
       </Dialog>
 
       {/* ===== ADD/EDIT BALANCE DIALOG (MOBILE OPTIMIZED) ===== */}
-      <Dialog open={balanceDialogOpen} onClose={() => setBalanceDialogOpen(false)} fullScreen sx={{ '& .MuiDialog-paper': { bgcolor: theme.palette.mode === 'dark' ? '#0a0e14' : '#f0f2f5' } }}>
+      <Dialog open={balanceDialogOpen} onClose={() => setBalanceDialogOpen(false)} fullScreen>
         <form onSubmit={handleBalSubmit(onSubmitBalance)} style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
           
           <Box sx={{ 
@@ -2296,7 +2296,7 @@ export const ClientProfilePage = () => {
               <Button onClick={() => setBalanceDialogOpen(false)} variant="outlined" fullWidth size="large" sx={{ borderRadius: 3, p: 1.5, fontWeight: 700, borderColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)', color: 'text.secondary' }}>
                 رجوع
               </Button>
-              <Button type="submit" variant="contained" fullWidth size="large" sx={{ borderRadius: 3, p: 1.5, fontWeight: 900, bgcolor: '#4a5d4a', color: '#fff', '&:hover': { bgcolor: '#364036' }, boxShadow: '0 4px 12px rgba(74,93,74,0.3)' }}>
+              <Button type="submit" variant="contained" fullWidth size="large" sx={{ borderRadius: 1.5, p: 1.5, fontWeight: 900 }}>
                 {editingBalance ? 'حفظ التعديل' : 'إيداع العهدة'}
               </Button>
             </Stack>
@@ -2305,7 +2305,7 @@ export const ClientProfilePage = () => {
       </Dialog>
 
       {/* ===== EDIT CLIENT DIALOG ===== */}
-      <Dialog open={editClientOpen} onClose={() => setEditClientOpen(false)} fullScreen sx={{ '& .MuiDialog-paper': { bgcolor: theme.palette.mode === 'dark' ? '#1a1f1a' : '#f5f3ef' } }}>
+      <Dialog open={editClientOpen} onClose={() => setEditClientOpen(false)} fullScreen>
         <form onSubmit={handleClientSubmit(onSubmitClient)}>
           <Box sx={{ background: headerGradient, color: 'white', p: 2, pt: 'calc(max(env(safe-area-inset-top), 50px) + 16px)' }}>
             <Stack direction="row" alignItems="center" justifyContent="space-between">
@@ -2332,8 +2332,8 @@ export const ClientProfilePage = () => {
               )} />
             </Stack>
             <Stack direction="row" spacing={2} sx={{ mt: 4 }}>
-              <Button onClick={() => setEditClientOpen(false)} fullWidth size="large" sx={{ borderRadius: 2.5 }}>إلغاء</Button>
-              <Button type="submit" variant="contained" fullWidth size="large" sx={{ borderRadius: 2.5, bgcolor: '#4a5d4a', '&:hover': { bgcolor: '#364036' } }}>حفظ التعديلات</Button>
+              <Button onClick={() => setEditClientOpen(false)} fullWidth size="large" sx={{ borderRadius: 1.5, fontWeight: 700 }}>إلغاء</Button>
+              <Button type="submit" variant="contained" fullWidth size="large" sx={{ borderRadius: 1.5, fontWeight: 800 }}>حفظ التعديلات</Button>
             </Stack>
             <Divider sx={{ my: 4 }} />
             <Button fullWidth size="large" variant="outlined" color="error" onClick={handleDeleteClient} sx={{ borderRadius: 2.5, fontWeight: 700, py: 1.5 }}>

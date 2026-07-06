@@ -31,7 +31,7 @@ import { useDataStore } from '../store/useDataStore';
 import { useAuthStore } from '../store/useAuthStore';
 import { formatCurrency, formatDate } from '../utils/formatters';
 import { PageScaffold } from '../components/layout/PageScaffold';
-import { EtlalaAccentSurface, EtlalaEmptyState, EtlalaSectionTitle, etlalaContentFieldSx } from '../components/etlala/EtlalaMobileUi';
+import { EtlalaAccentSurface, EtlalaEmptyState, EtlalaSectionTitle, etlalaContentFieldSx, etlalaHeroActionButtonSx } from '../components/etlala/EtlalaMobileUi';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -125,17 +125,9 @@ export const DebtsPage = () => {
           size="small"
           startIcon={<Add />}
           onClick={() => setDialogOpen(true)}
-          sx={{
-            bgcolor: 'rgba(200,192,176,0.95)',
-            color: '#2d3a2d',
-            fontWeight: 700,
-            borderRadius: 2.5,
-            px: 2,
-            boxShadow: '0 4px 14px -3px rgba(0,0,0,0.12)',
-            '&:hover': { bgcolor: '#c8c0b0' },
-          }}
+          sx={etlalaHeroActionButtonSx}
         >
-          جديد
+          دين جديد
         </Button>
       )}
       headerExtra={(
@@ -265,11 +257,20 @@ export const DebtsPage = () => {
         onClose={() => setDialogOpen(false)}
         maxWidth="sm"
         fullWidth
-        PaperProps={{ style: { borderRadius: '20px', padding: '16px' } }}
+        PaperProps={{
+          sx: {
+            borderRadius: '22px',
+            overflow: 'hidden',
+          },
+        }}
       >
-        <Typography variant="h6" fontWeight={800} mb={3}>تسجيل دين جديد</Typography>
-        <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="ar">
-          <Stack spacing={2.5}>
+        <Box sx={{ px: 2.5, pt: 2.25, pb: 1.5, borderBottom: `1px solid ${alpha(theme.palette.divider, 0.75)}` }}>
+          <Typography variant="h6" fontWeight={800} sx={{ lineHeight: 1.3 }}>تسجيل دين جديد</Typography>
+          <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>أدخل بيانات الطرف وقيمة الدين وتاريخ الاستحقاق</Typography>
+        </Box>
+        <Box sx={{ p: 2.5 }}>
+          <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="ar">
+            <Stack spacing={2.25}>
             <FormControl fullWidth>
               <InputLabel>نوع الطرف</InputLabel>
               <Select
@@ -325,13 +326,15 @@ export const DebtsPage = () => {
                 label="تاريخ الدين"
                 value={debtForm.date}
                 onChange={(newValue) => newValue && setDebtForm({...debtForm, date: newValue})}
-                slotProps={{ textField: { fullWidth: true } }}
+                format="DD/MM/YYYY"
+                slotProps={{ textField: { fullWidth: true, inputProps: { dir: 'ltr', style: { textAlign: 'end' } } } }}
               />
               <DatePicker 
                 label="تاريخ الاستحقاق"
                 value={debtForm.dueDate}
                 onChange={(newValue) => newValue && setDebtForm({...debtForm, dueDate: newValue})}
-                slotProps={{ textField: { fullWidth: true } }}
+                format="DD/MM/YYYY"
+                slotProps={{ textField: { fullWidth: true, inputProps: { dir: 'ltr', style: { textAlign: 'end' } } } }}
               />
             </Stack>
 
@@ -342,21 +345,22 @@ export const DebtsPage = () => {
               value={debtForm.notes}
               onChange={(e) => setDebtForm({...debtForm, notes: e.target.value})}
             />
-          </Stack>
-        </LocalizationProvider>
-        
-        <Box mt={3} display="flex" gap={2}>
-          <Button fullWidth onClick={() => setDialogOpen(false)} size="large" sx={{ borderRadius: '10px' }}>إلغاء</Button>
-          <Button 
-            fullWidth 
-            variant="contained" 
-            onClick={handleAddDebt}
-            disabled={loading}
-            size="large"
-            sx={{ borderRadius: '10px', fontWeight: 700 }}
-          >
-            {loading ? 'جاري الحفظ...' : 'حفظ الدين'}
-          </Button>
+            </Stack>
+          </LocalizationProvider>
+          
+          <Box mt={2.75} display="flex" gap={1.5}>
+            <Button fullWidth onClick={() => setDialogOpen(false)} size="large" sx={{ borderRadius: '12px', fontWeight: 700 }}>إلغاء</Button>
+            <Button 
+              fullWidth 
+              variant="contained" 
+              onClick={handleAddDebt}
+              disabled={loading}
+              size="large"
+              sx={{ borderRadius: '12px', fontWeight: 800 }}
+            >
+              {loading ? 'جاري الحفظ...' : 'حفظ الدين'}
+            </Button>
+          </Box>
         </Box>
       </Dialog>
     </>

@@ -8,7 +8,7 @@
   "display": "standalone",
   "display_override": ["standalone", "browser"],
   "categories": ["business", "productivity"],
-  "background_color": "#F7F7F5",
+  "background_color": "#F8F8F8",
   "theme_color": "#2F3E34",
   "dir": "rtl",
   "lang": "ar",
@@ -16,16 +16,16 @@
   "prefer_related_applications": false,
   "icons": [
     {
-      "src": "/logo-icon.jpg",
-      "sizes": "192x192",
-      "type": "image/jpeg",
+      "src": "/logo-hero-3d.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/logo-icon.jpg",
-      "sizes": "512x512",
-      "type": "image/jpeg",
-      "purpose": "any"
+      "src": "/logo-hero-3d.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ],
   "shortcuts": [
@@ -33,19 +33,19 @@
       "name": "الرئيسية",
       "short_name": "رئيسية",
       "url": "/",
-      "icons": [{ "src": "/logo-icon.jpg", "sizes": "192x192", "type": "image/jpeg" }]
+      "icons": [{ "src": "/logo-hero-3d.png", "sizes": "1024x1024", "type": "image/png" }]
     },
     {
       "name": "العملاء",
       "short_name": "عملاء",
       "url": "/clients",
-      "icons": [{ "src": "/logo-icon.jpg", "sizes": "192x192", "type": "image/jpeg" }]
+      "icons": [{ "src": "/logo-hero-3d.png", "sizes": "1024x1024", "type": "image/png" }]
     },
     {
       "name": "الفواتير",
       "short_name": "فواتير",
       "url": "/invoices",
-      "icons": [{ "src": "/logo-icon.jpg", "sizes": "192x192", "type": "image/jpeg" }]
+      "icons": [{ "src": "/logo-hero-3d.png", "sizes": "1024x1024", "type": "image/png" }]
     }
   ]
 }

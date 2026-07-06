@@ -15,6 +15,7 @@ import {
 import { useAuthStore } from '../store/useAuthStore';
 import { useDataStore } from '../store/useDataStore';
 import { PageScaffold } from '../components/layout/PageScaffold';
+import { etlalaHeroActionButtonSx } from '../components/etlala/EtlalaMobileUi';
 import { downloadLetterPdf, shareLetterPdf } from '../components/pdf/lazyPdf';
 import type { Letter, LetterType } from '../types';
 import toast from 'react-hot-toast';
@@ -162,26 +163,29 @@ export const LettersPage = () => {
           size="small"
           startIcon={<Add sx={{ ml: 0.5, mr: -0.5 }} />}
           onClick={openAdd}
-          sx={{
-            bgcolor: 'rgba(200, 192, 176, 0.95)',
-            color: '#1f291f',
-            fontWeight: 800,
-            borderRadius: 2.5,
-            px: 2,
-            fontSize: '0.8rem',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-            '&:hover': { bgcolor: '#c8c0b0' },
-          }}
+          sx={etlalaHeroActionButtonSx}
         >
-          جديد
+          رسالة جديدة
         </Button>
       )}
       headerExtra={(
         <Stack direction="row" spacing={1} sx={{ mt: 0.5 }}>
           {(['official', 'offer', 'entitlement'] as LetterType[]).map(t => (
-            <Box key={t} sx={{ flex: 1, textAlign: 'center', bgcolor: 'rgba(255,255,255,0.06)', borderRadius: 2, py: 1 }}>
-              <Typography sx={{ fontSize: '1.2rem', fontWeight: 900, color: typeColors[t], fontFamily: 'Outfit' }}>{letters.filter(l => l.type === t).length}</Typography>
-              <Typography sx={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>{typeLabels[t]}</Typography>
+            <Box
+              key={t}
+              sx={{
+                flex: 1,
+                textAlign: 'center',
+                bgcolor: 'rgba(255,255,255,0.08)',
+                border: '1px solid rgba(255,255,255,0.12)',
+                borderRadius: '16px',
+                py: 1,
+              }}
+            >
+              <Typography sx={{ fontSize: '1.15rem', fontWeight: 900, color: '#fff', fontFamily: 'Outfit', lineHeight: 1.25, fontVariantNumeric: 'tabular-nums' }}>
+                {letters.filter(l => l.type === t).length}
+              </Typography>
+              <Typography sx={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.66)', fontWeight: 600 }}>{typeLabels[t]}</Typography>
             </Box>
           ))}
         </Stack>
@@ -202,18 +206,23 @@ export const LettersPage = () => {
               return (
                 <Box key={letter.id} sx={{
                   bgcolor: cardBg,
-                  borderTop: `3px solid ${tc}`,
-                  boxShadow: isDark ? '0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(0,0,0,0.06)',
+                  borderRadius: '20px',
+                  border: `1px solid ${isDark ? 'rgba(255,255,255,0.07)' : 'rgba(31, 37, 33, 0.06)'}`,
+                  borderInlineStart: `3px solid ${tc}`,
+                  boxShadow: isDark
+                    ? '0 2px 8px rgba(0,0,0,0.3)'
+                    : '0 1px 2px rgba(31, 37, 33, 0.03), 0 6px 20px rgba(31, 37, 33, 0.04)',
                   overflow: 'hidden',
                   transition: 'box-shadow 0.2s',
-                  '&:hover': { boxShadow: isDark ? '0 4px 16px rgba(0,0,0,0.4)' : '0 4px 16px rgba(0,0,0,0.1)' },
+                  '&:hover': { boxShadow: isDark ? '0 4px 16px rgba(0,0,0,0.4)' : '0 2px 4px rgba(31,37,33,0.04), 0 10px 28px rgba(31,37,33,0.07)' },
                 }}>
                   {/* Card Header */}
                   <Box onClick={() => setExpandedId(isExp ? null : letter.id)}
                     sx={{ cursor: 'pointer', p: 2, display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
                     {/* Type indicator */}
                     <Box sx={{
-                      width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      width: 38, height: 38, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      borderRadius: '13px',
                       bgcolor: `${tc}10`, border: `1px solid ${tc}25`, flexShrink: 0, mt: 0.3,
                     }}>
                       <Description sx={{ fontSize: 18, color: tc }} />
@@ -301,13 +310,12 @@ export const LettersPage = () => {
     </PageScaffold>
 
       {/* ═══ DIALOG ═══ */}
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} fullScreen
-        PaperProps={{ sx: { bgcolor: isDark ? '#151a15' : '#f5f3ef', backgroundImage: 'none' } }}>
+      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} fullScreen>
         {/* Top bar */}
         <Box sx={{ bgcolor: isDark ? '#1e251e' : '#fff', borderBottom: `1px solid ${cardBorder}`, px: 2, pt: 'calc(env(safe-area-inset-top) + 12px)', pb: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <IconButton onClick={() => setDialogOpen(false)} size="small"><Close /></IconButton>
           <Typography fontWeight={800} sx={{ flex: 1, textAlign: 'center' }}>{editingId ? 'تعديل الرسالة' : 'رسالة جديدة'}</Typography>
-          <Button variant="contained" size="small" onClick={handleSave} sx={{ borderRadius: 1, px: 3, fontWeight: 700 }}>حفظ</Button>
+          <Button variant="contained" size="small" onClick={handleSave} sx={{ borderRadius: 1.5, px: 2.6, fontWeight: 800 }}>حفظ</Button>
         </Box>
 
         <Box sx={{ overflow: 'auto', flex: 1, px: 2, py: 2 }}>

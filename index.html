@@ -2,26 +2,29 @@
 <html lang="ar" dir="rtl">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/jpeg" href="/logo-icon.jpg" />
+    <link rel="icon" type="image/png" href="/logo-hero-3d.png" />
     <link rel="manifest" href="/manifest.json" />
+    <!-- iOS: منع أي زوم (عند التركيز على الحقول أو بالقرص) — سلوك تطبيق أصلي -->
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
     />
     <meta
       name="description"
       content="نظام إدارة شركة إطلالة للاستشارات الهندسية - فواتير، عملاء، ومصروفات"
     />
+    <meta name="format-detection" content="telephone=no, date=no, email=no, address=no" />
     <meta name="theme-color" content="#2F3E34" />
     <meta name="color-scheme" content="light dark" />
     <meta name="msapplication-TileColor" content="#2F3E34" />
     <meta name="msapplication-navbutton-color" content="#2F3E34" />
 
     <!-- Apple PWA Support -->
-    <link rel="apple-touch-icon" href="/logo-icon.jpg" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/logo-icon.jpg" />
-    <link rel="apple-touch-icon" sizes="152x152" href="/logo-icon.jpg" />
-    <link rel="apple-touch-icon" sizes="120x120" href="/logo-icon.jpg" />
+    <link rel="apple-touch-icon" href="/logo-hero-3d.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/logo-hero-3d.png" />
+    <link rel="apple-touch-icon" sizes="167x167" href="/logo-hero-3d.png" />
+    <link rel="apple-touch-icon" sizes="152x152" href="/logo-hero-3d.png" />
+    <link rel="apple-touch-icon" sizes="120x120" href="/logo-hero-3d.png" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta
@@ -36,6 +39,9 @@
     <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!-- تحميل مسبق لصورة الهيرو — تظهر فوراً عند فتح التطبيق -->
+    <link rel="preload" as="image" href="/hero-main.png" fetchpriority="high" />
 
     <!-- Professional Fonts: Cairo for Arabic, Outfit for English Numbers -->
     <!-- Using font-display=swap ensures text is visible immediately -->

@@ -788,7 +788,7 @@ export const FundPage = () => {
 
       {/* ══ ADD/EDIT DIALOG ══════════════════════════════════════════════════ */}
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} fullScreen
-        PaperProps={{ sx: { bgcolor: isDark ? '#0a0e14' : '#f0f2f5', fontFamily: F } }}>
+        PaperProps={{ sx: { fontFamily: F } }}>
 
         {/* Dialog Header */}
         <Box sx={{ background: HEADER, pt: 'calc(env(safe-area-inset-top) + 28px)', pb: 4.5, px: 2.5, position: 'relative', overflow: 'hidden', '&::after': { content: '""', position: 'absolute', top: '-40%', right: '-20%', width: '60%', height: '160%', background: 'radial-gradient(ellipse, rgba(16,185,129,0.06) 0%, transparent 60%)', pointerEvents: 'none' } }}>

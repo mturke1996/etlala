@@ -4,7 +4,8 @@
 export const premiumTokens = {
   primary: '#2F3E34',
   primaryDark: '#243028',
-  background: '#F7F7F5',
+  /** أبيض نظيف — iOS clean white */
+  background: '#F8F8F8',
   paper: '#FFFFFF',
   accent: '#C2B280',
   text: '#1F2521',

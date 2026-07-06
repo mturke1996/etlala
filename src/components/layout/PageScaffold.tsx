@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import type { SxProps, Theme } from '@mui/material/styles';
 import { Box, Container, IconButton, Stack, Typography, useTheme, alpha } from '@mui/material';
-import { ArrowBack } from '@mui/icons-material';
+import { ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 /**
@@ -67,39 +67,39 @@ export function PageScaffold({
           {
             background: isProfile
               ? (isDark
-                ? 'linear-gradient(168deg, #0F1812 0%, #1A2218 40%, #121814 100%)'
-                : 'linear-gradient(168deg, #2F3E34 0%, #2A352C 45%, #243028 100%)')
+                ? 'linear-gradient(166deg, #111A14 0%, #1A251D 42%, #121A15 100%)'
+                : 'linear-gradient(166deg, #304238 0%, #2A3A31 45%, #233229 100%)')
               : (isDark
-                ? 'linear-gradient(162deg, #1A2218 0%, #121814 52%, #0E120F 100%)'
-                : 'linear-gradient(162deg, #3A4B40 0%, #2F3E34 48%, #243028 100%)'),
-            pt: isProfile ? 'calc(env(safe-area-inset-top) + 16px)' : 'calc(env(safe-area-inset-top) + 12px)',
-            pb: isProfile ? 3.5 : 2.75,
+                ? 'linear-gradient(166deg, #1B251E 0%, #141C17 55%, #101713 100%)'
+                : 'linear-gradient(166deg, #35483D 0%, #2C3D33 52%, #25342B 100%)'),
+            pt: isProfile ? 'calc(env(safe-area-inset-top) + 17px)' : 'calc(env(safe-area-inset-top) + 14px)',
+            pb: isProfile ? 3.25 : 2.95,
             px: 2,
             color: 'common.white',
-            borderRadius: isProfile ? { xs: '0 0 32px 32px', sm: '0 0 40px 40px' } : { xs: '0 0 26px 26px', sm: '0 0 32px 32px' },
+            borderRadius: isProfile
+              ? { xs: '0 0 30px 30px', sm: '0 0 36px 36px' }
+              : { xs: '0 0 24px 24px', sm: '0 0 30px 30px' },
             boxShadow: isProfile
               ? (isDark
-                ? '0 28px 80px -12px rgba(0,0,0,0.65), inset 0 0 100px -40px rgba(194, 178, 128, 0.04), inset 0 -1px 0 rgba(226, 232, 240, 0.06)'
-                : '0 24px 64px -14px rgba(20, 28, 22, 0.45), inset 0 0 80px -30px rgba(255,255,255,0.04)')
+                ? '0 20px 54px -16px rgba(0,0,0,0.62), inset 0 0 100px -50px rgba(194, 178, 128, 0.05), inset 0 -1px 0 rgba(226, 232, 240, 0.07)'
+                : '0 16px 44px -14px rgba(20, 28, 22, 0.4), inset 0 0 72px -34px rgba(255,255,255,0.05)')
               : (isDark
-                ? '0 20px 56px rgba(0,0,0,0.55), inset 0 -1px 0 rgba(226, 232, 240, 0.05)'
-                : '0 16px 48px -12px rgba(20, 28, 22, 0.28), inset 0 -1px 0 rgba(255,255,255,0.1)'),
+                ? '0 14px 40px -16px rgba(0,0,0,0.56), inset 0 -1px 0 rgba(226, 232, 240, 0.05)'
+                : '0 12px 34px -14px rgba(20, 28, 22, 0.28), inset 0 -1px 0 rgba(255,255,255,0.1)'),
             position: 'relative',
             overflow: 'hidden',
-            borderBottom: isProfile
-              ? `1px solid ${isDark ? 'rgba(226, 232, 240, 0.12)' : 'rgba(226, 232, 240, 0.28)'}`
-              : `2px solid ${isDark ? 'rgba(226, 232, 240, 0.14)' : 'rgba(226, 232, 240, 0.22)'}`,
+            borderBottom: `1px solid ${isDark ? 'rgba(226, 232, 240, 0.14)' : 'rgba(226, 232, 240, 0.24)'}`,
             '&::before': {
               content: '""',
               position: 'absolute',
               inset: 0,
               background: isProfile
                 ? (isDark
-                  ? 'radial-gradient(ellipse 100% 90% at 100% 0%, rgba(194, 178, 128, 0.1) 0%, transparent 45%), radial-gradient(ellipse 60% 50% at 0% 100%, rgba(255,255,255,0.04) 0%, transparent 50%)'
-                  : 'radial-gradient(ellipse 100% 85% at 0% 0%, rgba(255,255,255,0.12) 0%, transparent 48%), radial-gradient(ellipse 70% 60% at 100% 100%, rgba(194, 178, 128, 0.08) 0%, transparent 55%)')
+                  ? 'radial-gradient(ellipse 110% 90% at 100% 0%, rgba(194, 178, 128, 0.12) 0%, transparent 48%), radial-gradient(ellipse 62% 52% at 0% 100%, rgba(255,255,255,0.05) 0%, transparent 52%)'
+                  : 'radial-gradient(ellipse 100% 86% at 0% 0%, rgba(255,255,255,0.14) 0%, transparent 50%), radial-gradient(ellipse 70% 62% at 100% 100%, rgba(194, 178, 128, 0.1) 0%, transparent 56%)')
                 : (isDark
-                  ? 'radial-gradient(ellipse 90% 70% at 100% 0%, rgba(194, 178, 128, 0.08) 0%, transparent 52%)'
-                  : 'radial-gradient(ellipse 85% 65% at 0% 0%, rgba(255,255,255,0.18) 0%, transparent 55%)'),
+                  ? 'radial-gradient(ellipse 95% 72% at 100% 0%, rgba(194, 178, 128, 0.09) 0%, transparent 53%)'
+                  : 'radial-gradient(ellipse 86% 66% at 0% 0%, rgba(255,255,255,0.2) 0%, transparent 56%)'),
               pointerEvents: 'none',
             },
             '&::after': {
@@ -108,14 +108,14 @@ export function PageScaffold({
               top: 0,
               left: 0,
               right: 0,
-              height: isProfile ? 2 : 1,
+              height: 1,
               background: isProfile
                 ? (isDark
-                  ? 'linear-gradient(90deg, transparent, rgba(226, 232, 240, 0.25) 20%, rgba(226, 232, 240, 0.45) 50%, rgba(226, 232, 240, 0.25) 80%, transparent)'
-                  : 'linear-gradient(90deg, transparent, rgba(255,255,255,0.5) 30%, rgba(226, 232, 240, 0.4) 50%, rgba(255,255,255,0.4) 70%, transparent)')
+                  ? 'linear-gradient(90deg, transparent, rgba(226, 232, 240, 0.3) 50%, transparent)'
+                  : 'linear-gradient(90deg, transparent, rgba(255,255,255,0.5) 50%, transparent)')
                 : (isDark
-                  ? 'linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent)'
-                  : 'linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent)'),
+                  ? 'linear-gradient(90deg, transparent, rgba(255,255,255,0.14), transparent)'
+                  : 'linear-gradient(90deg, transparent, rgba(255,255,255,0.38), transparent)'),
               pointerEvents: 'none',
             },
           },
@@ -136,14 +136,19 @@ export function PageScaffold({
               onClick={onBack}
               aria-label="رجوع"
               sx={{
+                width: 42,
+                height: 42,
+                borderRadius: '14px',
                 color: alpha('#fff', 0.95),
                 bgcolor: alpha('#fff', 0.08),
-                border: `1px solid ${alpha('#fff', 0.12)}`,
-                '&:hover': { bgcolor: alpha('#fff', 0.16) },
+                border: `1px solid ${alpha('#fff', 0.14)}`,
+                backdropFilter: 'blur(8px)',
+                WebkitBackdropFilter: 'blur(8px)',
+                '&:hover': { bgcolor: alpha('#fff', 0.16), borderColor: alpha('#fff', 0.22) },
                 flexShrink: 0,
               }}
             >
-              <ArrowBack />
+              <ArrowRight size={20} strokeWidth={2} />
             </IconButton>
             <Box sx={{ flex: 1, minWidth: 0, textAlign: 'right' }}>
               <Typography
@@ -152,13 +157,15 @@ export function PageScaffold({
                 sx={{
                   fontWeight: 800,
                   letterSpacing: isProfile ? 0.2 : 0.15,
-                  lineHeight: 1.2,
+                  lineHeight: 1.25,
                   color: '#fff',
                   fontFeatureSettings: '"kern" 1',
                   textShadow: isProfile
                     ? '0 2px 24px rgba(0,0,0,0.35), 0 0 40px rgba(0,0,0,0.2)'
                     : '0 1px 18px rgba(0,0,0,0.15)',
-                  fontSize: isProfile ? { xs: '1.35rem', sm: '1.5rem' } : undefined,
+                  fontSize: isProfile
+                    ? { xs: '1.35rem', sm: '1.5rem' }
+                    : { xs: '1.14rem', sm: '1.24rem' },
                 }}
               >
                 {title}
@@ -172,7 +179,7 @@ export function PageScaffold({
                     display: 'block',
                     mt: 0.5,
                     lineHeight: 1.5,
-                    fontSize: isProfile ? '0.82rem' : undefined,
+                    fontSize: isProfile ? '0.82rem' : '0.78rem',
                     fontWeight: isProfile ? 500 : 400,
                     letterSpacing: isProfile ? 0.2 : undefined,
                   }}

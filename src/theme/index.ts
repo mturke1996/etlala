@@ -92,12 +92,21 @@ export const createAppTheme = (mode: ThemeMode = 'light') => {
       borderRadius: 16,
     },
     components: {
+      /**
+       * إصلاح جوهري للـ RTL: بدون rtl-cache تُطبَّق مسافات Stack كـ margin-left
+       * (جانب خاطئ في العربية) فتلتصق العناصر ببعضها. flex gap يعمل في الاتجاهين.
+       */
+      MuiStack: {
+        defaultProps: {
+          useFlexGap: true,
+        },
+      },
       MuiCssBaseline: {
         styleOverrides: {
           body: {
             backgroundColor: palette.background.default,
             color: palette.text.primary,
-            scrollbarColor: isDark ? '#3D4A42 #121814' : '#C5CAC7 #F7F7F5',
+            scrollbarColor: isDark ? '#3D4A42 #121814' : '#C5CAC7 #F8F8F8',
             '&::-webkit-scrollbar, & *::-webkit-scrollbar': {
               backgroundColor: 'transparent',
               width: 6,
@@ -166,7 +175,7 @@ export const createAppTheme = (mode: ThemeMode = 'light') => {
         },
         styleOverrides: {
           root: {
-            borderRadius: '14px',
+            borderRadius: '18px',
             minHeight: 48,
             padding: '10px 24px',
             letterSpacing: '0.01em',
@@ -191,15 +200,15 @@ export const createAppTheme = (mode: ThemeMode = 'light') => {
             },
           },
           sizeSmall: {
-            minHeight: 44,
-            padding: '8px 18px',
-            borderRadius: '12px',
-            fontSize: '0.875rem',
+            minHeight: 40,
+            padding: '8px 16px',
+            borderRadius: '14px',
+            fontSize: '0.8125rem',
           },
           sizeLarge: {
             minHeight: 52,
             padding: '12px 28px',
-            borderRadius: '16px',
+            borderRadius: '20px',
             fontSize: '1rem',
           },
           contained: {
@@ -211,11 +220,12 @@ export const createAppTheme = (mode: ThemeMode = 'light') => {
               opacity: 0.55,
             },
           },
+          /** لون صلب (وليس تدرج background) حتى تعمل تخصيصات bgcolor في الصفحات */
           containedPrimary: {
-            background: `linear-gradient(180deg, ${palette.primary.main} 0%, ${isDark ? palette.primary.dark : premiumTokens.primaryDark} 100%)`,
+            backgroundColor: palette.primary.main,
             color: '#fff',
             '&:hover': {
-              background: isDark ? palette.primary.light : premiumTokens.primaryDark,
+              backgroundColor: isDark ? palette.primary.light : premiumTokens.primaryDark,
             },
           },
           outlined: {
@@ -238,11 +248,11 @@ export const createAppTheme = (mode: ThemeMode = 'light') => {
       MuiCard: {
         styleOverrides: {
           root: {
-            borderRadius: '20px',
+            borderRadius: '22px',
             boxShadow: isDark
               ? '0 4px 24px rgba(0, 0, 0, 0.25)'
-              : '0 2px 8px rgba(31, 37, 33, 0.06), 0 1px 2px rgba(31, 37, 33, 0.04)',
-            border: 'none',
+              : '0 1px 2px rgba(31, 37, 33, 0.03), 0 6px 20px rgba(31, 37, 33, 0.04)',
+            border: `1px solid ${isDark ? 'rgba(255,255,255,0.07)' : 'rgba(31, 37, 33, 0.06)'}`,
             backgroundImage: 'none',
             transition: 'box-shadow 0.25s ease, transform 0.2s ease',
           },
@@ -264,24 +274,103 @@ export const createAppTheme = (mode: ThemeMode = 'light') => {
         styleOverrides: {
           paper: {
             borderRadius: '24px',
-            boxShadow: isDark ? '0 25px 60px rgba(0,0,0,0.5)' : '0 8px 32px rgba(31, 37, 33, 0.12)',
+            border: `1px solid ${isDark ? alpha('#fff', 0.1) : alpha('#1f2521', 0.08)}`,
+            boxShadow: isDark ? '0 22px 56px rgba(0,0,0,0.48)' : '0 10px 36px rgba(31, 37, 33, 0.14)',
             color: palette.text.primary,
-            backgroundColor: palette.background.paper,
+            background: isDark
+              ? 'linear-gradient(180deg, #1B241E 0%, #161E19 100%)'
+              : 'linear-gradient(180deg, #FFFFFF 0%, #FAFAF8 100%)',
+          },
+          paperFullScreen: {
+            borderRadius: 0,
+            border: 'none',
+            boxShadow: 'none',
+            background: isDark
+              ? 'linear-gradient(180deg, #161F19 0%, #101712 100%)'
+              : 'linear-gradient(180deg, #F8F8F6 0%, #F2F2EF 100%)',
           },
         },
       },
       MuiDialogTitle: {
-        styleOverrides: { root: { color: palette.text.primary } },
+        styleOverrides: {
+          root: {
+            color: palette.text.primary,
+            fontWeight: 800,
+            fontSize: '1.05rem',
+            padding: '16px 20px 12px',
+            borderBottom: `1px solid ${alpha(palette.divider, isDark ? 0.9 : 0.75)}`,
+          },
+        },
       },
       MuiDialogContent: {
-        styleOverrides: { root: { color: palette.text.primary } },
+        styleOverrides: {
+          root: {
+            color: palette.text.primary,
+            padding: '16px 20px',
+            '&.MuiDialogContent-dividers': {
+              borderTop: `1px solid ${alpha(palette.divider, 0.8)}`,
+              borderBottom: `1px solid ${alpha(palette.divider, 0.8)}`,
+            },
+          },
+        },
+      },
+      MuiDialogActions: {
+        styleOverrides: {
+          root: {
+            padding: '12px 20px 16px',
+            borderTop: `1px solid ${alpha(palette.divider, isDark ? 0.9 : 0.72)}`,
+            gap: 8,
+          },
+        },
+      },
+      MuiDrawer: {
+        styleOverrides: {
+          paper: {
+            border: 'none',
+            borderLeft: `1px solid ${alpha(palette.divider, isDark ? 0.85 : 0.62)}`,
+            boxShadow: isDark
+              ? '-12px 0 38px rgba(0,0,0,0.46)'
+              : '-10px 0 34px rgba(31, 37, 33, 0.14)',
+            backgroundImage: isDark
+              ? 'linear-gradient(180deg, #1B241E 0%, #151D18 100%)'
+              : 'linear-gradient(180deg, #FFFFFF 0%, #F7F7F5 100%)',
+          },
+        },
+      },
+      MuiMenu: {
+        styleOverrides: {
+          paper: {
+            borderRadius: '16px',
+            border: `1px solid ${alpha(palette.divider, isDark ? 0.8 : 0.65)}`,
+            boxShadow: isDark
+              ? '0 14px 34px rgba(0,0,0,0.42)'
+              : '0 10px 26px rgba(31, 37, 33, 0.12)',
+            backgroundImage: 'none',
+          },
+          list: {
+            paddingTop: 6,
+            paddingBottom: 6,
+          },
+        },
+      },
+      MuiPopover: {
+        styleOverrides: {
+          paper: {
+            borderRadius: '16px',
+            border: `1px solid ${alpha(palette.divider, isDark ? 0.8 : 0.65)}`,
+            boxShadow: isDark
+              ? '0 14px 34px rgba(0,0,0,0.4)'
+              : '0 10px 26px rgba(31, 37, 33, 0.11)',
+            backgroundImage: 'none',
+          },
+        },
       },
 
       MuiTextField: {
         styleOverrides: {
           root: {
             '& .MuiOutlinedInput-root': {
-              borderRadius: '14px',
+              borderRadius: '16px',
               backgroundColor: isDark ? '#1A221C' : paper,
               transition: 'all 0.2s ease',
               '& fieldset': {
@@ -415,15 +504,16 @@ export const createAppTheme = (mode: ThemeMode = 'light') => {
       MuiChip: {
         styleOverrides: {
           root: {
-            borderRadius: '10px',
-            fontWeight: 500,
+            borderRadius: '999px',
+            fontWeight: 600,
           },
         },
       },
       MuiIconButton: {
         styleOverrides: {
           root: {
-            borderRadius: '12px',
+            /** iOS-style: أزرار الأيقونات دائرية بالكامل */
+            borderRadius: '999px',
             minWidth: 44,
             minHeight: 44,
             padding: 10,

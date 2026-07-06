@@ -2,8 +2,8 @@
 importScripts("https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js");
 importScripts("https://www.gstatic.com/firebasejs/10.7.2/firebase-messaging-compat.js");
 
-const CACHE_STATIC = "etlala-pwa-static-v2";
-const PRECACHE_URLS = ["/manifest.json", "/logo-icon.jpg"];
+const CACHE_STATIC = "etlala-pwa-static-v4";
+const PRECACHE_URLS = ["/manifest.json", "/logo-hero-3d.png"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -45,7 +45,7 @@ self.addEventListener("fetch", (event) => {
   const path = url.pathname;
   const allowed =
     path === "/manifest.json" ||
-    path === "/logo-icon.jpg" ||
+    path === "/logo-hero-3d.png" ||
     path.endsWith(".webmanifest");
 
   if (!allowed) return;
@@ -88,8 +88,8 @@ messaging.onBackgroundMessage((payload) => {
   const url = (payload.data && payload.data.url) || "/";
   const options = {
     body,
-    icon: "/logo-icon.jpg",
-    badge: "/logo-icon.jpg",
+    icon: "/logo-hero-3d.png",
+    badge: "/logo-hero-3d.png",
     tag: payload.data?.tag || "etlala-fcm",
     data: { url },
     vibrate: [160, 70, 160],
@@ -105,8 +105,8 @@ self.addEventListener("message", (event) => {
   const title = data.title || "إطلالة";
   const options = {
     body: data.body || "",
-    icon: data.icon || "/logo-icon.jpg",
-    badge: data.badge || "/logo-icon.jpg",
+    icon: data.icon || "/logo-hero-3d.png",
+    badge: data.badge || "/logo-hero-3d.png",
     tag: data.tag || "etlala-general",
     vibrate: [160, 70, 160],
     dir: "rtl",

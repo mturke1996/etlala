@@ -38,6 +38,7 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs, { Dayjs } from 'dayjs';
 import 'dayjs/locale/ar';
 import { motion, AnimatePresence } from 'framer-motion';
+import toast from 'react-hot-toast';
 
 const Grid = MuiGrid as any;
 
@@ -45,6 +46,7 @@ import { useDataStore } from '../store/useDataStore';
 import { useAuthStore } from '../store/useAuthStore';
 import { InvoiceItem } from '../types';
 import { PageScaffold } from '../components/layout/PageScaffold';
+import { etlalaHeroActionButtonSx } from '../components/etlala/EtlalaMobileUi';
 import { premiumTokens } from '../theme/tokens';
 
 // ═══════════════════════════════════════════════════════════
@@ -64,6 +66,12 @@ const SHADOWS = {
   lg: '0 10px 15px -3px rgba(47, 62, 52, 0.08), 0 4px 6px -2px rgba(47, 62, 52, 0.04)',
   inset: 'inset 0 2px 4px rgba(47, 62, 52, 0.03)',
 };
+
+const MONEY_SX = {
+  fontFamily: "'Sora', 'Montserrat', 'Outfit', 'Inter', sans-serif",
+  fontVariantNumeric: 'tabular-nums lining-nums',
+  fontFeatureSettings: '"tnum" 1, "lnum" 1',
+} as const;
 
 export const NewInvoicePage = () => {
   const navigate = useNavigate();
@@ -165,15 +173,19 @@ export const NewInvoicePage = () => {
 
   const handleSubmit = async () => {
     if (!clientId) {
-      alert('يرجى اختيار العميل أولاً');
+      toast.error('يرجى اختيار العميل أولاً');
       return;
     }
     if (clientId === 'temp' && !tempClientName.trim()) {
-      alert('يرجى إدخال اسم العميل المؤقت');
+      toast.error('يرجى إدخال اسم العميل المؤقت');
       return;
     }
     if (items.some((i) => !i.description)) {
-      alert('يرجى ملء وصف جميع البنود');
+      toast.error('يرجى ملء وصف جميع البنود');
+      return;
+    }
+    if (items.some((i) => Number(i.total) <= 0 || Number(i.quantity) <= 0)) {
+      toast.error('تحقق من الكمية والسعر لكل بند');
       return;
     }
 
@@ -206,6 +218,7 @@ export const NewInvoicePage = () => {
 
       if (editId) {
         await updateInvoice(editId, invoiceData);
+        toast.success('تم تحديث الفاتورة');
       } else {
         await addInvoice({
           id: crypto.randomUUID(),
@@ -214,10 +227,12 @@ export const NewInvoicePage = () => {
           createdAt: new Date().toISOString(),
           createdBy: user?.displayName || 'غير معروف',
         });
+        toast.success('تم إنشاء الفاتورة');
       }
       navigate('/invoices');
     } catch (error) {
       console.error(error);
+      toast.error('تعذّر حفظ الفاتورة. حاول مجدداً.');
     } finally {
       setLoading(false);
     }
@@ -245,35 +260,14 @@ export const NewInvoicePage = () => {
             size="small"
             onClick={handleSubmit}
             disabled={loading}
-            startIcon={!loading && <Save sx={{ fontSize: 18, color: '#fff' }} />}
+            startIcon={!loading && <Save sx={{ fontSize: 16 }} />}
             sx={{
-              bgcolor: premiumTokens.primary,
-              color: '#fff',
-              fontWeight: 800,
-              fontSize: '0.8rem',
-              px: 3,
-              py: 1,
-              borderRadius: `${RADIUS.md}px`,
-              boxShadow: '0 4px 12px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.1)',
-              textTransform: 'none',
-              letterSpacing: '0.02em',
-              transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-              '&:hover': {
-                bgcolor: premiumTokens.primaryDark,
-                transform: 'translateY(-2px)',
-                boxShadow: '0 6px 20px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.15)',
-              },
-              '&:active': {
-                transform: 'scale(0.96) translateY(0)',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-              },
-              '&.Mui-disabled': {
-                bgcolor: 'rgba(255,255,255,0.25)',
-                color: 'rgba(255,255,255,0.6)',
-              },
+              ...etlalaHeroActionButtonSx,
+              minHeight: 38,
+              px: 1.9,
             }}
           >
-            {loading ? '…' : editId ? 'تحديث' : 'إصدار'}
+            {loading ? '...' : editId ? 'تحديث' : 'حفظ الفاتورة'}
           </Button>
         }
         headerExtra={
@@ -306,8 +300,7 @@ export const NewInvoicePage = () => {
                   color: '#fff',
                   fontSize: '1.5rem',
                   fontWeight: 800,
-                  fontFamily: "'Outfit', sans-serif",
-                  fontVariantNumeric: 'tabular-nums',
+                  ...MONEY_SX,
                   lineHeight: 1.2,
                   mt: 0.25,
                 }}
@@ -688,9 +681,11 @@ export const NewInvoicePage = () => {
                       label="تاريخ الإصدار"
                       value={issueDate}
                       onChange={(val) => setIssueDate(val)}
+                      format="DD/MM/YYYY"
                       slotProps={{
                         textField: {
                           fullWidth: true,
+                          inputProps: { dir: 'ltr', style: { textAlign: 'end' } },
                           sx: {
                             '& .MuiOutlinedInput-root': {
                               borderRadius: `${RADIUS.md}px`,
@@ -707,9 +702,11 @@ export const NewInvoicePage = () => {
                       label="تاريخ الاستحقاق"
                       value={dueDate}
                       onChange={(val) => setDueDate(val)}
+                      format="DD/MM/YYYY"
                       slotProps={{
                         textField: {
                           fullWidth: true,
+                          inputProps: { dir: 'ltr', style: { textAlign: 'end' } },
                           sx: {
                             '& .MuiOutlinedInput-root': {
                               borderRadius: `${RADIUS.md}px`,
@@ -1073,7 +1070,7 @@ export const NewInvoicePage = () => {
       <Box
         sx={{
           position: 'fixed',
-          bottom: 'calc(70px + env(safe-area-inset-bottom, 0px))',
+          bottom: 'calc(64px + env(safe-area-inset-bottom, 0px))',
           left: 0,
           right: 0,
           p: 2,

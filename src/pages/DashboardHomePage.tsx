@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
@@ -25,6 +25,8 @@ import {
 } from "@mui/material";
 import {
   AlertTriangle,
+  ArrowDownRight,
+  ArrowUpRight,
   Bell,
   Building2,
   CheckCircle2,
@@ -32,9 +34,11 @@ import {
   CircleDollarSign,
   CreditCard,
   FileText,
+  Home,
   Lock,
   LockOpen,
   LogOut,
+  Menu as MenuIcon,
   Moon,
   Receipt,
   Shield,
@@ -44,6 +48,7 @@ import {
   UserCog,
   Users,
   Wallet,
+  X,
 } from "lucide-react";
 import {
   getNotificationPermission,
@@ -56,6 +61,7 @@ import {
   filterUndismissedNotifications,
   loadDismissMap,
   mergeDismissAfterClear,
+  NOTIFICATION_IDS_EXCLUDED_FROM_CLEAR,
   saveDismissMap,
 } from "../lib/notificationDismissals";
 import { buildAppNotifications } from "../notifications/buildAppNotifications";
@@ -79,7 +85,7 @@ const COLORS = {
   primary: "#1E3F36",
   primary2: "#2D5246",
   primaryDeep: "#152E28",
-  background: "#F7F6F1",
+  background: "#F8F8F8",
   accent: "#C4AE72",
   text: "#2A2E2C",
   muted: "#6E756F",
@@ -104,8 +110,10 @@ const NOTIF_R = {
   handle: "2.5px",
 } as const;
 
-/** بانر الصفحة الرئيسية — الملف: `public/home-hero-banner.png` */
-const HOME_HERO_BANNER_SRC = "/home-hero-banner.png";
+type NotificationFilter = "all" | "urgent" | "team" | "activity";
+
+/** هيرو الصفحة الرئيسية — `public/hero-main.png` (الهيرو الجديد) */
+const HOME_HERO_SRC = "/hero-main.png";
 
 const numberFormatter = new Intl.NumberFormat("ar-LY-u-nu-latn", {
   maximumFractionDigits: 0,
@@ -116,6 +124,13 @@ const percentDisplayFormatter = new Intl.NumberFormat("ar-LY-u-nu-latn", {
   minimumFractionDigits: 0,
 });
 
+const FINANCIAL_NUMBER_FONT = '"Sora","Montserrat","Outfit","Inter",sans-serif';
+const FINANCIAL_NUMBER_SX = {
+  fontFamily: FINANCIAL_NUMBER_FONT,
+  fontVariantNumeric: "tabular-nums lining-nums",
+  fontFeatureSettings: '"tnum" 1, "lnum" 1',
+} as const;
+
 /**
  * في بطاقة RTL: عرض المبلغ ككتلة ltr — «د.ل» يسار الأرقام (لاصقة بجانب المبلغ من ناحية الوسط/النهاية)،
  * وليست تُقرأ «قبل» الأرقام في جملة ltr.
@@ -125,13 +140,14 @@ const MoneyLine = ({
   size = "md",
 }: {
   value: number;
-  size?: "md" | "lg";
+  size?: "sm" | "md" | "lg";
 }) => {
   const raw = numberFormatter.format(Math.round(value || 0));
-  const fs =
-    size === "lg"
-      ? "clamp(1.35rem, 6.5vw, 1.95rem)"
-      : "clamp(1.02rem, 4.2vw, 1.18rem)";
+  const fs = size === "lg"
+    ? "clamp(1.18rem, 5.9vw, 1.64rem)"
+    : size === "md"
+      ? "clamp(0.96rem, 4.1vw, 1.12rem)"
+      : "clamp(0.88rem, 3.4vw, 1rem)";
   return (
     <Box
       component="span"
@@ -140,7 +156,7 @@ const MoneyLine = ({
         display: "inline-flex",
         flexDirection: "row",
         alignItems: "baseline",
-        gap: 0.6,
+        gap: 0.52,
         maxWidth: "100%",
         fontStyle: "normal",
         unicodeBidi: "embed",
@@ -150,11 +166,17 @@ const MoneyLine = ({
         component="span"
         sx={{
           color: "text.secondary",
-          fontWeight: 700,
-          fontSize: size === "lg" ? "0.72rem" : "0.66rem",
+          fontWeight: 650,
+          fontSize:
+            size === "lg"
+              ? "0.68rem"
+              : size === "md"
+                ? "0.64rem"
+                : "0.62rem",
           lineHeight: 1,
           whiteSpace: "nowrap",
           letterSpacing: 0.08,
+          ...FINANCIAL_NUMBER_SX,
         }}
       >
         د.ل
@@ -169,8 +191,8 @@ const MoneyLine = ({
           whiteSpace: "nowrap",
           overflow: "hidden",
           textOverflow: "ellipsis",
-          fontVariantNumeric: "tabular-nums",
           letterSpacing: "0.01em",
+          ...FINANCIAL_NUMBER_SX,
         }}
       >
         {raw}
@@ -185,14 +207,15 @@ const CustodyMoneyLine = ({
   size = "lg",
 }: {
   value: number;
-  size?: "md" | "lg";
+  size?: "sm" | "md" | "lg";
 }) => {
   const neg = value < 0;
   const raw = numberFormatter.format(Math.round(Math.abs(value || 0)));
-  const fs =
-    size === "lg"
-      ? "clamp(1.35rem, 6.5vw, 1.95rem)"
-      : "clamp(1.02rem, 4.2vw, 1.18rem)";
+  const fs = size === "lg"
+    ? "clamp(1.18rem, 5.9vw, 1.64rem)"
+    : size === "md"
+      ? "clamp(0.96rem, 4.1vw, 1.12rem)"
+      : "clamp(0.88rem, 3.4vw, 1rem)";
   return (
     <Box
       component="span"
@@ -201,7 +224,7 @@ const CustodyMoneyLine = ({
         display: "inline-flex",
         flexDirection: "row",
         alignItems: "baseline",
-        gap: 0.6,
+        gap: 0.52,
         maxWidth: "100%",
         fontStyle: "normal",
         unicodeBidi: "embed",
@@ -211,11 +234,17 @@ const CustodyMoneyLine = ({
         component="span"
         sx={{
           color: "text.secondary",
-          fontWeight: 700,
-          fontSize: size === "lg" ? "0.72rem" : "0.66rem",
+          fontWeight: 650,
+          fontSize:
+            size === "lg"
+              ? "0.68rem"
+              : size === "md"
+                ? "0.64rem"
+                : "0.62rem",
           lineHeight: 1,
           whiteSpace: "nowrap",
           letterSpacing: 0.08,
+          ...FINANCIAL_NUMBER_SX,
         }}
       >
         د.ل
@@ -228,8 +257,8 @@ const CustodyMoneyLine = ({
           fontSize: fs,
           lineHeight: 1.2,
           whiteSpace: "nowrap",
-          fontVariantNumeric: "tabular-nums",
           letterSpacing: "0.01em",
+          ...FINANCIAL_NUMBER_SX,
         }}
       >
         {neg ? "−" : ""}
@@ -333,6 +362,7 @@ export const DashboardHomePage = () => {
   const { isLocked, isSessionUnlocked, canAccess } = useAppLockStore();
   const [lockSettingsOpen, setLockSettingsOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [sideMenuOpen, setSideMenuOpen] = useState(false);
   const [pwaNotifEnabled, setPwaNotifEnabled] = useState(() =>
     getPwaNotificationsUserEnabled(),
   );
@@ -341,8 +371,8 @@ export const DashboardHomePage = () => {
   );
   const [notifPermLoading, setNotifPermLoading] = useState(false);
   const [notifDismissMap, setNotifDismissMap] = useState(loadDismissMap);
+  const [notifFilter, setNotifFilter] = useState<NotificationFilter>("all");
   const reduceMotion = useReducedMotion();
-  const netMarginWaveGradId = useId().replace(/:/g, "");
 
   const canOpenFund = canAccess("balances");
   const canSeeStats = canAccess("stats");
@@ -447,6 +477,10 @@ export const DashboardHomePage = () => {
     if (notifOpen) setBrowserNotifPerm(getNotificationPermission());
   }, [notifOpen]);
 
+  useEffect(() => {
+    if (!notifOpen) setNotifFilter("all");
+  }, [notifOpen]);
+
   const visibleNotifications = useMemo(() => {
     const v = filterUndismissedNotifications(homeNotifications, notifDismissMap);
     const core = v.filter((n) => n.id !== "all-clear");
@@ -495,6 +529,45 @@ export const DashboardHomePage = () => {
     return visibleNotifications.filter((n) => n.id !== "all-clear").length;
   }, [visibleNotifications, urgentNotifCount]);
 
+  const notifKindCounts = useMemo(
+    () => ({
+      all: visibleNotifications.filter((n) => n.id !== "all-clear").length,
+      urgent: visibleNotifications.filter((n) => n.kind === "urgent").length,
+      team: visibleNotifications.filter((n) => n.kind === "team").length,
+      activity: visibleNotifications.filter((n) => n.kind === "activity").length,
+    }),
+    [visibleNotifications],
+  );
+
+  const filteredNotifications = useMemo(() => {
+    if (notifFilter === "all") return visibleNotifications;
+
+    const filtered = visibleNotifications.filter((n) => {
+      if (n.id === "all-clear") return false;
+      if (notifFilter === "urgent") return n.kind === "urgent";
+      if (notifFilter === "team") return n.kind === "team";
+      return n.kind === "activity";
+    });
+
+    if (filtered.length > 0) return filtered;
+
+    const emptyTitle =
+      notifFilter === "urgent"
+        ? "لا يوجد تنبيه عاجل الآن"
+        : notifFilter === "team"
+          ? "لا يوجد تنبيه فريق الآن"
+          : "لا يوجد نشاط حديث الآن";
+
+    return [
+      {
+        id: `empty-${notifFilter}`,
+        kind: "info",
+        title: emptyTitle,
+        body: "أي تحديث جديد سيظهر هنا تلقائياً.",
+      } satisfies AppNotificationItem,
+    ];
+  }, [notifFilter, visibleNotifications]);
+
   const primaryMenuVisible = useMemo(
     () => PRIMARY_MENU.filter((item) => canAccess(item.module)),
     [canAccess],
@@ -518,6 +591,36 @@ export const DashboardHomePage = () => {
       collectedAmount > 0 ? (netProfit / collectedAmount) * 100 : null;
     const hasData =
       clients.length > 0 || payments.length > 0 || expenses.length > 0;
+
+    /** مقارنة الشهر الحالي بالشهر الماضي (لشارة «عن الشهر الماضي») */
+    const monthStart = dayjs().startOf("month");
+    const prevMonthStart = monthStart.subtract(1, "month");
+    const sumInMonth = (
+      rows: { amount?: number }[],
+      dates: (string | undefined)[],
+      start: dayjs.Dayjs,
+    ) =>
+      rows.reduce((sum, item, i) => {
+        const d = dates[i] ? dayjs(dates[i]) : null;
+        if (d && d.isValid() && d.isAfter(start.subtract(1, "millisecond")) && d.isBefore(start.add(1, "month"))) {
+          return sum + (item.amount || 0);
+        }
+        return sum;
+      }, 0);
+    const pctChange = (curr: number, prev: number) =>
+      prev > 0 ? ((curr - prev) / prev) * 100 : null;
+
+    const paymentDates = payments.map((p: any) => p.paymentDate || p.createdAt);
+    const expenseDates = expenses.map((e: any) => e.date || e.createdAt);
+    const collectedTrend = pctChange(
+      sumInMonth(payments, paymentDates, monthStart),
+      sumInMonth(payments, paymentDates, prevMonthStart),
+    );
+    const expensesTrend = pctChange(
+      sumInMonth(expenses, expenseDates, monthStart),
+      sumInMonth(expenses, expenseDates, prevMonthStart),
+    );
+
     return {
       collectedAmount,
       expensesAmount,
@@ -525,50 +628,73 @@ export const DashboardHomePage = () => {
       netMarginPercent,
       hasData,
       clientsCount: clients.length,
+      collectedTrend,
+      expensesTrend,
     };
   }, [clients.length, expenses, payments]);
 
-  const menuListCardSurface = isMuiDark
-    ? "linear-gradient(165deg, #222A24 0%, #181E1A 100%)"
-    : "linear-gradient(165deg, #FEFDFB 0%, #F5F3ED 100%)";
+  const allMenusVisible = useMemo(
+    () => [...primaryMenuVisible, ...shortcutsMenuVisible],
+    [primaryMenuVisible, shortcutsMenuVisible],
+  );
 
-  const renderMenuList = (menu: MenuItem[]) => (
-    <Stack spacing={1.35} sx={{ width: 1 }} useFlexGap>
+  /** مجموعة قوائم عمودية موحّدة — مظهر نظيف بدون خطوط زخرفية جانبية */
+  const renderMenuGroup = (menu: MenuItem[]) => (
+    <Box
+      sx={{
+        borderRadius: "20px",
+        p: 0.6,
+        display: "grid",
+        gap: 0.55,
+        bgcolor: isMuiDark ? alpha("#fff", 0.04) : "#FFFFFF",
+        border: `1px solid ${isMuiDark ? alpha("#fff", 0.07) : "rgba(31, 37, 33, 0.06)"}`,
+        boxShadow: isMuiDark
+          ? "0 4px 24px rgba(0,0,0,0.26)"
+          : "0 1px 2px rgba(31, 37, 33, 0.04), 0 8px 28px rgba(31, 37, 33, 0.05)",
+      }}
+    >
       {menu.map((item) => {
         const Icon = item.icon;
         const p = theme.palette;
         return (
           <Box
             key={item.path}
+            component={motion.div}
+            whileTap={reduceMotion ? undefined : { scale: 0.985 }}
             onClick={() => navigate(item.path)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e: React.KeyboardEvent) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                navigate(item.path);
+              }
+            }}
             sx={{
-              borderRadius: 3,
-              px: 1.6,
-              py: 1.4,
-              minHeight: 64,
               display: "flex",
               flexDirection: "row",
               alignItems: "center",
               justifyContent: "space-between",
               gap: 1.25,
-              direction: "rtl",
+              px: 1.35,
+              py: 1.15,
+              minHeight: 58,
+              borderRadius: "14px",
               cursor: "pointer",
-              border: "none",
-              bgcolor: isMuiDark ? alpha("#fff", 0.04) : alpha("#fff", 0.72),
-              boxShadow: isMuiDark
-                ? "0 2px 16px rgba(0,0,0,0.22)"
-                : "0 2px 14px rgba(31, 61, 53, 0.06)",
-              transition: "background 180ms ease, box-shadow 180ms ease",
+              WebkitTapHighlightColor: "transparent",
+              border: `1px solid ${isMuiDark ? alpha("#fff", 0.06) : alpha(COLORS.primary, 0.06)}`,
+              backgroundColor: isMuiDark ? alpha("#fff", 0.02) : alpha("#fff", 0.74),
               "@media (hover: hover) and (pointer: fine)": {
                 "&:hover": {
                   bgcolor: isMuiDark
-                    ? alpha("#fff", 0.08)
-                    : alpha("#fff", 0.95),
-                  boxShadow: isMuiDark
-                    ? "0 6px 22px rgba(0,0,0,0.32)"
-                    : "0 8px 24px rgba(31, 61, 53, 0.1)",
-                  transform: "translateY(-1px)",
+                    ? alpha("#fff", 0.04)
+                    : alpha(COLORS.primary, 0.03),
                 },
+              },
+              "&:active": {
+                bgcolor: isMuiDark
+                  ? alpha("#fff", 0.06)
+                  : alpha(COLORS.primary, 0.05),
               },
             }}
           >
@@ -577,61 +703,80 @@ export const DashboardHomePage = () => {
                 display: "flex",
                 flexDirection: "row",
                 alignItems: "center",
-                gap: 1.35,
+                gap: 1.5,
                 minWidth: 0,
                 flex: 1,
               }}
             >
               <Box
                 sx={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 2.25,
+                  width: 40,
+                  height: 40,
+                  borderRadius: "12px",
                   display: "grid",
                   placeItems: "center",
+                  flexShrink: 0,
                   background: isMuiDark
                     ? `linear-gradient(145deg, ${alpha(COLORS.accent, 0.14)} 0%, ${alpha("#fff", 0.06)} 100%)`
-                    : `linear-gradient(145deg, ${alpha(p.primary.main, 0.1)} 0%, ${alpha(COLORS.accent, 0.12)} 100%)`,
-                  border: "none",
-                  flexShrink: 0,
+                    : `linear-gradient(145deg, ${alpha(p.primary.main, 0.09)} 0%, ${alpha(COLORS.accent, 0.13)} 100%)`,
                   boxShadow: isMuiDark
                     ? "inset 0 1px 0 rgba(255,255,255,0.06)"
                     : "inset 0 1px 0 rgba(255,255,255,0.85)",
                 }}
               >
-                <Icon size={20} color={p.primary.main} strokeWidth={1.85} />
+                <Icon size={18} color={p.primary.main} strokeWidth={1.9} />
               </Box>
               <Box sx={{ textAlign: "right", minWidth: 0, flex: 1 }}>
                 <Typography
                   sx={{
                     color: "text.primary",
-                    fontWeight: 600,
-                    fontSize: "0.95rem",
+                    fontWeight: 700,
+                    fontSize: "0.88rem",
+                    lineHeight: 1.35,
                   }}
                 >
                   {item.title}
                 </Typography>
                 <Typography
-                  sx={{ color: "text.secondary", fontSize: "0.76rem" }}
+                  noWrap
+                  sx={{
+                    color: "text.secondary",
+                    fontSize: "0.7rem",
+                    fontWeight: 500,
+                    mt: 0.15,
+                  }}
                 >
                   {item.subtitle}
                 </Typography>
               </Box>
             </Box>
-            <Box
-              sx={{
-                display: "grid",
-                placeItems: "center",
-                width: 22,
-                flexShrink: 0,
-              }}
-            >
-              <ChevronLeft size={17} color={p.text.disabled as string} />
-            </Box>
+            <ChevronLeft
+              size={16}
+              color={p.text.disabled as string}
+              style={{ flexShrink: 0 }}
+            />
           </Box>
         );
       })}
-    </Stack>
+    </Box>
+  );
+
+  const renderMenuSection = (title: string, menu: MenuItem[]) => (
+    <Box sx={{ width: 1 }}>
+      <Typography
+        sx={{
+          color: "text.primary",
+          fontWeight: 750,
+          fontSize: "1.02rem",
+          letterSpacing: 0.05,
+          px: 0.45,
+          mb: 1.25,
+        }}
+      >
+        {title}
+      </Typography>
+      {renderMenuGroup(menu)}
+    </Box>
   );
 
   return (
@@ -642,9 +787,10 @@ export const DashboardHomePage = () => {
         width: "100%",
         maxWidth: "100%",
         overflowX: "hidden",
+        /* أبيض نظيف — iOS clean background */
         background: isMuiDark
           ? "linear-gradient(180deg, #141916 0%, #0F1310 45%, #121814 100%)"
-          : `linear-gradient(180deg, ${COLORS.background} 0%, #EEEBE4 55%, #E8E4DB 100%)`,
+          : COLORS.background,
         /* المساحة فوق شريط التنقل تُدار من Layout فقط — لا padding إضافي يُضاعف الفراغ */
         pb: 0,
         direction: "rtl",
@@ -678,25 +824,67 @@ export const DashboardHomePage = () => {
               flexDirection: "row",
               alignItems: "center",
               gap: 1.25,
+              minWidth: 0,
+              flex: 1,
             }}
           >
-            <Avatar
+            <IconButton
+              onClick={() => setSideMenuOpen(true)}
+              aria-label="القائمة الجانبية"
               sx={{
-                width: 48,
-                height: 48,
-                bgcolor: isMuiDark ? "primary.dark" : "#1F2A2A",
-                fontWeight: 700,
-                border: isMuiDark
-                  ? "2px solid rgba(255,255,255,0.2)"
-                  : "2px solid #fff",
-                boxShadow: isMuiDark
-                  ? "0 10px 18px rgba(0,0,0,0.4)"
-                  : "0 10px 18px rgba(31,61,53,0.18)",
+                width: 42,
+                height: 42,
+                borderRadius: "50%",
+                bgcolor: isMuiDark
+                  ? alpha("#fff", 0.08)
+                  : alpha("#1F2521", 0.05),
+                color: isMuiDark ? "common.white" : "#242B26",
+                border: `1px solid ${isMuiDark ? alpha("#fff", 0.1) : alpha("#1F2521", 0.055)}`,
+                boxShadow: "none",
                 flexShrink: 0,
+                "@media (hover: hover) and (pointer: fine)": {
+                  "&:hover": {
+                    bgcolor: isMuiDark
+                      ? alpha("#fff", 0.13)
+                      : alpha("#1F2521", 0.08),
+                  },
+                },
               }}
             >
-              {(user?.displayName || "محمد").charAt(0)}
-            </Avatar>
+              <MenuIcon size={20} strokeWidth={1.9} />
+            </IconButton>
+            <Box sx={{ position: "relative", flexShrink: 0 }}>
+              <Avatar
+                sx={{
+                  width: 42,
+                  height: 42,
+                  bgcolor: isMuiDark ? "primary.dark" : "#26332B",
+                  fontWeight: 700,
+                  fontSize: "1.05rem",
+                  border: isMuiDark
+                    ? "2px solid rgba(255,255,255,0.18)"
+                    : "2px solid #fff",
+                  boxShadow: isMuiDark
+                    ? "0 4px 12px rgba(0,0,0,0.35)"
+                    : "0 4px 12px rgba(31,61,53,0.14)",
+                }}
+              >
+                {(user?.displayName || "محمد").charAt(0)}
+              </Avatar>
+              <Box
+                aria-hidden
+                sx={{
+                  position: "absolute",
+                  bottom: 1,
+                  left: 1,
+                  width: 12,
+                  height: 12,
+                  borderRadius: "50%",
+                  bgcolor: COLORS.success,
+                  border: `2.5px solid ${isMuiDark ? "#141916" : "#FFFFFF"}`,
+                }}
+              />
+            </Box>
             <Box sx={{ textAlign: "right", minWidth: 0 }}>
               <Typography
                 sx={{
@@ -708,9 +896,10 @@ export const DashboardHomePage = () => {
                 مرحباً
               </Typography>
               <Typography
+                noWrap
                 sx={{
                   color: "text.primary",
-                  fontSize: "1.05rem",
+                  fontSize: "0.98rem",
                   fontWeight: 700,
                 }}
               >
@@ -722,7 +911,7 @@ export const DashboardHomePage = () => {
           <Stack
             direction="row"
             alignItems="center"
-            spacing={{ xs: 2, sm: 2.75 }}
+            spacing={{ xs: 1.25, sm: 1.5 }}
             sx={{
               direction: "rtl",
               flexShrink: 0,
@@ -733,41 +922,35 @@ export const DashboardHomePage = () => {
               alignItems="center"
               sx={{
                 flexShrink: 0,
-                gap: { xs: 2.25, sm: 2.75 },
+                gap: { xs: 1.25, sm: 1.5 },
               }}
             >
               <IconButton
                 onClick={() => setNotifOpen(true)}
                 aria-label="الإشعارات"
                 sx={{
-                  marginInlineEnd: { xs: 0.25, sm: 0.5 },
-                  width: 44,
-                  height: 44,
-                  borderRadius: 2.5,
-                  bgcolor: isMuiDark ? "rgba(255,255,255,0.1)" : "#EFEFED",
-                  color: isMuiDark ? "common.white" : "#1F2A2A",
-                  border: `1px solid ${isMuiDark ? "rgba(255,255,255,0.14)" : "rgba(31,61,53,0.08)"}`,
-                  boxShadow:
+                  width: 42,
+                  height: 42,
+                  borderRadius: "50%",
+                  bgcolor: isMuiDark
+                    ? alpha("#fff", 0.08)
+                    : alpha("#1F2521", 0.05),
+                  color: isMuiDark ? "common.white" : "#242B26",
+                  border: `1px solid ${
                     urgentNotifCount > 0
-                      ? "0 0 0 2px rgba(198,40,40,0.2), 0 4px 14px rgba(198,40,40,0.12)"
+                      ? "rgba(198,40,40,0.35)"
                       : isMuiDark
-                        ? "0 2px 12px rgba(0,0,0,0.35)"
-                        : "0 2px 10px rgba(24,38,33,0.04)",
-                  transition:
-                    "background 180ms cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 180ms cubic-bezier(0.2, 0.8, 0.2, 1)",
+                        ? alpha("#fff", 0.1)
+                        : alpha("#1F2521", 0.055)
+                  }`,
+                  boxShadow: "none",
                   "@media (hover: hover) and (pointer: fine)": {
                     "&:hover": {
-                      bgcolor: isMuiDark ? "rgba(255,255,255,0.16)" : "#F6F6F4",
-                      transform: "translateY(-1px)",
+                      bgcolor: isMuiDark
+                        ? alpha("#fff", 0.13)
+                        : alpha("#1F2521", 0.08),
                     },
                   },
-                  ...(urgentNotifCount > 0 && {
-                    "@keyframes notifRing": {
-                      "0%, 100%": { boxShadow: "0 0 0 0 rgba(198,40,40,0.35)" },
-                      "50%": { boxShadow: "0 0 0 6px rgba(198,40,40,0)" },
-                    },
-                    animation: "notifRing 2.2s ease-in-out infinite",
-                  }),
                 }}
               >
                 <Badge
@@ -802,23 +985,20 @@ export const DashboardHomePage = () => {
                         : "التبديل إلى الوضع الليلي"
                     }
                     sx={{
-                      width: 44,
-                      height: 44,
-                      borderRadius: 2.5,
-                      bgcolor: isMuiDark ? "rgba(255,255,255,0.1)" : "#EFEFED",
-                      color: isMuiDark ? "common.white" : "#1F2A2A",
-                      border: `1px solid ${isMuiDark ? "rgba(255,255,255,0.14)" : "rgba(31,61,53,0.08)"}`,
-                      boxShadow: isMuiDark
-                        ? "0 2px 12px rgba(0,0,0,0.35)"
-                        : "0 2px 10px rgba(24,38,33,0.04)",
-                      transition:
-                        "background 180ms cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 180ms cubic-bezier(0.2, 0.8, 0.2, 1)",
+                      width: 42,
+                      height: 42,
+                      borderRadius: "50%",
+                      bgcolor: isMuiDark
+                        ? alpha("#fff", 0.08)
+                        : alpha("#1F2521", 0.05),
+                      color: isMuiDark ? "common.white" : "#242B26",
+                      border: `1px solid ${isMuiDark ? alpha("#fff", 0.1) : alpha("#1F2521", 0.055)}`,
+                      boxShadow: "none",
                       "@media (hover: hover) and (pointer: fine)": {
                         "&:hover": {
                           bgcolor: isMuiDark
-                            ? "rgba(255,255,255,0.16)"
-                            : "#F6F6F4",
-                          transform: "translateY(-1px)",
+                            ? alpha("#fff", 0.13)
+                            : alpha("#1F2521", 0.08),
                         },
                       },
                     }}
@@ -832,61 +1012,12 @@ export const DashboardHomePage = () => {
                 </span>
               </Tooltip>
             </Stack>
-            {(
-              [
-                {
-                  label: "القفل",
-                  icon:
-                    isLocked && !isSessionUnlocked() ? (
-                      <Lock size={18} />
-                    ) : (
-                      <LockOpen size={18} />
-                    ),
-                  action: () => setLockSettingsOpen(true),
-                },
-                {
-                  label: "تسجيل الخروج",
-                  icon: <LogOut size={18} />,
-                  action: () => {
-                    logout();
-                    navigate("/login");
-                  },
-                },
-              ] as const
-            ).map((item) => (
-              <IconButton
-                key={item.label}
-                onClick={item.action}
-                aria-label={item.label}
-                sx={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 2.5,
-                  bgcolor: isMuiDark ? "rgba(255,255,255,0.1)" : "#EFEFED",
-                  color: isMuiDark ? "common.white" : "#1F2A2A",
-                  border: `1px solid ${isMuiDark ? "rgba(255,255,255,0.14)" : "rgba(31,61,53,0.08)"}`,
-                  boxShadow: isMuiDark
-                    ? "0 2px 12px rgba(0,0,0,0.35)"
-                    : "0 2px 10px rgba(24,38,33,0.04)",
-                  transition:
-                    "background 180ms cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 180ms cubic-bezier(0.2, 0.8, 0.2, 1)",
-                  "@media (hover: hover) and (pointer: fine)": {
-                    "&:hover": {
-                      bgcolor: isMuiDark ? "rgba(255,255,255,0.16)" : "#F6F6F4",
-                      transform: "translateY(-1px)",
-                    },
-                  },
-                }}
-              >
-                {item.icon}
-              </IconButton>
-            ))}
           </Stack>
         </Box>
 
         <Box
           component={motion.div}
-          sx={{ mb: 2.5 }}
+          sx={{ mb: 3.35, mx: { xs: -1.2, sm: -0.95 } }}
           initial={reduceMotion ? undefined : { opacity: 0, y: 14, scale: 0.985 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{
@@ -894,113 +1025,70 @@ export const DashboardHomePage = () => {
             ease: [0.2, 0.8, 0.2, 1],
           }}
         >
+          {/* هيرو — الصورة كاملة بنسبتها الأصلية بلا قصّ ولا تغطية تعتيم (أقصى وضوح للنص) */}
           <Box
-            component="img"
-            src={HOME_HERO_BANNER_SRC}
-            alt="إطلالة — لوحة تحكم موحدة لعملائك والفواتير والمدفوعات"
             sx={{
+              position: "relative",
               width: "100%",
-              height: "auto",
-              display: "block",
-              borderRadius: "24px",
+              aspectRatio: "1024 / 780",
+              borderRadius: "26px",
+              overflow: "hidden",
+              isolation: "isolate",
               border: "1px solid",
-              borderColor: alpha("#C8B27D", 0.12),
+              borderColor: isMuiDark
+                ? alpha("#C8B27D", 0.16)
+                : alpha(COLORS.primary, 0.08),
               boxShadow: isMuiDark
-                ? "0 28px 56px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.03) inset"
-                : "0 22px 50px rgba(4, 18, 14, 0.22)",
+                ? "0 24px 48px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05)"
+                : "0 14px 30px rgba(31, 61, 53, 0.13), 0 2px 8px rgba(31, 61, 53, 0.05)",
+              backgroundColor: isMuiDark ? "#161C17" : "#EDF2F6",
             }}
-          />
+          >
+            <Box
+              component="img"
+              src={HOME_HERO_SRC}
+              alt="إطلالة للخدمات الهندسية — نحو هندسة معمارية تلهم المستقبل: تصميم، إشراف، تنفيذ"
+              fetchPriority="high"
+              decoding="async"
+              sx={{
+                position: "absolute",
+                inset: 0,
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                objectPosition: "center",
+                display: "block",
+                userSelect: "none",
+                imageRendering: "auto",
+                filter: "contrast(1.04) saturate(1.02)",
+              }}
+              draggable={false}
+            />
+          </Box>
         </Box>
 
-        <Stack spacing={3.25} sx={{ width: 1, mt: 1.25 }} useFlexGap>
+        <Stack spacing={3} sx={{ width: 1, mt: 1 }} useFlexGap>
           {canAccess("stats") && (
-            <Stack spacing={2.5} sx={{ width: 1 }} useFlexGap>
+            <Stack spacing={1.5} sx={{ width: 1 }} useFlexGap>
               <Card
                 elevation={0}
                 sx={{
-                  borderRadius: "22px",
-                  p: 2.5,
-                  pb: 4.25,
+                  borderRadius: "20px",
+                  p: 2.15,
+                  pb: 2.5,
                   overflow: "hidden",
                   position: "relative",
                   background: isMuiDark
-                    ? "linear-gradient(180deg, #1E2620 0%, #1A211C 100%)"
-                    : "linear-gradient(180deg, #FFFFFF 0%, #F9F9F6 100%)",
-                  border: "none",
+                    ? "linear-gradient(180deg, #1D251F 0%, #181F1A 100%)"
+                    : "#FFFFFF",
+                  border: isMuiDark
+                    ? `1px solid ${alpha("#fff", 0.06)}`
+                    : `1px solid ${alpha(COLORS.primary, 0.07)}`,
                   boxShadow: isMuiDark
                     ? "0 10px 36px rgba(0,0,0,0.35)"
-                    : "0 10px 32px rgba(25, 34, 29, 0.08)",
-                  "&::before": {
-                    content: '""',
-                    position: "absolute",
-                    right: 0,
-                    top: 0,
-                    width: 4,
-                    height: "100%",
-                    borderRadius: "0 22px 22px 0",
-                    background: `linear-gradient(180deg, ${alpha(COLORS.accent, 0.9)} 0%, ${alpha(COLORS.primary, 0.55)} 100%)`,
-                  },
+                    : "0 1px 2px rgba(25, 34, 29, 0.03), 0 8px 26px rgba(25, 34, 29, 0.05)",
                 }}
               >
-                <Box
-                  sx={{
-                    position: "absolute",
-                    insetInline: 0,
-                    bottom: 0,
-                    height: 56,
-                    pointerEvents: "none",
-                    zIndex: 0,
-                    opacity: isMuiDark ? 0.92 : 1,
-                  }}
-                  aria-hidden
-                >
-                  <Box
-                    component="svg"
-                    viewBox="0 0 480 56"
-                    preserveAspectRatio="none"
-                    sx={{ display: "block", width: 1, height: 1 }}
-                  >
-                    <defs>
-                      <linearGradient
-                        id={netMarginWaveGradId}
-                        x1="0"
-                        y1="0"
-                        x2="0"
-                        y2="1"
-                      >
-                        <stop
-                          offset="0%"
-                          stopColor={alpha(COLORS.accent, isMuiDark ? 0.28 : 0.2)}
-                        />
-                        <stop
-                          offset="100%"
-                          stopColor={alpha(COLORS.accent, 0)}
-                        />
-                      </linearGradient>
-                    </defs>
-                    <motion.path
-                      d="M0,40 C72,14 144,52 216,26 S360,8 480,36 L480,56 L0,56 Z"
-                      fill={`url(#${netMarginWaveGradId})`}
-                      initial={reduceMotion ? false : { opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 0.5, ease: "easeOut" }}
-                    />
-                    <motion.path
-                      d="M0,40 C72,14 144,52 216,26 S360,8 480,36"
-                      fill="none"
-                      stroke={alpha(COLORS.accent, isMuiDark ? 0.55 : 0.42)}
-                      strokeWidth="1.75"
-                      strokeLinecap="round"
-                      initial={reduceMotion ? false : { pathLength: 0 }}
-                      animate={{ pathLength: 1 }}
-                      transition={{
-                        duration: reduceMotion ? 0 : 1.15,
-                        ease: [0.2, 0.8, 0.2, 1],
-                        delay: reduceMotion ? 0 : 0.08,
-                      }}
-                    />
-                  </Box>
-                </Box>
                 {isLoading ? (
                   <Box sx={{ pr: 0.5, position: "relative", zIndex: 1 }}>
                     <Skeleton variant="text" width={100} sx={{ mb: 1 }} />
@@ -1008,33 +1096,71 @@ export const DashboardHomePage = () => {
                   </Box>
                 ) : (
                   <Box
-                    sx={{ pr: 1, textAlign: "right", position: "relative", zIndex: 1 }}
+                    sx={{
+                      pr: 0.35,
+                      textAlign: "right",
+                      position: "relative",
+                      zIndex: 1,
+                    }}
                   >
-                    <Typography
+                    <Box
+                      dir="rtl"
                       sx={{
-                        color: "text.secondary",
-                        fontSize: "0.88rem",
-                        fontWeight: 600,
-                        mb: 0.75,
-                        letterSpacing: 0.02,
+                        display: "flex",
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: 1,
+                        mb: 0.9,
                       }}
                     >
-                      صافي النسبة
-                    </Typography>
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        display: "block",
-                        color: "text.secondary",
-                        opacity: 0.85,
-                        fontWeight: 600,
-                        fontSize: "0.68rem",
-                        mb: 1,
-                        letterSpacing: 0.03,
-                      }}
-                    >
-                      المحصّل ناقص المصروفات
-                    </Typography>
+                      <Box sx={{ minWidth: 0, flex: 1 }}>
+                        <Typography
+                          sx={{
+                            color: "text.secondary",
+                            fontSize: "0.84rem",
+                            fontWeight: 700,
+                            mb: 0.25,
+                            letterSpacing: 0.02,
+                          }}
+                        >
+                          صافي المحصّل
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            display: "block",
+                            color: "text.secondary",
+                            opacity: 0.9,
+                            fontWeight: 560,
+                            fontSize: "0.67rem",
+                            letterSpacing: 0.02,
+                          }}
+                        >
+                          المحصّل ناقص المصروفات
+                        </Typography>
+                      </Box>
+                      <Box
+                        sx={{
+                          width: 36,
+                          height: 36,
+                          borderRadius: "11px",
+                          display: "grid",
+                          placeItems: "center",
+                          background: isMuiDark
+                            ? alpha(COLORS.accent, 0.2)
+                            : alpha(COLORS.accent, 0.22),
+                          border: `1px solid ${alpha(COLORS.accent, isMuiDark ? 0.28 : 0.32)}`,
+                          flexShrink: 0,
+                        }}
+                      >
+                        <CircleDollarSign
+                          size={17}
+                          color={isMuiDark ? COLORS.accent : COLORS.primaryDeep}
+                          strokeWidth={1.9}
+                        />
+                      </Box>
+                    </Box>
                     <Box
                       component={motion.div}
                       dir="rtl"
@@ -1055,7 +1181,7 @@ export const DashboardHomePage = () => {
                         lineHeight: 1.2,
                       }}
                     >
-                      <CustodyMoneyLine value={stats.netProfit} size="lg" />
+                      <CustodyMoneyLine value={stats.netProfit} size="md" />
                     </Box>
                     {stats.netMarginPercent !== null ? (
                       <Box
@@ -1070,14 +1196,14 @@ export const DashboardHomePage = () => {
                         <Typography
                           variant="caption"
                           sx={{
-                            mt: 1.1,
+                            mt: 0.95,
                             mb: 0,
                             display: "block",
                             color: "text.secondary",
                             fontWeight: 700,
-                            fontSize: "0.72rem",
+                            fontSize: "0.67rem",
                             letterSpacing: 0.02,
-                            fontVariantNumeric: "tabular-nums",
+                            ...FINANCIAL_NUMBER_SX,
                           }}
                         >
                           هامش من المحصّل:{" "}
@@ -1093,32 +1219,34 @@ export const DashboardHomePage = () => {
                 )}
               </Card>
 
-              <Stack direction="row" spacing={2} sx={{ width: 1 }} useFlexGap>
+              <Stack direction="row" spacing={1.35} sx={{ width: 1 }} useFlexGap>
                 {(
                   [
                     {
                       key: "collected",
                       title: "المحصل",
                       value: stats.collectedAmount,
-                      stripe: `linear-gradient(180deg, ${alpha(COLORS.success, 0.95)} 0%, ${alpha(COLORS.successDeep, 0.45)} 100%)`,
+                      trend: stats.collectedTrend,
+                      trendColor: COLORS.success,
                       iconBg: `linear-gradient(145deg, ${COLORS.success} 0%, ${COLORS.successDeep} 100%)`,
                       iconShadow: `0 8px 22px ${alpha(COLORS.success, 0.35)}`,
                       icon: (
-                        <Wallet size={19} color="#fff" strokeWidth={1.85} />
+                        <Wallet size={17} color="#fff" strokeWidth={1.9} />
                       ),
                     },
                     {
                       key: "expenses",
                       title: "المصروفات",
                       value: stats.expensesAmount,
-                      stripe: `linear-gradient(180deg, ${alpha(COLORS.expense, 0.88)} 0%, ${alpha(COLORS.expenseDeep, 0.42)} 100%)`,
+                      trend: stats.expensesTrend,
+                      trendColor: COLORS.expense,
                       iconBg: `linear-gradient(145deg, ${COLORS.expense} 0%, ${COLORS.expenseDeep} 100%)`,
                       iconShadow: `0 8px 22px ${alpha(COLORS.expense, 0.28)}`,
                       icon: (
                         <CreditCard
-                          size={19}
+                          size={17}
                           color="#fff"
-                          strokeWidth={1.85}
+                          strokeWidth={1.9}
                         />
                       ),
                     },
@@ -1148,40 +1276,29 @@ export const DashboardHomePage = () => {
                       elevation={0}
                       sx={{
                         height: "100%",
-                        borderRadius: "22px",
-                        p: 2,
+                        borderRadius: "20px",
+                        p: 1.55,
                         overflow: "hidden",
                         position: "relative",
                         background: isMuiDark
-                          ? "linear-gradient(165deg, #1e2620 0%, #181f1a 100%)"
-                          : "linear-gradient(165deg, #ffffff 0%, #f7f5ef 100%)",
+                          ? "linear-gradient(165deg, #1D251F 0%, #181F1A 100%)"
+                          : "#FFFFFF",
                         border: isMuiDark
                           ? `1px solid ${alpha("#fff", 0.06)}`
                           : `1px solid ${alpha(COLORS.primary, 0.07)}`,
                         boxShadow: isMuiDark
                           ? "0 1px 0 rgba(255,255,255,0.05) inset, 0 12px 32px rgba(0,0,0,0.34)"
-                          : "0 1px 0 rgba(255,255,255,0.92) inset, 0 12px 28px rgba(25, 34, 29, 0.07)",
+                          : "0 1px 0 rgba(255,255,255,0.92) inset, 0 1px 2px rgba(25, 34, 29, 0.03), 0 8px 24px rgba(25, 34, 29, 0.05)",
                         textAlign: "right",
                         transition:
                           "transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 220ms cubic-bezier(0.2, 0.8, 0.2, 1)",
                         "@media (hover: hover) and (pointer: fine)": {
                           "&:hover": {
-                            transform: "translateY(-3px)",
+                            transform: "translateY(-2px)",
                             boxShadow: isMuiDark
                               ? "0 1px 0 rgba(255,255,255,0.07) inset, 0 18px 36px -10px rgba(0,0,0,0.55)"
                               : "0 1px 0 rgba(255,255,255,1) inset, 0 18px 36px -10px rgba(25,34,29,0.14)",
                           },
-                        },
-                        "&::before": {
-                          content: '""',
-                          position: "absolute",
-                          insetInlineStart: 0,
-                          top: 0,
-                          width: 4,
-                          height: "100%",
-                          borderStartStartRadius: "22px",
-                          borderEndStartRadius: "22px",
-                          background: item.stripe,
                         },
                       }}
                     >
@@ -1201,15 +1318,15 @@ export const DashboardHomePage = () => {
                               alignItems: "center",
                               justifyContent: "space-between",
                               gap: 1,
-                              mb: 1.35,
+                              mb: 1.05,
                             }}
                           >
                             <Typography
                               sx={{
                                 color: "text.secondary",
-                                fontSize: "0.8rem",
-                                fontWeight: 800,
-                                letterSpacing: 0.04,
+                                fontSize: "0.76rem",
+                                fontWeight: 760,
+                                letterSpacing: 0.03,
                                 lineHeight: 1.2,
                                 flex: 1,
                                 minWidth: 0,
@@ -1219,9 +1336,9 @@ export const DashboardHomePage = () => {
                             </Typography>
                             <Box
                               sx={{
-                                width: 44,
-                                height: 44,
-                                borderRadius: "14px",
+                                width: 40,
+                                height: 40,
+                                borderRadius: "12px",
                                 display: "grid",
                                 placeItems: "center",
                                 background: item.iconBg,
@@ -1240,8 +1357,91 @@ export const DashboardHomePage = () => {
                               lineHeight: 1.15,
                             }}
                           >
-                            <MoneyLine value={item.value} size="md" />
+                            <MoneyLine value={item.value} size="sm" />
                           </Box>
+                          {item.trend !== null &&
+                          Number.isFinite(item.trend) ? (
+                            <Box
+                              dir="rtl"
+                              sx={{
+                                mt: 1.25,
+                                display: "flex",
+                                flexDirection: "row",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                gap: 0.75,
+                                minWidth: 0,
+                              }}
+                            >
+                              <Typography
+                                noWrap
+                                sx={{
+                                  color: "text.secondary",
+                                  fontSize: "0.6rem",
+                                  fontWeight: 600,
+                                  minWidth: 0,
+                                }}
+                              >
+                                عن الشهر الماضي
+                              </Typography>
+                              <Box
+                                dir="ltr"
+                                sx={{
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: 0.35,
+                                  px: 0.85,
+                                  py: 0.35,
+                                  borderRadius: "999px",
+                                  flexShrink: 0,
+                                  bgcolor: alpha(
+                                    item.trendColor,
+                                    isMuiDark ? 0.2 : 0.12,
+                                  ),
+                                  border: `1px solid ${alpha(item.trendColor, 0.25)}`,
+                                }}
+                              >
+                                {item.trend >= 0 ? (
+                                  <ArrowUpRight
+                                    size={12}
+                                    strokeWidth={2.4}
+                                    color={
+                                      isMuiDark
+                                        ? alpha(item.trendColor, 0.95)
+                                        : item.trendColor
+                                    }
+                                  />
+                                ) : (
+                                  <ArrowDownRight
+                                    size={12}
+                                    strokeWidth={2.4}
+                                    color={
+                                      isMuiDark
+                                        ? alpha(item.trendColor, 0.95)
+                                        : item.trendColor
+                                    }
+                                  />
+                                )}
+                                <Typography
+                                  component="span"
+                                  sx={{
+                                    fontSize: "0.62rem",
+                                    fontWeight: 800,
+                                    lineHeight: 1,
+                                    color: isMuiDark
+                                      ? alpha(item.trendColor, 0.95)
+                                      : item.trendColor,
+                                    ...FINANCIAL_NUMBER_SX,
+                                  }}
+                                >
+                                  {percentDisplayFormatter.format(
+                                    Math.min(Math.abs(item.trend), 999),
+                                  )}
+                                  %
+                                </Typography>
+                              </Box>
+                            </Box>
+                          ) : null}
                         </Box>
                       )}
                     </Card>
@@ -1288,16 +1488,6 @@ export const DashboardHomePage = () => {
                       : "0 2px 0 rgba(31,61,53,0.05) inset, 0 16px 36px -6px rgba(25,34,29,0.14)",
                     transform: "translateY(-1px)",
                   },
-                },
-                "&::before": {
-                  content: '""',
-                  position: "absolute",
-                  right: 0,
-                  top: 0,
-                  width: 4,
-                  height: "100%",
-                  borderRadius: "0 22px 22px 0",
-                  background: `linear-gradient(180deg, ${alpha(COLORS.primary, 0.75)} 0%, ${alpha(COLORS.accent, 0.55)} 100%)`,
                 },
               }}
             >
@@ -1388,110 +1578,10 @@ export const DashboardHomePage = () => {
             </Card>
           )}
 
-          {primaryMenuVisible.length > 0 && (
-            <Box sx={{ width: 1 }}>
-              <Box
-                dir="rtl"
-                sx={{
-                  display: "flex",
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "flex-start",
-                  gap: 1.25,
-                  px: 0.5,
-                  mb: 1.75,
-                }}
-              >
-                <Typography
-                  sx={{
-                    color: "text.primary",
-                    fontWeight: 700,
-                    fontSize: "1.35rem",
-                    letterSpacing: 0.12,
-                  }}
-                >
-                  القوائم الرئيسية
-                </Typography>
-                <Box
-                  sx={{
-                    width: 3,
-                    height: 22,
-                    borderRadius: 1.5,
-                    bgcolor: alpha(COLORS.primary, isMuiDark ? 0.5 : 0.28),
-                    flexShrink: 0,
-                  }}
-                />
-              </Box>
-              <Card
-                elevation={0}
-                sx={{
-                  borderRadius: "22px",
-                  p: 1.65,
-                  background: menuListCardSurface,
-                  border: "none",
-                  boxShadow: isMuiDark
-                    ? "0 12px 40px rgba(0,0,0,0.38)"
-                    : "0 10px 36px rgba(31, 61, 53, 0.08)",
-                }}
-              >
-                {renderMenuList(primaryMenuVisible)}
-              </Card>
-            </Box>
-          )}
+          {allMenusVisible.length > 0 &&
+            renderMenuSection("القوائم", allMenusVisible)}
 
-          {shortcutsMenuVisible.length > 0 && (
-            <Box sx={{ width: 1 }}>
-              <Box
-                dir="rtl"
-                sx={{
-                  display: "flex",
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "flex-start",
-                  gap: 1.1,
-                  px: 0.5,
-                  mb: 1.5,
-                }}
-              >
-                <Typography
-                  sx={{
-                    color: "text.primary",
-                    fontWeight: 600,
-                    fontSize: "1.05rem",
-                    letterSpacing: 0.1,
-                  }}
-                >
-                  اختصارات إضافية
-                </Typography>
-                <Box
-                  sx={{
-                    width: 3,
-                    height: 18,
-                    borderRadius: 1.5,
-                    bgcolor: alpha(COLORS.accent, isMuiDark ? 0.55 : 0.4),
-                    flexShrink: 0,
-                  }}
-                />
-              </Box>
-              <Card
-                elevation={0}
-                sx={{
-                  borderRadius: "22px",
-                  p: 1.65,
-                  background: menuListCardSurface,
-                  border: "none",
-                  boxShadow: isMuiDark
-                    ? "0 12px 40px rgba(0,0,0,0.38)"
-                    : "0 10px 36px rgba(31, 61, 53, 0.08)",
-                }}
-              >
-                {renderMenuList(shortcutsMenuVisible)}
-              </Card>
-            </Box>
-          )}
-
-          {primaryMenuVisible.length === 0 &&
-            shortcutsMenuVisible.length === 0 && (
+          {allMenusVisible.length === 0 && (
               <Card
                 elevation={0}
                 sx={{
@@ -1542,7 +1632,7 @@ export const DashboardHomePage = () => {
         onClose={() => setNotifOpen(false)}
         PaperProps={{
           sx: {
-            width: { xs: "100%", sm: 360 },
+            width: { xs: "100%", sm: 392 },
             maxWidth: "100vw",
             height: "100dvh",
             maxHeight: "100dvh",
@@ -1552,18 +1642,18 @@ export const DashboardHomePage = () => {
             boxSizing: "border-box",
             borderRadius: {
               xs: `${NOTIF_R.sheetTop} ${NOTIF_R.sheetTop} 0 0`,
-              sm: 0,
+              sm: "22px 0 0 22px",
             },
             borderLeft: {
-              sm: `1px solid ${alpha(theme.palette.divider, 0.85)}`,
+              sm: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
             },
             boxShadow: isMuiDark
-              ? "0 -8px 40px rgba(0,0,0,0.45)"
-              : "0 -12px 48px rgba(31, 61, 53, 0.12)",
+              ? "0 -6px 36px rgba(0,0,0,0.52)"
+              : "0 -14px 52px rgba(31, 61, 53, 0.14)",
             pt: "max(8px, env(safe-area-inset-top, 0px))",
             background: isMuiDark
-              ? "linear-gradient(165deg, #1c2420 0%, #141a17 48%, #0f1412 100%)"
-              : "linear-gradient(180deg, #fbfbf9 0%, #f2f4f1 55%, #eef1ee 100%)",
+              ? "linear-gradient(168deg, #1a221e 0%, #141a17 54%, #0f1412 100%)"
+              : "linear-gradient(180deg, #fdfdfb 0%, #f5f6f3 58%, #f0f3ef 100%)",
             color: "text.primary",
           },
         }}
@@ -1589,18 +1679,18 @@ export const DashboardHomePage = () => {
           sx={{
             flexShrink: 0,
             px: 2,
-            pt: 1.35,
-            pb: 1.5,
-            borderBottom: `1px solid ${alpha(theme.palette.divider, isMuiDark ? 0.12 : 0.08)}`,
+            pt: 1.15,
+            pb: 1.4,
+            borderBottom: `1px solid ${alpha(theme.palette.divider, isMuiDark ? 0.15 : 0.1)}`,
           }}
         >
           <Stack
             direction="row"
             alignItems="center"
             justifyContent="space-between"
-            gap={1}
+            gap={1.25}
           >
-            <Stack direction="row" alignItems="center" gap={1.25} sx={{ minWidth: 0 }}>
+            <Stack direction="row" alignItems="center" gap={1.15} sx={{ minWidth: 0 }}>
               <Box
                 sx={{
                   width: 44,
@@ -1619,7 +1709,7 @@ export const DashboardHomePage = () => {
                 }}
               >
                 <Bell
-                  size={20}
+                  size={19}
                   color={isMuiDark ? COLORS.accent : COLORS.primaryDeep}
                   strokeWidth={2}
                 />
@@ -1636,88 +1726,151 @@ export const DashboardHomePage = () => {
                 >
                   الإشعارات
                 </Typography>
-                <Typography
-                  sx={{
-                    fontSize: "0.72rem",
-                    color: "text.secondary",
-                    mt: 0.35,
-                    lineHeight: 1.45,
-                    opacity: 0.92,
-                  }}
-                >
-                  تحديثات العهدة والفريق والنشاط
-                </Typography>
+                <Stack direction="row" alignItems="center" gap={0.75} sx={{ mt: 0.35 }}>
+                  <Typography
+                    sx={{
+                      fontSize: "0.72rem",
+                      color: "text.secondary",
+                      lineHeight: 1.45,
+                      opacity: 0.92,
+                    }}
+                  >
+                    تحديثات العهدة والفريق والنشاط
+                  </Typography>
+                  {relevantNotifCount > 0 && (
+                    <Box
+                      component="span"
+                      sx={{
+                        px: 0.8,
+                        py: 0.2,
+                        borderRadius: 99,
+                        bgcolor:
+                          urgentNotifCount > 0
+                            ? alpha(theme.palette.error.main, isMuiDark ? 0.24 : 0.14)
+                            : alpha(COLORS.primary, isMuiDark ? 0.22 : 0.1),
+                        border: `1px solid ${
+                          urgentNotifCount > 0
+                            ? alpha(theme.palette.error.main, 0.35)
+                            : alpha(COLORS.primary, 0.22)
+                        }`,
+                        color:
+                          urgentNotifCount > 0
+                            ? theme.palette.error.main
+                            : isMuiDark
+                              ? COLORS.accent
+                              : COLORS.primaryDeep,
+                        fontSize: "0.66rem",
+                        fontWeight: 800,
+                        lineHeight: 1.2,
+                        fontFamily: FINANCIAL_NUMBER_FONT,
+                      }}
+                    >
+                      {numberFormatter.format(relevantNotifCount)}
+                    </Box>
+                  )}
+                </Stack>
               </Box>
             </Stack>
-            <Tooltip title="مسح المعروض (لا يمس القفل ولا إخفاء الإحصائيات)">
-              <span>
-                <IconButton
-                  size="small"
-                  disabled={!canBulkClearNotifications}
-                  onClick={() => {
-                    const next = mergeDismissAfterClear(
-                      visibleNotifications,
-                      notifDismissMap,
-                    );
-                    saveDismissMap(next);
-                    setNotifDismissMap(next);
-                  }}
-                  aria-label="مسح جميع الإشعارات المعروضة"
-                  sx={{
-                    width: 42,
-                    height: 42,
-                    borderRadius: NOTIF_R.surface,
+            <IconButton
+              size="small"
+              onClick={() => setNotifOpen(false)}
+              aria-label="إغلاق لوحة الإشعارات"
+              sx={{
+                width: 40,
+                height: 40,
+                borderRadius: NOTIF_R.control,
+                bgcolor: isMuiDark ? alpha("#fff", 0.06) : alpha(COLORS.primary, 0.06),
+                border: `1px solid ${alpha(theme.palette.divider, 0.52)}`,
+                color: "text.secondary",
+                flexShrink: 0,
+                transition: "background-color .22s ease, transform .15s ease",
+                "@media (hover: hover) and (pointer: fine)": {
+                  "&:hover": {
+                    bgcolor: isMuiDark ? alpha("#fff", 0.11) : alpha(COLORS.primary, 0.1),
+                  },
+                },
+                "&:active": { transform: "scale(0.96)" },
+              }}
+            >
+              <X size={18} />
+            </IconButton>
+          </Stack>
+          <Tooltip title="مسح المعروض (لا يمس القفل ولا إخفاء الإحصائيات)">
+            <span>
+              <Button
+                fullWidth
+                size="small"
+                disabled={!canBulkClearNotifications}
+                onClick={() => {
+                  const next = mergeDismissAfterClear(
+                    visibleNotifications,
+                    notifDismissMap,
+                  );
+                  saveDismissMap(next);
+                  setNotifDismissMap(next);
+                }}
+                startIcon={<Trash2 size={15} />}
+                sx={{
+                  mt: 1.15,
+                  minHeight: 38,
+                  borderRadius: NOTIF_R.control,
+                  border: `1px solid ${alpha(theme.palette.divider, 0.48)}`,
+                  bgcolor: canBulkClearNotifications
+                    ? isMuiDark
+                      ? alpha("#fff", 0.06)
+                      : alpha(COLORS.primary, 0.06)
+                    : "transparent",
+                  color: canBulkClearNotifications
+                    ? theme.palette.text.secondary
+                    : theme.palette.action.disabled,
+                  fontSize: "0.76rem",
+                  fontWeight: 800,
+                  textTransform: "none",
+                  justifyContent: "center",
+                  "&:hover": {
                     bgcolor: canBulkClearNotifications
                       ? isMuiDark
-                        ? alpha("#fff", 0.06)
-                        : alpha(COLORS.primary, 0.06)
+                        ? alpha("#fff", 0.11)
+                        : alpha(COLORS.primary, 0.11)
                       : "transparent",
-                    border: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
-                    color: canBulkClearNotifications
-                      ? theme.palette.text.secondary
-                      : theme.palette.action.disabled,
-                    transition: "background 0.2s ease, transform 0.15s ease",
-                    "@media (hover: hover) and (pointer: fine)": {
-                      "&:hover": {
-                        bgcolor: isMuiDark
-                          ? alpha("#fff", 0.1)
-                          : alpha(COLORS.primary, 0.1),
-                      },
-                    },
-                  }}
-                >
-                  <Trash2 size={18} strokeWidth={2} />
-                </IconButton>
-              </span>
-            </Tooltip>
-          </Stack>
+                  },
+                }}
+              >
+                مسح المعروض
+              </Button>
+            </span>
+          </Tooltip>
         </Box>
         <Box
           sx={{
             flexShrink: 0,
             px: 2,
-            py: 1.25,
+            py: 1.1,
             mx: 2,
-            mb: 1,
-            borderRadius: NOTIF_R.surface,
-            border: `1px solid ${alpha(theme.palette.divider, isMuiDark ? 0.14 : 0.1)}`,
+            mb: 1.05,
+            borderRadius: "16px",
+            border: `1px solid ${alpha(theme.palette.divider, isMuiDark ? 0.2 : 0.14)}`,
             background: isMuiDark
-              ? alpha("#fff", 0.04)
-              : alpha("#fff", 0.72),
+              ? alpha("#fff", 0.045)
+              : alpha("#fff", 0.8),
             backdropFilter: "blur(12px)",
             WebkitBackdropFilter: "blur(12px)",
             boxShadow: isMuiDark
               ? "none"
-              : "0 4px 20px rgba(31, 61, 53, 0.06)",
+              : "0 4px 18px rgba(31, 61, 53, 0.055)",
           }}
         >
-            <Stack
-              direction="row"
-              alignItems="center"
-              justifyContent="space-between"
-              gap={1}
-              flexWrap="wrap"
-            >
+          <Stack spacing={1.05}>
+            <Stack direction="row" alignItems="center" justifyContent="space-between" gap={1}>
+              <Typography
+                sx={{
+                  fontSize: "0.75rem",
+                  fontWeight: 800,
+                  color: "text.secondary",
+                }}
+              >
+                إعدادات التنبيه
+              </Typography>
               {browserNotifPerm !== "granted" ? (
                 <Button
                   variant="contained"
@@ -1780,13 +1933,13 @@ export const DashboardHomePage = () => {
                   }}
                   sx={{
                     minWidth: 0,
-                    px: 1.5,
-                    py: 0.6,
-                    fontSize: "0.75rem",
+                    px: 1.35,
+                    py: 0.62,
+                    fontSize: "0.73rem",
                     fontWeight: 800,
                     textTransform: "none",
                     borderRadius: NOTIF_R.control,
-                    boxShadow: "0 4px 14px rgba(31, 61, 53, 0.2)",
+                    boxShadow: "0 4px 12px rgba(31, 61, 53, 0.2)",
                     bgcolor: COLORS.primary,
                     "&:hover": { bgcolor: COLORS.primaryDeep },
                   }}
@@ -1796,7 +1949,7 @@ export const DashboardHomePage = () => {
                     ) : undefined
                   }
                 >
-                  تفعيل تنبيهات الجهاز
+                  تفعيل الجهاز
                 </Button>
               ) : (
                 <Box
@@ -1804,11 +1957,11 @@ export const DashboardHomePage = () => {
                     display: "inline-flex",
                     alignItems: "center",
                     gap: 0.75,
-                    px: 1.25,
-                    py: 0.5,
+                    px: 1.2,
+                    py: 0.45,
                     borderRadius: NOTIF_R.control,
                     bgcolor: alpha(theme.palette.success.main, 0.12),
-                    border: `1px solid ${alpha(theme.palette.success.main, 0.28)}`,
+                    border: `1px solid ${alpha(theme.palette.success.main, 0.26)}`,
                   }}
                 >
                   <Box
@@ -1817,22 +1970,31 @@ export const DashboardHomePage = () => {
                       height: 6,
                       borderRadius: "50%",
                       bgcolor: "success.main",
-                      boxShadow: `0 0 0 3px ${alpha(theme.palette.success.main, 0.25)}`,
+                      boxShadow: `0 0 0 3px ${alpha(theme.palette.success.main, 0.24)}`,
                     }}
                   />
                   <Typography
                     sx={{
-                      fontSize: "0.72rem",
-                      fontWeight: 700,
+                      fontSize: "0.71rem",
+                      fontWeight: 750,
                       color: "success.dark",
                     }}
                   >
-                    التنبيهات مفعّلة
+                    مفعّل
                   </Typography>
                 </Box>
               )}
+            </Stack>
+
+            <Stack
+              direction="row"
+              alignItems="center"
+              justifyContent="space-between"
+              gap={1}
+              flexWrap="wrap"
+            >
               <FormControlLabel
-                sx={{ mr: 0, ml: 0, gap: 0.75 }}
+                sx={{ mr: 0, ml: 0, gap: 0.55 }}
                 control={
                   <Switch
                     size="small"
@@ -1846,12 +2008,99 @@ export const DashboardHomePage = () => {
                   />
                 }
                 label={
-                  <Typography sx={{ fontSize: "0.75rem", fontWeight: 700 }}>
-                    وضع الخلفية
+                  <Typography sx={{ fontSize: "0.74rem", fontWeight: 750 }}>
+                    إشعارات الخلفية
                   </Typography>
                 }
               />
+              <Typography
+                sx={{
+                  fontSize: "0.68rem",
+                  color: "text.secondary",
+                  fontFamily: FINANCIAL_NUMBER_FONT,
+                }}
+              >
+                الإجمالي: {numberFormatter.format(notifKindCounts.all)}
+              </Typography>
             </Stack>
+
+            <Stack direction="row" gap={0.75} flexWrap="wrap">
+              {(
+                [
+                  { id: "all", label: "الكل", count: notifKindCounts.all },
+                  { id: "urgent", label: "عاجل", count: notifKindCounts.urgent },
+                  { id: "team", label: "الفريق", count: notifKindCounts.team },
+                  { id: "activity", label: "النشاط", count: notifKindCounts.activity },
+                ] as const
+              ).map((f) => {
+                const active = notifFilter === f.id;
+                return (
+                  <Button
+                    key={f.id}
+                    size="small"
+                    onClick={() => setNotifFilter(f.id)}
+                    sx={{
+                      px: 1.15,
+                      minHeight: 32,
+                      borderRadius: NOTIF_R.control,
+                      border: `1px solid ${
+                        active
+                          ? alpha(COLORS.primary, 0.42)
+                          : alpha(theme.palette.divider, 0.5)
+                      }`,
+                      bgcolor: active
+                        ? isMuiDark
+                          ? alpha(COLORS.accent, 0.15)
+                          : alpha(COLORS.primary, 0.09)
+                        : isMuiDark
+                          ? alpha("#fff", 0.03)
+                          : alpha("#fff", 0.7),
+                      color: active
+                        ? isMuiDark
+                          ? COLORS.accent
+                          : COLORS.primaryDeep
+                        : "text.secondary",
+                      fontSize: "0.71rem",
+                      fontWeight: active ? 800 : 700,
+                      textTransform: "none",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 0.55,
+                      "&:hover": {
+                        bgcolor: active
+                          ? isMuiDark
+                            ? alpha(COLORS.accent, 0.2)
+                            : alpha(COLORS.primary, 0.13)
+                          : isMuiDark
+                            ? alpha("#fff", 0.06)
+                            : alpha(COLORS.primary, 0.06),
+                      },
+                    }}
+                  >
+                    {f.label}
+                    <Box
+                      component="span"
+                      sx={{
+                        minWidth: 18,
+                        px: 0.45,
+                        py: 0.1,
+                        borderRadius: 99,
+                        bgcolor: active
+                          ? alpha(theme.palette.common.black, isMuiDark ? 0.22 : 0.08)
+                          : alpha(theme.palette.common.black, isMuiDark ? 0.16 : 0.05),
+                        color: "inherit",
+                        fontSize: "0.64rem",
+                        lineHeight: 1.35,
+                        fontFamily: FINANCIAL_NUMBER_FONT,
+                      }}
+                    >
+                      {numberFormatter.format(f.count)}
+                    </Box>
+                  </Button>
+                );
+              })}
+            </Stack>
+          </Stack>
         </Box>
         <Box
           component="div"
@@ -1870,28 +2119,33 @@ export const DashboardHomePage = () => {
         >
           <Typography
             sx={{
-              fontSize: "0.7rem",
+              fontSize: "0.72rem",
               fontWeight: 800,
               color: "text.secondary",
-              letterSpacing: "0.06em",
+              letterSpacing: "0.04em",
               textTransform: "uppercase",
               mb: 1.25,
               opacity: 0.85,
             }}
           >
-            اليوم
+            {notifFilter === "all"
+              ? "اليوم"
+              : notifFilter === "urgent"
+                ? "العاجل"
+                : notifFilter === "team"
+                  ? "تنبيهات الفريق"
+                  : "آخر النشاط"}
           </Typography>
-          <Stack spacing={1.15} sx={{ pb: 1 }}>
-            {visibleNotifications.map((n) => {
+          <Stack spacing={1.05} sx={{ pb: 1.2 }}>
+            {filteredNotifications.map((n) => {
               const kindStyles = {
                 urgent: {
                   cardBg: isMuiDark
                     ? alpha("#ef5350", 0.1)
                     : alpha("#ffebee", 0.95),
-                  cardBorder: alpha("#c62828", isMuiDark ? 0.35 : 0.22),
+                  cardBorder: alpha("#c62828", isMuiDark ? 0.4 : 0.24),
                   iconBg: alpha("#c62828", isMuiDark ? 0.2 : 0.12),
                   iconColor: "#c62828",
-                  bar: "linear-gradient(180deg, #e53935 0%, #b71c1c 100%)",
                 },
                 info: {
                   cardBg: isMuiDark
@@ -1900,7 +2154,6 @@ export const DashboardHomePage = () => {
                   cardBorder: alpha(COLORS.primary, isMuiDark ? 0.22 : 0.12),
                   iconBg: alpha(COLORS.primary, isMuiDark ? 0.28 : 0.1),
                   iconColor: isMuiDark ? COLORS.accent : COLORS.primaryDeep,
-                  bar: `linear-gradient(180deg, ${COLORS.accent} 0%, ${alpha(COLORS.primary, 0.8)} 100%)`,
                 },
                 success: {
                   cardBg: isMuiDark
@@ -1909,7 +2162,6 @@ export const DashboardHomePage = () => {
                   cardBorder: alpha("#2e7d32", isMuiDark ? 0.35 : 0.2),
                   iconBg: alpha("#2e7d32", isMuiDark ? 0.22 : 0.12),
                   iconColor: "#2e7d32",
-                  bar: "linear-gradient(180deg, #43a047 0%, #2e7d32 100%)",
                 },
                 lock: {
                   cardBg: isMuiDark
@@ -1918,7 +2170,6 @@ export const DashboardHomePage = () => {
                   cardBorder: alpha("#3949ab", isMuiDark ? 0.35 : 0.2),
                   iconBg: alpha("#3949ab", isMuiDark ? 0.22 : 0.12),
                   iconColor: "#3949ab",
-                  bar: "linear-gradient(180deg, #5c6bc0 0%, #3949ab 100%)",
                 },
                 team: {
                   cardBg: isMuiDark
@@ -1927,7 +2178,6 @@ export const DashboardHomePage = () => {
                   cardBorder: alpha(COLORS.accent, isMuiDark ? 0.4 : 0.35),
                   iconBg: alpha(COLORS.accent, isMuiDark ? 0.22 : 0.18),
                   iconColor: isMuiDark ? COLORS.accent : "#7d6a44",
-                  bar: `linear-gradient(180deg, ${COLORS.accent} 0%, ${alpha("#8d7b52", 0.9)} 100%)`,
                 },
                 activity: {
                   cardBg: isMuiDark
@@ -1936,10 +2186,24 @@ export const DashboardHomePage = () => {
                   cardBorder: alpha("#4361ee", isMuiDark ? 0.35 : 0.18),
                   iconBg: alpha("#4361ee", isMuiDark ? 0.2 : 0.1),
                   iconColor: "#4361ee",
-                  bar: "linear-gradient(180deg, #5c6bc0 0%, #3949ab 100%)",
                 },
               } as const;
               const s = kindStyles[n.kind] ?? kindStyles.info;
+              const canDismiss =
+                !NOTIFICATION_IDS_EXCLUDED_FROM_CLEAR.has(n.id) &&
+                !n.id.startsWith("empty-");
+              const kindLabel =
+                n.kind === "urgent"
+                  ? "عاجل"
+                  : n.kind === "team"
+                    ? "فريق"
+                    : n.kind === "activity"
+                      ? "نشاط"
+                      : n.kind === "success"
+                        ? "مكتمل"
+                        : n.kind === "lock"
+                          ? "أمان"
+                          : "معلومة";
               const leftIcon =
                 n.kind === "urgent" ? (
                   <AlertTriangle size={18} color={s.iconColor} strokeWidth={2} />
@@ -1962,155 +2226,220 @@ export const DashboardHomePage = () => {
                 <Box
                   key={n.id}
                   sx={{
-                    position: "relative",
-                    pl: 1.25,
-                    pr: 1.35,
-                    py: 1.35,
-                    borderRadius: NOTIF_R.surface,
-                    bgcolor: s.cardBg,
-                    border: `1px solid ${s.cardBorder}`,
-                    overflow: "hidden",
+                    p: 0.5,
+                    borderRadius: "16px",
+                    bgcolor: isMuiDark ? alpha("#fff", 0.025) : alpha("#fff", 0.72),
+                    border: `1px solid ${alpha(theme.palette.divider, isMuiDark ? 0.14 : 0.09)}`,
                     boxShadow: isMuiDark
-                      ? "0 1px 4px rgba(0,0,0,0.28)"
-                      : "0 1px 3px rgba(31, 61, 53, 0.08), 0 8px 24px rgba(31, 61, 53, 0.04)",
-                    transition:
-                      "box-shadow 0.2s cubic-bezier(0.2, 0.8, 0.2, 1)",
-                    "&::before": {
-                      content: '""',
-                      position: "absolute",
-                      insetInlineStart: 0,
-                      top: 12,
-                      bottom: 12,
-                      width: 3,
-                      borderRadius: `0 ${NOTIF_R.meta} ${NOTIF_R.meta} 0`,
-                      background: s.bar,
-                      opacity: n.kind === "info" && n.id === "all-clear" ? 0.45 : 1,
-                    },
+                      ? "0 1px 4px rgba(0,0,0,0.3)"
+                      : "0 1px 2px rgba(31, 61, 53, 0.06), 0 10px 26px rgba(31, 61, 53, 0.05)",
                   }}
                 >
-                  <Stack direction="row" gap={1.25} alignItems="flex-start">
-                    <Box
-                      sx={{
-                        width: 42,
-                        height: 42,
-                        borderRadius: NOTIF_R.control,
-                        flexShrink: 0,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        bgcolor: s.iconBg,
-                        border: `1px solid ${alpha(s.iconColor, 0.15)}`,
-                      }}
-                    >
-                      {leftIcon}
-                    </Box>
-                    <Box sx={{ minWidth: 0, overflow: "hidden", flex: 1 }}>
-                      <Typography
+                  <Box
+                    sx={{
+                      borderRadius: "12px",
+                      bgcolor: s.cardBg,
+                      border: `1px solid ${s.cardBorder}`,
+                      p: 1.1,
+                    }}
+                  >
+                    <Stack direction="row" gap={1.05} alignItems="flex-start">
+                      <Box
                         sx={{
-                          fontWeight: 800,
-                          fontSize: "0.8125rem",
-                          color: "text.primary",
-                          lineHeight: 1.35,
-                          letterSpacing: "-0.01em",
-                          wordBreak: "break-word",
-                          overflowWrap: "anywhere",
+                          width: 40,
+                          height: 40,
+                          borderRadius: NOTIF_R.control,
+                          flexShrink: 0,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          bgcolor: s.iconBg,
+                          border: `1px solid ${alpha(s.iconColor, 0.16)}`,
                         }}
                       >
-                        {n.title}
-                      </Typography>
-                      <Typography
-                        sx={{
-                          fontSize: "0.78rem",
-                          color: "text.secondary",
-                          mt: 0.5,
-                          lineHeight: 1.55,
-                          wordBreak: "break-word",
-                          overflowWrap: "anywhere",
-                          opacity: 0.95,
-                        }}
-                      >
-                        {n.body}
-                      </Typography>
-                      {n.at && (
-                        <Typography
-                          component="span"
-                          sx={{
-                            display: "inline-block",
-                            mt: 0.75,
-                            fontSize: "0.68rem",
-                            fontWeight: 600,
-                            color: "text.secondary",
-                            px: 1,
-                            py: 0.25,
-                            borderRadius: NOTIF_R.meta,
-                            bgcolor: isMuiDark
-                              ? alpha("#fff", 0.06)
-                              : alpha(COLORS.primary, 0.06),
-                          }}
+                        {leftIcon}
+                      </Box>
+                      <Box sx={{ minWidth: 0, overflow: "hidden", flex: 1 }}>
+                        <Stack
+                          direction="row"
+                          alignItems="center"
+                          justifyContent="space-between"
+                          gap={0.8}
+                          flexWrap="wrap"
                         >
-                          {dayjs(n.at).fromNow()}
-                        </Typography>
-                      )}
-                      {n.id === "custody-deficit-self" && canOpenFund && (
-                        <Button
-                          fullWidth
-                          variant="contained"
-                          onClick={() => {
-                            setNotifOpen(false);
-                            navigate("/fund");
-                          }}
-                          sx={{
-                            mt: 1.15,
-                            py: 0.85,
-                            minHeight: 44,
-                            fontSize: "0.8rem",
-                            borderRadius: NOTIF_R.control,
-                            textTransform: "none",
-                            fontWeight: 800,
-                            bgcolor: COLORS.primary,
-                            boxShadow: `0 6px 20px ${alpha(COLORS.primary, 0.35)}`,
-                            "&:hover": {
-                              bgcolor: COLORS.primaryDeep,
-                              boxShadow: `0 8px 24px ${alpha(COLORS.primary, 0.4)}`,
-                            },
-                          }}
-                        >
-                          فتح صندوق العهدة
-                        </Button>
-                      )}
-                      {n.actionPath &&
-                        n.id !== "custody-deficit-self" &&
-                        n.actionLabel && (
-                          <Button
-                            fullWidth
-                            variant="outlined"
-                            onClick={() => {
-                              setNotifOpen(false);
-                              navigate(n.actionPath!);
-                            }}
+                          <Typography
                             sx={{
-                              mt: 1,
-                              py: 0.75,
-                              minHeight: 42,
-                              fontSize: "0.78rem",
-                              borderRadius: NOTIF_R.control,
-                              textTransform: "none",
                               fontWeight: 800,
-                              borderWidth: 1.5,
-                              borderColor: alpha(COLORS.primary, 0.35),
-                              color: isMuiDark ? COLORS.accent : COLORS.primaryDeep,
-                              "&:hover": {
-                                borderWidth: 1.5,
-                                borderColor: COLORS.primary,
-                                bgcolor: alpha(COLORS.primary, 0.06),
-                              },
+                              fontSize: "0.81rem",
+                              color: "text.primary",
+                              lineHeight: 1.34,
+                              letterSpacing: "-0.01em",
+                              wordBreak: "break-word",
+                              overflowWrap: "anywhere",
                             }}
                           >
-                            {n.actionLabel}
-                          </Button>
+                            {n.title}
+                          </Typography>
+                          <Box
+                            component="span"
+                            sx={{
+                              px: 0.7,
+                              py: 0.2,
+                              borderRadius: 99,
+                              bgcolor: alpha(s.iconColor, isMuiDark ? 0.2 : 0.12),
+                              border: `1px solid ${alpha(s.iconColor, 0.22)}`,
+                              color: s.iconColor,
+                              fontSize: "0.64rem",
+                              fontWeight: 800,
+                              lineHeight: 1.2,
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {kindLabel}
+                          </Box>
+                        </Stack>
+
+                        <Typography
+                          sx={{
+                            fontSize: "0.77rem",
+                            color: "text.secondary",
+                            mt: 0.45,
+                            lineHeight: 1.55,
+                            wordBreak: "break-word",
+                            overflowWrap: "anywhere",
+                            opacity: 0.95,
+                          }}
+                        >
+                          {n.body}
+                        </Typography>
+
+                        {(n.at || canDismiss) && (
+                          <Stack
+                            direction="row"
+                            alignItems="center"
+                            justifyContent="space-between"
+                            gap={0.8}
+                            flexWrap="wrap"
+                            sx={{ mt: 0.72 }}
+                          >
+                            {n.at ? (
+                              <Typography
+                                component="span"
+                                sx={{
+                                  display: "inline-block",
+                                  fontSize: "0.67rem",
+                                  fontWeight: 650,
+                                  color: "text.secondary",
+                                  px: 0.95,
+                                  py: 0.24,
+                                  borderRadius: 99,
+                                  bgcolor: isMuiDark
+                                    ? alpha("#fff", 0.06)
+                                    : alpha(COLORS.primary, 0.06),
+                                }}
+                              >
+                                {dayjs(n.at).fromNow()}
+                              </Typography>
+                            ) : (
+                              <Box />
+                            )}
+                            {canDismiss && (
+                              <Button
+                                size="small"
+                                onClick={() => {
+                                  const next = {
+                                    ...notifDismissMap,
+                                    [n.id]: n.dismissSignature ?? n.id,
+                                  };
+                                  saveDismissMap(next);
+                                  setNotifDismissMap(next);
+                                }}
+                                sx={{
+                                  minHeight: 28,
+                                  px: 0.9,
+                                  py: 0.2,
+                                  borderRadius: 99,
+                                  color: "text.secondary",
+                                  bgcolor: isMuiDark
+                                    ? alpha("#fff", 0.05)
+                                    : alpha(COLORS.primary, 0.05),
+                                  border: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
+                                  fontSize: "0.67rem",
+                                  fontWeight: 700,
+                                  textTransform: "none",
+                                  "&:hover": {
+                                    bgcolor: isMuiDark
+                                      ? alpha("#fff", 0.09)
+                                      : alpha(COLORS.primary, 0.08),
+                                  },
+                                }}
+                              >
+                                تمت المراجعة
+                              </Button>
+                            )}
+                          </Stack>
                         )}
-                    </Box>
-                  </Stack>
+
+                        {n.actionPath && n.actionLabel && (
+                          <Stack direction="row" gap={0.7} sx={{ mt: 0.95 }}>
+                            <Button
+                              fullWidth
+                              variant={
+                                n.kind === "urgent" || n.kind === "team"
+                                  ? "contained"
+                                  : "outlined"
+                              }
+                              onClick={() => {
+                                setNotifOpen(false);
+                                navigate(n.actionPath!);
+                              }}
+                              startIcon={<ArrowUpRight size={15} />}
+                              sx={{
+                                py: 0.7,
+                                minHeight: 39,
+                                fontSize: "0.76rem",
+                                borderRadius: NOTIF_R.control,
+                                textTransform: "none",
+                                fontWeight: 800,
+                                borderWidth: 1.4,
+                                borderColor:
+                                  n.kind === "urgent" || n.kind === "team"
+                                    ? "transparent"
+                                    : alpha(COLORS.primary, 0.35),
+                                bgcolor:
+                                  n.kind === "urgent" || n.kind === "team"
+                                    ? COLORS.primary
+                                    : "transparent",
+                                color:
+                                  n.kind === "urgent" || n.kind === "team"
+                                    ? "#fff"
+                                    : isMuiDark
+                                      ? COLORS.accent
+                                      : COLORS.primaryDeep,
+                                boxShadow:
+                                  n.kind === "urgent" || n.kind === "team"
+                                    ? `0 6px 16px ${alpha(COLORS.primary, 0.32)}`
+                                    : "none",
+                                "&:hover": {
+                                  borderWidth: 1.4,
+                                  borderColor:
+                                    n.kind === "urgent" || n.kind === "team"
+                                      ? "transparent"
+                                      : COLORS.primary,
+                                  bgcolor:
+                                    n.kind === "urgent" || n.kind === "team"
+                                      ? COLORS.primaryDeep
+                                      : alpha(COLORS.primary, 0.08),
+                                },
+                              }}
+                            >
+                              {n.actionLabel}
+                            </Button>
+                          </Stack>
+                        )}
+                      </Box>
+                    </Stack>
+                  </Box>
                 </Box>
               );
             })}
@@ -2122,10 +2451,10 @@ export const DashboardHomePage = () => {
             px: 2,
             pt: 1,
             pb: "calc(14px + env(safe-area-inset-bottom, 0px))",
-            borderTop: `1px solid ${alpha(theme.palette.divider, isMuiDark ? 0.12 : 0.08)}`,
+            borderTop: `1px solid ${alpha(theme.palette.divider, isMuiDark ? 0.13 : 0.09)}`,
             background: isMuiDark
               ? alpha("#000", 0.2)
-              : alpha("#fff", 0.55),
+              : alpha("#fff", 0.58),
             backdropFilter: "blur(10px)",
           }}
         >
@@ -2133,12 +2462,12 @@ export const DashboardHomePage = () => {
             fullWidth
             onClick={() => setNotifOpen(false)}
             sx={{
-              py: 1.1,
+              py: 1.02,
               borderRadius: NOTIF_R.control,
               fontWeight: 800,
-              fontSize: "0.84rem",
+              fontSize: "0.82rem",
               textTransform: "none",
-              color: isMuiDark ? alpha("#fff", 0.88) : COLORS.primaryDeep,
+              color: isMuiDark ? alpha("#fff", 0.9) : COLORS.primaryDeep,
               bgcolor: isMuiDark
                 ? alpha("#fff", 0.08)
                 : alpha(COLORS.primary, 0.08),
@@ -2152,6 +2481,338 @@ export const DashboardHomePage = () => {
           >
             إغلاق اللوحة
           </Button>
+        </Box>
+      </Drawer>
+
+      {/* القائمة الجانبية — Sidebar iOS style */}
+      <Drawer
+        anchor="right"
+        open={sideMenuOpen}
+        onClose={() => setSideMenuOpen(false)}
+        PaperProps={{
+          sx: {
+            width: "min(320px, 86vw)",
+            height: "100dvh",
+            display: "flex",
+            flexDirection: "column",
+            overflow: "hidden",
+            borderRadius: "28px 0 0 28px",
+            border: "none",
+            borderLeft: `1px solid ${alpha(theme.palette.divider, 0.8)}`,
+            background: isMuiDark
+              ? "linear-gradient(170deg, #1C2420 0%, #141A17 55%, #10150F 100%)"
+              : "linear-gradient(180deg, #FCFBF8 0%, #F4F2EC 60%, #EFEDE6 100%)",
+            boxShadow: isMuiDark
+              ? "-16px 0 56px rgba(0,0,0,0.55)"
+              : "-16px 0 56px rgba(31, 61, 53, 0.16)",
+            pt: "max(12px, env(safe-area-inset-top, 0px))",
+            pb: "max(12px, env(safe-area-inset-bottom, 0px))",
+          },
+        }}
+      >
+        <Box
+          dir="rtl"
+          sx={{
+            px: 2,
+            pt: 1,
+            pb: 1.75,
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 1,
+            borderBottom: `1px solid ${alpha(theme.palette.divider, isMuiDark ? 0.14 : 0.1)}`,
+            flexShrink: 0,
+          }}
+        >
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 1.25,
+              minWidth: 0,
+            }}
+          >
+            <Avatar
+              src="/logo-icon.jpg"
+              alt="شعار إطلالة"
+              sx={{
+                width: 46,
+                height: 46,
+                borderRadius: "15px",
+                border: `1px solid ${alpha(COLORS.accent, 0.45)}`,
+                boxShadow: isMuiDark
+                  ? "0 8px 20px rgba(0,0,0,0.4)"
+                  : "0 8px 20px rgba(31, 61, 53, 0.14)",
+                bgcolor: "#fff",
+              }}
+            />
+            <Box sx={{ minWidth: 0 }}>
+              <Typography
+                sx={{
+                  fontWeight: 800,
+                  fontSize: "1.02rem",
+                  color: "text.primary",
+                  lineHeight: 1.25,
+                }}
+              >
+                إطلالة
+              </Typography>
+              <Typography
+                sx={{
+                  fontSize: "0.72rem",
+                  fontWeight: 600,
+                  color: "text.secondary",
+                }}
+              >
+                للخدمات الهندسية
+              </Typography>
+            </Box>
+          </Box>
+          <IconButton
+            onClick={() => setSideMenuOpen(false)}
+            aria-label="إغلاق القائمة"
+            sx={{
+              width: 40,
+              height: 40,
+              borderRadius: "50%",
+              bgcolor: isMuiDark ? alpha("#fff", 0.07) : alpha(COLORS.primary, 0.06),
+              color: "text.secondary",
+              border: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
+              flexShrink: 0,
+            }}
+          >
+            <X size={17} strokeWidth={2} />
+          </IconButton>
+        </Box>
+
+        <Box
+          dir="rtl"
+          sx={{
+            flex: 1,
+            minHeight: 0,
+            overflowY: "auto",
+            WebkitOverflowScrolling: "touch",
+            overscrollBehaviorY: "contain",
+            px: 1.5,
+            py: 1.5,
+          }}
+        >
+          <Stack spacing={0.75}>
+            {[
+              {
+                title: "الرئيسية",
+                subtitle: "نظرة عامة وإحصائيات",
+                path: "/",
+                icon: Home,
+                module: null,
+              } as unknown as MenuItem,
+              ...allMenusVisible,
+            ].map((item) => {
+              const Icon = item.icon;
+              return (
+                <Box
+                  key={item.path}
+                  component={motion.div}
+                  whileTap={reduceMotion ? undefined : { scale: 0.97 }}
+                  onClick={() => {
+                    setSideMenuOpen(false);
+                    navigate(item.path);
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e: React.KeyboardEvent) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setSideMenuOpen(false);
+                      navigate(item.path);
+                    }
+                  }}
+                  sx={{
+                    display: "flex",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 1,
+                    px: 1.25,
+                    py: 1.1,
+                    minHeight: 58,
+                    borderRadius: "18px",
+                    cursor: "pointer",
+                    WebkitTapHighlightColor: "transparent",
+                    "@media (hover: hover) and (pointer: fine)": {
+                      "&:hover": {
+                        bgcolor: isMuiDark
+                          ? alpha("#fff", 0.05)
+                          : alpha(COLORS.primary, 0.05),
+                      },
+                    },
+                  }}
+                >
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 1.35,
+                      minWidth: 0,
+                      flex: 1,
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        width: 42,
+                        height: 42,
+                        borderRadius: "14px",
+                        display: "grid",
+                        placeItems: "center",
+                        flexShrink: 0,
+                        background: isMuiDark
+                          ? `linear-gradient(145deg, ${alpha(COLORS.accent, 0.14)} 0%, ${alpha("#fff", 0.05)} 100%)`
+                          : `linear-gradient(145deg, ${alpha(COLORS.primary, 0.09)} 0%, ${alpha(COLORS.accent, 0.14)} 100%)`,
+                        boxShadow: isMuiDark
+                          ? "inset 0 1px 0 rgba(255,255,255,0.06)"
+                          : "inset 0 1px 0 rgba(255,255,255,0.85)",
+                      }}
+                    >
+                      <Icon
+                        size={19}
+                        color={theme.palette.primary.main}
+                        strokeWidth={1.85}
+                      />
+                    </Box>
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography
+                        sx={{
+                          fontWeight: 700,
+                          fontSize: "0.9rem",
+                          color: "text.primary",
+                          lineHeight: 1.3,
+                        }}
+                      >
+                        {item.title}
+                      </Typography>
+                      <Typography
+                        noWrap
+                        sx={{
+                          fontSize: "0.7rem",
+                          fontWeight: 500,
+                          color: "text.secondary",
+                        }}
+                      >
+                        {item.subtitle}
+                      </Typography>
+                    </Box>
+                  </Box>
+                  <ChevronLeft
+                    size={16}
+                    color={theme.palette.text.disabled as string}
+                  />
+                </Box>
+              );
+            })}
+          </Stack>
+        </Box>
+
+        <Box
+          dir="rtl"
+          sx={{
+            flexShrink: 0,
+            px: 1.5,
+            pt: 1.25,
+            pb: 0.5,
+            borderTop: `1px solid ${alpha(theme.palette.divider, isMuiDark ? 0.14 : 0.1)}`,
+          }}
+        >
+          <Stack direction="row" spacing={1}>
+            {(
+              [
+                {
+                  label: isThemeDark ? "الوضع الفاتح" : "الوضع الليلي",
+                  icon: isThemeDark ? (
+                    <Sun size={18} strokeWidth={1.9} />
+                  ) : (
+                    <Moon size={18} strokeWidth={1.9} />
+                  ),
+                  action: () => toggleTheme(),
+                  danger: false,
+                },
+                {
+                  label: "قفل التطبيق",
+                  icon:
+                    isLocked && !isSessionUnlocked() ? (
+                      <Lock size={18} strokeWidth={1.9} />
+                    ) : (
+                      <LockOpen size={18} strokeWidth={1.9} />
+                    ),
+                  action: () => {
+                    setSideMenuOpen(false);
+                    setLockSettingsOpen(true);
+                  },
+                  danger: false,
+                },
+                {
+                  label: "خروج",
+                  icon: <LogOut size={18} strokeWidth={1.9} />,
+                  action: () => {
+                    logout();
+                    navigate("/login");
+                  },
+                  danger: true,
+                },
+              ] as const
+            ).map((a) => (
+              <Box
+                key={a.label}
+                component={motion.button}
+                type="button"
+                whileTap={reduceMotion ? undefined : { scale: 0.95 }}
+                onClick={a.action}
+                sx={{
+                  appearance: "none",
+                  border: `1px solid ${
+                    a.danger
+                      ? alpha("#c73e3e", 0.3)
+                      : alpha(theme.palette.divider, 0.6)
+                  }`,
+                  flex: 1,
+                  minWidth: 0,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 0.6,
+                  py: 1.1,
+                  borderRadius: "16px",
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                  color: a.danger
+                    ? "#c73e3e"
+                    : theme.palette.text.secondary,
+                  bgcolor: a.danger
+                    ? alpha("#c73e3e", isMuiDark ? 0.12 : 0.06)
+                    : isMuiDark
+                      ? alpha("#fff", 0.05)
+                      : alpha("#fff", 0.75),
+                  WebkitTapHighlightColor: "transparent",
+                }}
+              >
+                {a.icon}
+                <Typography
+                  component="span"
+                  sx={{
+                    fontSize: "0.66rem",
+                    fontWeight: 700,
+                    lineHeight: 1,
+                    color: "inherit",
+                  }}
+                >
+                  {a.label}
+                </Typography>
+              </Box>
+            ))}
+          </Stack>
         </Box>
       </Drawer>
 

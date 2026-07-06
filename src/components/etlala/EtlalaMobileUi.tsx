@@ -39,25 +39,26 @@ export function EtlalaNavRow(props: {
         minHeight: dense ? 56 : 64,
         px: 2,
         py: 1.35,
-        borderRadius: 2.5,
+        borderRadius: '20px',
         border: '1px solid',
-        borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(31, 37, 33, 0.08)',
-        borderInlineStart: `3px solid ${accent}`,
+        borderColor: isDark ? alpha(accent, 0.28) : alpha(accent, 0.2),
         bgcolor: isDark ? 'rgba(255,255,255,0.03)' : premiumTokens.paper,
         cursor: 'pointer',
         WebkitTapHighlightColor: 'transparent',
-        transition: 'background 0.2s ease, box-shadow 0.2s ease, transform 0.12s ease',
+        transition: 'background 0.2s ease, box-shadow 0.2s ease, transform 0.16s cubic-bezier(0.32, 0.72, 0, 1)',
         boxShadow: isDark
           ? '0 2px 12px rgba(0,0,0,0.2)'
-          : '0 2px 8px rgba(31, 37, 33, 0.06), 0 1px 2px rgba(31, 37, 33, 0.04)',
+          : '0 1px 2px rgba(31, 37, 33, 0.03), 0 6px 20px rgba(31, 37, 33, 0.04)',
         overflow: 'hidden',
-        '&:hover': {
-          bgcolor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(47, 62, 52, 0.03)',
-          boxShadow: isDark
-            ? '0 0 0 1px rgba(255,255,255,0.06)'
-            : '0 4px 16px rgba(31, 37, 33, 0.08)',
+        '@media (hover: hover) and (pointer: fine)': {
+          '&:hover': {
+            bgcolor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(47, 62, 52, 0.03)',
+            boxShadow: isDark
+              ? '0 0 0 1px rgba(255,255,255,0.06)'
+              : '0 2px 4px rgba(31, 37, 33, 0.04), 0 10px 28px rgba(31, 37, 33, 0.07)',
+          },
         },
-        '&:active': { transform: 'scale(0.98)', opacity: 0.97 },
+        '&:active': { transform: 'scale(0.98)' },
         '@media (prefers-reduced-motion: reduce)': { transition: 'none', '&:active': { transform: 'none' } },
       }}
     >
@@ -115,14 +116,17 @@ export function EtlalaSectionTitle({ title, subtitle }: { title: string; subtitl
     <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5, mb: 2, px: 0.25, mt: 0.5 }}>
       <Box
         sx={{
-          width: 3,
-          height: 26,
-          borderRadius: 1.5,
-          mt: 0.4,
+          width: 9,
+          height: 9,
+          borderRadius: '999px',
+          mt: 0.75,
           flexShrink: 0,
-          background: isDark
-            ? `linear-gradient(180deg, ${premiumTokens.accent}, ${premiumTokens.primary})`
-            : `linear-gradient(180deg, ${premiumTokens.primary}, ${premiumTokens.accent})`,
+          bgcolor: isDark
+            ? alpha(premiumTokens.accent, 0.88)
+            : alpha(premiumTokens.primary, 0.84),
+          boxShadow: isDark
+            ? `0 0 0 4px ${alpha(premiumTokens.accent, 0.16)}`
+            : `0 0 0 4px ${alpha(premiumTokens.primary, 0.1)}`,
         }}
         aria-hidden
       />
@@ -156,14 +160,12 @@ export function EtlalaEmptyState(props: {
         textAlign: 'center',
         py: { xs: 6, sm: 7 },
         px: 2,
-        borderRadius: 3,
-        border: '1px solid',
-        borderColor: 'divider',
-        bgcolor: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.65)',
-        backgroundImage: isDark
-          ? 'none'
-          : 'linear-gradient(160deg, rgba(255,255,255,0.95) 0%, rgba(250,247,240,0.9) 100%)',
-        boxShadow: isDark ? '0 4px 24px rgba(0,0,0,0.2)' : '0 2px 8px rgba(31, 37, 33, 0.06)',
+        borderRadius: '24px',
+        border: '1px dashed',
+        borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(31, 37, 33, 0.12)',
+        bgcolor: isDark ? 'rgba(255,255,255,0.02)' : '#FFFFFF',
+        backgroundImage: 'none',
+        boxShadow: 'none',
       }}
     >
       <Box
@@ -187,7 +189,7 @@ export function EtlalaEmptyState(props: {
         </Typography>
       ) : null}
       {actionLabel && onAction ? (
-        <Button variant="contained" onClick={onAction} sx={{ mt: 2.5, borderRadius: 2.5, fontWeight: 800, px: 3 }}>
+        <Button variant="contained" onClick={onAction} sx={{ mt: 2.5, borderRadius: '18px', fontWeight: 800, px: 3 }}>
           {actionLabel}
         </Button>
       ) : null}
@@ -216,28 +218,31 @@ export function EtlalaAccentSurface(props: {
         {
           position: 'relative',
           overflow: 'hidden',
-          borderRadius: 2.5,
+          borderRadius: '20px',
           cursor: onClick ? 'pointer' : 'default',
-          border: 'none',
-          borderInlineStart: `3px solid ${accent}`,
+          border: '1px solid',
+          borderColor: isDark ? alpha(accent, 0.24) : alpha(accent, 0.16),
           bgcolor: 'background.paper',
           backgroundImage: 'none',
           boxShadow: isDark
             ? '0 4px 20px rgba(0,0,0,0.22)'
-            : '0 2px 8px rgba(31, 37, 33, 0.06), 0 1px 2px rgba(31, 37, 33, 0.04)',
-          transition: 'transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.25s ease',
+            : '0 1px 2px rgba(31, 37, 33, 0.03), 0 6px 20px rgba(31, 37, 33, 0.04)',
+          transition: 'transform 0.16s cubic-bezier(0.32, 0.72, 0, 1), box-shadow 0.2s ease, border-color 0.2s ease',
           WebkitTapHighlightColor: 'transparent',
           '@media (prefers-reduced-motion: reduce)': {
             transition: 'none',
           },
           ...(onClick
             ? {
-                '&:hover': {
-                  boxShadow: isDark
-                    ? '0 8px 28px rgba(0,0,0,0.4)'
-                    : '0 4px 16px rgba(31, 37, 33, 0.1)',
+                '@media (hover: hover) and (pointer: fine)': {
+                  '&:hover': {
+                    borderColor: isDark ? 'rgba(255,255,255,0.12)' : 'rgba(31, 37, 33, 0.11)',
+                    boxShadow: isDark
+                      ? '0 8px 28px rgba(0,0,0,0.4)'
+                      : '0 2px 4px rgba(31, 37, 33, 0.04), 0 10px 28px rgba(31, 37, 33, 0.07)',
+                  },
                 },
-                '&:active': { transform: 'scale(0.98)', opacity: 0.97 },
+                '&:active': { transform: 'scale(0.98)' },
               }
             : {}),
         },
@@ -304,41 +309,45 @@ export function EtlalaStatRow(props: { items: { label: string; value: string; co
 /** حقول البحث في منطقة المحتوى (تحت هيدر PageScaffold) */
 export const etlalaContentFieldSx: SxProps<Theme> = {
   '& .MuiOutlinedInput-root': {
-    borderRadius: 2,
+    borderRadius: '16px',
     bgcolor: 'background.paper',
     boxShadow: (t) =>
       t.palette.mode === 'dark' ? 'none' : '0 1px 0 rgba(255,255,255,0.9) inset, 0 2px 10px rgba(20,25,20,0.04)',
   },
 };
 
-/** زر إجراء على الهيدر الداكن — accent فاتح، نص primary (بدون تغيير اللون الأساسي) */
+/** زر إجراء على الهيدر الداكن — accent فاتح، نص primary (بدون تغيير اللون الأساسي)
+ *  ملاحظة: `background` (shorthand) وليس bgcolor حتى يتغلب على تدرج containedPrimary في الثيم. */
 export const etlalaHeroActionButtonSx: SxProps<Theme> = {
-  bgcolor: 'rgba(232, 224, 200, 0.97)',
-  color: premiumTokens.primary,
+  background: 'rgba(243, 237, 223, 0.98)',
+  color: premiumTokens.primaryDark,
   fontWeight: 800,
   letterSpacing: '0.02em',
-  px: 2.25,
-  py: 0.85,
-  minHeight: 40,
+  px: 1.85,
+  py: 0.75,
+  minHeight: 38,
   borderRadius: '12px',
   fontSize: '0.8125rem',
-  boxShadow: '0 2px 10px rgba(0,0,0,0.14), inset 0 1px 0 rgba(255,255,255,0.45)',
-  transition: 'transform 0.12s ease, background-color 0.2s ease, box-shadow 0.2s ease',
+  whiteSpace: 'nowrap',
+  border: `1px solid ${alpha(premiumTokens.accent, 0.36)}`,
+  boxShadow: '0 1px 6px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.55)',
+  transition: 'transform 0.12s ease, background 0.2s ease, box-shadow 0.2s ease',
   '&:hover': {
-    bgcolor: premiumTokens.accent,
+    background: 'rgba(236, 229, 208, 1)',
     color: premiumTokens.primaryDark,
-    boxShadow: '0 4px 16px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.35)',
+    borderColor: alpha(premiumTokens.accent, 0.5),
+    boxShadow: '0 3px 12px rgba(0,0,0,0.14), inset 0 1px 0 rgba(255,255,255,0.4)',
   },
   '&:active': { transform: 'scale(0.96)' },
   '@media (prefers-reduced-motion: reduce)': { '&:active': { transform: 'none' } },
-  '&.Mui-disabled': { opacity: 0.55, color: premiumTokens.primary },
+  '&.Mui-disabled': { opacity: 0.55, color: premiumTokens.primaryDark },
   '& .MuiButton-startIcon': { color: 'inherit', mr: 0.5, ml: -0.25 },
 };
 
 /** زر CTA أساسي — تدرج primary، نص أبيض واضح */
 export const etlalaPrimaryCtaButtonSx: SxProps<Theme> = {
   py: 1.5,
-  borderRadius: '14px',
+  borderRadius: '18px',
   fontWeight: 800,
   fontSize: '1rem',
   letterSpacing: '0.02em',
@@ -359,8 +368,8 @@ export const etlalaPrimaryCtaButtonSx: SxProps<Theme> = {
 
 /** زر إصدار — زوايا حادة، أسلوب editorial (صفحة فاتورة جديدة) */
 export const etlalaSharpHeroActionButtonSx: SxProps<Theme> = {
-  bgcolor: 'rgba(232, 224, 200, 0.97)',
-  color: premiumTokens.primary,
+  background: 'rgba(236, 229, 208, 0.98)',
+  color: premiumTokens.primaryDark,
   fontWeight: 800,
   letterSpacing: '0.08em',
   textTransform: 'uppercase',
@@ -369,11 +378,12 @@ export const etlalaSharpHeroActionButtonSx: SxProps<Theme> = {
   minHeight: 40,
   borderRadius: 0,
   fontSize: '0.68rem',
+  whiteSpace: 'nowrap',
   border: `1px solid ${alpha(premiumTokens.accent, 0.55)}`,
   boxShadow: `inset 0 -2px 0 ${premiumTokens.primary}`,
-  transition: 'transform 0.12s ease, background-color 0.2s ease',
+  transition: 'transform 0.12s ease, background 0.2s ease',
   '&:hover': {
-    bgcolor: premiumTokens.accent,
+    background: premiumTokens.accent,
     color: premiumTokens.primaryDark,
     boxShadow: `inset 0 -3px 0 ${premiumTokens.primaryDark}`,
   },
@@ -406,9 +416,12 @@ export const etlalaSharpPrimaryCtaButtonSx: SxProps<Theme> = {
 
 export const etlalaIssueStickyBarSx: SxProps<Theme> = {
   position: 'fixed',
-  bottom: 'calc(70px + env(safe-area-inset-bottom, 0px))',
+  bottom: 'calc(64px + env(safe-area-inset-bottom, 0px))',
   left: 0,
   right: 0,
+  /** يلتزم بإطار الجوال 430px على الشاشات العريضة */
+  maxWidth: { xs: '100%', sm: '430px' },
+  mx: 'auto',
   zIndex: 1100,
   bgcolor: 'background.paper',
   borderTop: `3px solid ${premiumTokens.accent}`,

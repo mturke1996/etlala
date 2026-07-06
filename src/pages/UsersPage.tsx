@@ -1,23 +1,35 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, forwardRef } from 'react';
 import {
-  Box, Container, Typography, Stack, IconButton, Button,
-  TextField, InputAdornment, useTheme, Chip, Avatar,
-  Dialog, Slide, Fade, Grid, Paper, alpha
+  Box, Typography, Stack, IconButton, Button,
+  TextField, InputAdornment, useTheme, Avatar,
+  Dialog, Slide, Fade, Grid as MuiGrid, alpha
 } from '@mui/material';
 import {
-  ArrowBack, Add, Search, Delete, Person, Email, Lock, Edit,
-  AdminPanelSettings, Close, PersonAdd, VpnKey, SupervisedUserCircle, VerifiedUser
-} from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
+  BadgeCheck,
+  KeyRound,
+  Mail,
+  Lock as LockIcon,
+  Pencil,
+  Plus,
+  Search,
+  ShieldCheck,
+  Trash2,
+  User as UserIcon,
+  UserPlus,
+  Users as UsersIcon,
+  X,
+} from 'lucide-react';
 import { collection, query, orderBy, onSnapshot, addDoc, deleteDoc, doc, updateDoc, where, getDocs, writeBatch } from 'firebase/firestore';
 import { initializeApp, deleteApp } from 'firebase/app';
 import { getAuth, createUserWithEmailAndPassword, updateProfile, signOut, sendPasswordResetEmail } from 'firebase/auth';
 import { db, auth } from '../config/firebase';
 import { firebaseConfig } from '../config/firebase';
 import { toast } from 'react-hot-toast';
-import { forwardRef } from 'react';
 import { PageScaffold } from '../components/layout/PageScaffold';
+import { etlalaHeroActionButtonSx } from '../components/etlala/EtlalaMobileUi';
 import { TransitionProps } from '@mui/material/transitions';
+
+const Grid = MuiGrid as any;
 
 const Transition = forwardRef(function Transition(
   props: TransitionProps & {
@@ -29,7 +41,6 @@ const Transition = forwardRef(function Transition(
 });
 
 export const UsersPage = () => {
-  const navigate = useNavigate();
   const theme = useTheme();
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -176,7 +187,7 @@ export const UsersPage = () => {
     if (!formData.email) return;
     try {
       await sendPasswordResetEmail(auth, formData.email);
-      toast.success('تم إرسال رابط التغيير إلى إيميله بنجاح! 📧');
+      toast.success('تم إرسال رابط التغيير إلى إيميله بنجاح');
     } catch (error: any) {
       toast.error('حدث خطأ أثناء إرسال الرابط.');
     }
@@ -209,22 +220,13 @@ export const UsersPage = () => {
         <Button
           variant="contained"
           size="small"
-          startIcon={<Add sx={{ ml: 0.5, mr: -0.5 }} />}
+          startIcon={<Plus size={16} strokeWidth={2.2} />}
           onClick={() => {
             setEditingUserId(null);
             setFormData({ name: '', email: '', password: '', newPassword: '', role: 'editor' });
             setDialogOpen(true);
           }}
-          sx={{
-            bgcolor: 'rgba(200, 192, 176, 0.95)',
-            color: '#1f291f',
-            fontWeight: 800,
-            borderRadius: 3,
-            px: 2,
-            fontSize: '0.8rem',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-            '&:hover': { bgcolor: '#c8c0b0' },
-          }}
+          sx={etlalaHeroActionButtonSx}
         >
           موظف جديد
         </Button>
@@ -233,74 +235,74 @@ export const UsersPage = () => {
         <Grid container spacing={1.5}>
           <Grid size={{ xs: 6 }}>
             <Box sx={{ 
-              p: 1.5, borderRadius: 3, bgcolor: 'rgba(255,255,255,0.08)', 
-              border: '1px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(12px)',
+              px: 1.75, py: 1.5, borderRadius: '18px', bgcolor: 'rgba(255,255,255,0.08)', 
+              border: '1px solid rgba(255,255,255,0.12)',
+              backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
               display: 'flex', alignItems: 'center', gap: 1.5 
             }}>
-              <Box sx={{ width: 36, height: 36, borderRadius: 2, bgcolor: 'rgba(200,192,176,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <SupervisedUserCircle sx={{ color: '#c8c0b0', fontSize: 20 }} />
+              <Box sx={{ width: 38, height: 38, borderRadius: '13px', bgcolor: 'rgba(200,192,176,0.2)', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+                <UsersIcon size={18} color="#c8c0b0" strokeWidth={2} />
               </Box>
-              <Box>
+              <Box sx={{ minWidth: 0 }}>
                 <Typography sx={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.65)', fontWeight: 600 }}>إجمالي الحسابات</Typography>
-                <Typography sx={{ fontSize: '1.05rem', color: 'white', fontWeight: 900, lineHeight: 1.2 }}>{users.length}</Typography>
+                <Typography sx={{ fontSize: '1.05rem', color: 'white', fontWeight: 900, lineHeight: 1.2, fontVariantNumeric: 'tabular-nums' }}>{users.length}</Typography>
               </Box>
             </Box>
           </Grid>
           <Grid size={{ xs: 6 }}>
             <Box sx={{ 
-              p: 1.5, borderRadius: 3, bgcolor: 'rgba(255,255,255,0.08)', 
-              border: '1px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(12px)',
+              px: 1.75, py: 1.5, borderRadius: '18px', bgcolor: 'rgba(255,255,255,0.08)', 
+              border: '1px solid rgba(255,255,255,0.12)',
+              backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
               display: 'flex', alignItems: 'center', gap: 1.5 
             }}>
-              <Box sx={{ width: 36, height: 36, borderRadius: 2, bgcolor: 'rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <VerifiedUser sx={{ color: '#fff', fontSize: 18 }} />
+              <Box sx={{ width: 38, height: 38, borderRadius: '13px', bgcolor: 'rgba(255,255,255,0.12)', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+                <ShieldCheck size={18} color="#fff" strokeWidth={2} />
               </Box>
-              <Box>
+              <Box sx={{ minWidth: 0 }}>
                 <Typography sx={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.65)', fontWeight: 600 }}>المدراء</Typography>
-                <Typography sx={{ fontSize: '1.05rem', color: 'white', fontWeight: 900, lineHeight: 1.2 }}>{users.filter((u) => u.role === 'admin').length}</Typography>
+                <Typography sx={{ fontSize: '1.05rem', color: 'white', fontWeight: 900, lineHeight: 1.2, fontVariantNumeric: 'tabular-nums' }}>{users.filter((u) => u.role === 'admin').length}</Typography>
               </Box>
             </Box>
           </Grid>
         </Grid>
       )}
     >
-        <Box sx={{ mb: 2.5, fontFamily: 'Tajawal, sans-serif' }}>
+        <Box sx={{ mb: 2.5 }}>
           <TextField
             fullWidth
-            placeholder="البحث الطريع بالاسم أو الإيميل..."
+            placeholder="البحث السريع بالاسم أو الإيميل..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             InputProps={{
-              startAdornment: <Search sx={{ color: '#8b7e6a', mr: 1.5, ml: 0.5, fontSize: 22 }} />,
+              startAdornment: <InputAdornment position="start"><Search size={19} color="#8b7e6a" strokeWidth={2} /></InputAdornment>,
             }}
             sx={{
               '& .MuiOutlinedInput-root': {
-                bgcolor: 'white', height: 52, borderRadius: 4, fontSize: '0.95rem', fontWeight: 600,
-                boxShadow: '0 8px 24px rgba(42,58,42,0.06)', border: '1px solid', borderColor: 'rgba(42,58,42,0.04)',
+                bgcolor: 'white', height: 52, borderRadius: '16px', fontSize: '0.95rem', fontWeight: 600,
+                boxShadow: '0 4px 18px rgba(42,58,42,0.05)', border: '1px solid', borderColor: 'rgba(42,58,42,0.05)',
                 '& fieldset': { border: 'none' },
-                '&:focus-within': { boxShadow: '0 8px 28px rgba(42,58,42,0.12)', transform: 'translateY(-1px)' },
-                transition: 'all 0.3s ease',
+                '&:focus-within': { boxShadow: '0 6px 24px rgba(42,58,42,0.1)' },
               }
             }}
           />
         </Box>
 
-        <Stack spacing={1.5}>
+        <Stack spacing={1.25} sx={{ mb: 6 }}>
           {filteredUsers.map((user) => (
             <Box
               key={user.id}
               sx={{
-                p: 2, borderRadius: 3.5, bgcolor: 'white',
-                border: '1px solid', borderColor: 'rgba(0,0,0,0.04)',
-                boxShadow: '0 4px 16px rgba(0,0,0,0.02)',
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                transition: 'all 0.2s', '&:hover': { transform: 'scale(1.01)', boxShadow: '0 6px 20px rgba(0,0,0,0.04)' }
+                px: 2, py: 1.75, borderRadius: '22px', bgcolor: 'white',
+                border: '1px solid', borderColor: 'rgba(31, 37, 33, 0.05)',
+                boxShadow: '0 1px 2px rgba(31, 37, 33, 0.03), 0 6px 22px rgba(31, 37, 33, 0.04)',
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1,
               }}
             >
-              <Stack direction="row" alignItems="center" spacing={2} sx={{ minWidth: 0, flex: 1 }}>
+              <Stack direction="row" alignItems="center" spacing={1.5} sx={{ minWidth: 0, flex: 1 }}>
                 <Avatar 
                   sx={{ 
-                    width: 46, height: 46, borderRadius: 2.5, 
+                    width: 46, height: 46, borderRadius: '16px', 
                     bgcolor: user.role === 'admin' ? alpha('#2a3a2a', 0.08) : alpha('#8b7e6a', 0.08), 
                     color: user.role === 'admin' ? '#2a3a2a' : '#8b7e6a', 
                     fontWeight: 900, fontSize: '1.1rem' 
@@ -310,39 +312,41 @@ export const UsersPage = () => {
                 </Avatar>
                 
                 <Box sx={{ minWidth: 0 }}>
-                  <Stack direction="row" alignItems="center" spacing={1} mb={0.3}>
-                    <Typography fontWeight={800} sx={{ fontSize: '0.95rem', color: '#1f291f', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  <Stack direction="row" alignItems="center" spacing={0.75} mb={0.3}>
+                    <Typography fontWeight={800} noWrap sx={{ fontSize: '0.95rem', color: '#1f291f' }}>
                       {user.displayName}
                     </Typography>
                     {user.role === 'admin' && (
-                      <VerifiedUser sx={{ fontSize: 14, color: '#4a5d4a' }} />
+                      <BadgeCheck size={15} color="#4a5d4a" strokeWidth={2.2} style={{ flexShrink: 0 }} />
                     )}
                   </Stack>
-                  <Typography sx={{ fontSize: '0.75rem', fontWeight: 600, color: '#8b7e6a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} dir="ltr">
+                  <Typography noWrap sx={{ fontSize: '0.75rem', fontWeight: 600, color: '#8b7e6a' }} dir="ltr">
                     {user.email}
                   </Typography>
                 </Box>
               </Stack>
 
               {/* Action Buttons */}
-              <Stack direction="row" spacing={0.5} sx={{ flexShrink: 0, ml: 1 }}>
+              <Stack direction="row" spacing={0.75} sx={{ flexShrink: 0 }}>
                 <IconButton 
                   onClick={() => handleEditClick(user)} 
+                  aria-label="تعديل"
                   sx={{ 
-                    width: 38, height: 38, borderRadius: 2.5, bgcolor: '#f4f6f4', color: '#4a5d4a',
+                    width: 40, height: 40, borderRadius: '50%', bgcolor: '#f4f6f4', color: '#4a5d4a',
                     '&:hover': { bgcolor: '#e8ece8' } 
                   }}
                 >
-                  <Edit sx={{ fontSize: 18 }} />
+                  <Pencil size={16} strokeWidth={2} />
                 </IconButton>
                 <IconButton 
                   onClick={() => handleDeleteUser(user.id)} 
+                  aria-label="حذف"
                   sx={{ 
-                    width: 38, height: 38, borderRadius: 2.5, bgcolor: '#fcf0f0', color: '#d64545',
+                    width: 40, height: 40, borderRadius: '50%', bgcolor: '#fcf0f0', color: '#d64545',
                     '&:hover': { bgcolor: '#fae4e4' } 
                   }}
                 >
-                  <Delete sx={{ fontSize: 18 }} />
+                  <Trash2 size={16} strokeWidth={2} />
                 </IconButton>
               </Stack>
             </Box>
@@ -350,8 +354,8 @@ export const UsersPage = () => {
 
           {!loading && filteredUsers.length === 0 && (
             <Fade in={true}>
-              <Box textAlign="center" py={8} sx={{ bgcolor: 'white', borderRadius: 4, border: '1px dashed rgba(0,0,0,0.08)', mt: 2 }}>
-                <PersonAdd sx={{ fontSize: 56, color: 'text.disabled', mb: 2, opacity: 0.3 }} />
+              <Box textAlign="center" py={8} sx={{ bgcolor: 'white', borderRadius: '24px', border: '1px dashed rgba(31, 37, 33, 0.12)', mt: 2 }}>
+                <UserPlus size={52} color={theme.palette.text.disabled} strokeWidth={1.5} style={{ opacity: 0.4, marginBottom: 16 }} />
                 <Typography variant="h6" fontWeight={800} color="text.secondary" mb={1}>لا يوجد موظفين</Typography>
                 <Typography variant="body2" color="text.disabled" fontWeight={500}>جرب البحث باسم آخر أو أضف موظف جديد</Typography>
               </Box>
@@ -360,25 +364,31 @@ export const UsersPage = () => {
         </Stack>
     </PageScaffold>
 
-      {/* ── Add / Edit Dialog (Ultra Premium Modal) ── */}
+      {/* ── Add / Edit Sheet ── */}
       <Dialog
         open={dialogOpen} onClose={() => !submitting && setDialogOpen(false)}
         TransitionComponent={Transition} keepMounted fullWidth maxWidth="xs"
         PaperProps={{ 
           sx: { 
-            borderRadius: { xs: '32px 32px 0 0', sm: 5 }, m: { xs: 0, sm: 2 }, 
+            borderRadius: { xs: '28px 28px 0 0', sm: '28px' }, m: { xs: 0, sm: 2 }, 
             position: { xs: 'fixed', sm: 'relative' }, bottom: { xs: 0, sm: 'auto' }, width: '100%',
-            boxShadow: '0 -10px 40px rgba(0,0,0,0.1)'
+            maxHeight: { xs: '92dvh', sm: 'calc(100dvh - 64px)' },
+            boxShadow: '0 -12px 48px rgba(0,0,0,0.14)',
+            overflowY: 'auto',
+            WebkitOverflowScrolling: 'touch',
           } 
         }}
       >
-        <Box sx={{ p: { xs: 3.5, sm: 4 }, pb: { xs: 'calc(env(safe-area-inset-bottom) + 24px)', sm: 4 }, position: 'relative' }}>
+        {/* مقبض السحب */}
+        <Box aria-hidden sx={{ display: { xs: 'block', sm: 'none' }, width: 40, height: 5, borderRadius: '999px', mx: 'auto', mt: 1, mb: 0, flexShrink: 0, bgcolor: 'rgba(31, 37, 33, 0.14)' }} />
+
+        <Box sx={{ p: { xs: 2.75, sm: 3.5 }, pt: { xs: 1.75, sm: 3 }, pb: { xs: 'calc(env(safe-area-inset-bottom) + 24px)', sm: 3.5 }, position: 'relative' }}>
           
           {/* Header */}
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3.5 }}>
-            <Box>
-              <Typography variant="h5" fontWeight={900} mb={0.5} color="#1f291f">
-                {editingUserId ? 'تحديث السجلات' : 'إضافة موظف 👤'}
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
+            <Box sx={{ minWidth: 0 }}>
+              <Typography variant="h6" fontWeight={900} mb={0.25} color="#1f291f">
+                {editingUserId ? 'تحديث السجلات' : 'إضافة موظف'}
               </Typography>
               <Typography variant="body2" color="#8b7e6a" fontWeight={600}>
                 {editingUserId ? 'تعديل الصلاحيات أو البيانات الأساسية' : 'إنشاء حساب جديد لمنح الوصول'}
@@ -386,21 +396,22 @@ export const UsersPage = () => {
             </Box>
             <IconButton 
               onClick={() => setDialogOpen(false)} 
-              sx={{ bgcolor: '#f4f6f4', color: '#1f291f', width: 34, height: 34, '&:hover': { bgcolor: '#e8ece8' } }}
+              aria-label="إغلاق"
+              sx={{ bgcolor: '#f4f6f4', color: '#1f291f', width: 38, height: 38, flexShrink: 0, '&:hover': { bgcolor: '#e8ece8' } }}
             >
-              <Close sx={{ fontSize: 18 }} />
+              <X size={16} strokeWidth={2.2} />
             </IconButton>
           </Box>
 
-          <Stack spacing={2.5}>
+          <Stack spacing={2.25}>
             {/* Input Groups */}
             <Box>
               <Typography fontWeight={800} fontSize="0.8rem" color="#4a5d4a" mb={1}>الاسم الكامل</Typography>
               <TextField
                 fullWidth variant="outlined" placeholder="محمد أحمد..."
                 value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})}
-                InputProps={{ startAdornment: <InputAdornment position="start"><Person sx={{ color: '#8b7e6a' }} /></InputAdornment> }}
-                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3, bgcolor: '#f4f6f4', '& fieldset': { border: 'none' }, '&:focus-within': { bgcolor: 'white', '& fieldset': { border: '2px solid #4a5d4a' } } } }}
+                InputProps={{ startAdornment: <InputAdornment position="start"><UserIcon size={18} color="#8b7e6a" strokeWidth={2} /></InputAdornment> }}
+                sx={{ '& .MuiOutlinedInput-root': { borderRadius: '16px', bgcolor: '#f4f6f4', '& fieldset': { border: 'none' }, '&:focus-within': { bgcolor: 'white', boxShadow: '0 0 0 2px rgba(74,93,74,0.45)' } } }}
               />
             </Box>
 
@@ -410,8 +421,8 @@ export const UsersPage = () => {
                 fullWidth type="email" variant="outlined" placeholder="email@example.com"
                 value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})}
                 disabled={!!editingUserId}
-                InputProps={{ startAdornment: <InputAdornment position="start"><Email sx={{ color: '#8b7e6a' }} /></InputAdornment> }}
-                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3, bgcolor: '#f4f6f4', '& fieldset': { border: 'none' }, '&.Mui-disabled': { opacity: 0.6 } } }}
+                InputProps={{ startAdornment: <InputAdornment position="start"><Mail size={18} color="#8b7e6a" strokeWidth={2} /></InputAdornment> }}
+                sx={{ '& .MuiOutlinedInput-root': { borderRadius: '16px', bgcolor: '#f4f6f4', '& fieldset': { border: 'none' }, '&.Mui-disabled': { opacity: 0.6 } } }}
               />
             </Box>
 
@@ -421,23 +432,23 @@ export const UsersPage = () => {
                 <TextField
                   fullWidth type="password" variant="outlined" placeholder="••••••••"
                   value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})}
-                  InputProps={{ startAdornment: <InputAdornment position="start"><Lock sx={{ color: '#8b7e6a' }} /></InputAdornment> }}
-                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3, bgcolor: '#f4f6f4', '& fieldset': { border: 'none' } } }}
+                  InputProps={{ startAdornment: <InputAdornment position="start"><LockIcon size={18} color="#8b7e6a" strokeWidth={2} /></InputAdornment> }}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: '16px', bgcolor: '#f4f6f4', '& fieldset': { border: 'none' } } }}
                 />
               </Box>
             ) : (
-              <Box sx={{ p: 2, borderRadius: 3, bgcolor: '#f8f9f8', border: '1px solid rgba(0,0,0,0.04)' }}>
+              <Box sx={{ p: 2, borderRadius: '18px', bgcolor: '#f8f9f8', border: '1px solid rgba(31, 37, 33, 0.05)' }}>
                 <Typography variant="body2" fontWeight={800} color="#1f291f" mb={1.5} display="flex" alignItems="center" gap={1}>
-                  <VpnKey fontSize="small" sx={{ color: '#4a5d4a' }}/> إعادة تعيين كلمة المرور
+                  <KeyRound size={16} color="#4a5d4a" strokeWidth={2} /> إعادة تعيين كلمة المرور
                 </Typography>
                 <TextField
                   fullWidth placeholder="كلمة مرور جديدة (اختياري)" type="password" size="small"
                   value={formData.newPassword} onChange={e => setFormData({...formData, newPassword: e.target.value})}
-                  sx={{ mb: 1.5, '& .MuiOutlinedInput-root': { borderRadius: 2, bgcolor: 'white' } }}
+                  sx={{ mb: 1.5, '& .MuiOutlinedInput-root': { borderRadius: '14px', bgcolor: 'white' } }}
                 />
                 <Button 
-                  fullWidth onClick={handleResetPasswordEmail} startIcon={<Email />}
-                  sx={{ borderRadius: 2, py: 1, fontWeight: 700, color: '#4a5d4a', bgcolor: 'rgba(74,93,74,0.08)' }}
+                  fullWidth onClick={handleResetPasswordEmail} startIcon={<Mail size={16} strokeWidth={2} />}
+                  sx={{ borderRadius: '14px', py: 1, fontWeight: 700, color: '#4a5d4a', bgcolor: 'rgba(74,93,74,0.08)' }}
                 >
                   إرسال رابط استعادة للإيميل
                 </Button>
@@ -446,21 +457,22 @@ export const UsersPage = () => {
 
             <Box>
               <Typography fontWeight={800} fontSize="0.8rem" color="#4a5d4a" mb={1}>الصلاحية</Typography>
-              <Stack direction="row" spacing={1.5}>
+              <Stack direction="row" spacing={1.25}>
                 {[
-                  { value: 'editor', label: 'موظف عادي', icon: <Person /> },
-                  { value: 'admin', label: 'مدير نظام', icon: <AdminPanelSettings /> },
+                  { value: 'editor', label: 'موظف عادي', icon: <UserIcon size={22} strokeWidth={2} /> },
+                  { value: 'admin', label: 'مدير نظام', icon: <ShieldCheck size={22} strokeWidth={2} /> },
                 ].map((role) => (
                   <Box
                     key={role.value} onClick={() => setFormData({...formData, role: role.value})}
                     sx={{
-                      flex: 1, p: 2, borderRadius: 3, cursor: 'pointer', textAlign: 'center', transition: 'all 0.2s',
+                      flex: 1, py: 1.75, px: 1.5, borderRadius: '18px', cursor: 'pointer', textAlign: 'center',
                       border: formData.role === role.value ? '2px solid #2a3a2a' : '2px solid transparent',
                       bgcolor: formData.role === role.value ? alpha('#2a3a2a', 0.05) : '#f4f6f4',
-                      '&:active': { transform: 'scale(0.96)' }
+                      WebkitTapHighlightColor: 'transparent',
+                      '&:active': { transform: 'scale(0.97)' }
                     }}
                   >
-                    <Box sx={{ color: formData.role === role.value ? '#2a3a2a' : '#8b7e6a', mb: 0.5 }}>
+                    <Box sx={{ color: formData.role === role.value ? '#2a3a2a' : '#8b7e6a', mb: 0.5, display: 'flex', justifyContent: 'center' }}>
                       {role.icon}
                     </Box>
                     <Typography fontWeight={800} sx={{ fontSize: '0.8rem', color: formData.role === role.value ? '#1f291f' : '#8b7e6a' }}>
@@ -474,9 +486,10 @@ export const UsersPage = () => {
             <Button
               variant="contained" fullWidth onClick={handleCreateUser} disabled={submitting}
               sx={{
-                py: 2, mt: 2, borderRadius: 3, fontWeight: 900, fontSize: '1.05rem',
+                py: 1.75, mt: 1.5, borderRadius: '18px', fontWeight: 900, fontSize: '1rem',
                 bgcolor: '#2a3a2a', color: 'white', '&:hover': { bgcolor: '#151a15' },
                 boxShadow: '0 8px 24px rgba(42,58,42,0.25)',
+                '&:disabled': { opacity: 0.55 },
               }}
             >
               {submitting ? 'جاري المعالجة...' : (editingUserId ? 'حفظ التحديثات' : 'إضافة الموظف المعتمد')}
@@ -487,4 +500,3 @@ export const UsersPage = () => {
     </>
   );
 };
-

@@ -1,21 +1,24 @@
 import { useState, FormEvent } from 'react';
 import {
-  Box, Button, Container, IconButton, InputAdornment,
-  Stack, TextField, Typography, useTheme, Alert, Fade,
-  useMediaQuery, alpha,
+  Box, Button, CircularProgress, IconButton, InputAdornment,
+  Stack, TextField, Typography, useTheme, alpha,
 } from '@mui/material';
-import { Visibility, VisibilityOff, Login as LoginIcon, Email, Lock } from '@mui/icons-material';
+import { Eye, EyeOff, Lock, Mail } from 'lucide-react';
 import { useAuthStore } from '../store/useAuthStore';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { COMPANY_INFO } from '../constants/companyInfo';
+import { premiumTokens } from '../theme/tokens';
+
+/** شعار القوس الذهبي — قصاصة مضغوطة من الشعار الأصلي عالي الدقة */
+const LOGO_SRC = '/logo-arch-gold.jpg';
 
 export const LoginPage = () => {
   const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
   const navigate = useNavigate();
   const { login } = useAuthStore();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -29,7 +32,7 @@ export const LoginPage = () => {
     try {
       await login(email, password);
       navigate('/');
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
       setError('فشل تسجيل الدخول. تأكد من صحة البيانات.');
     } finally {
@@ -37,227 +40,243 @@ export const LoginPage = () => {
     }
   };
 
+  /** حقل iOS نظيف: تعبئة هادئة بلا إطار، وحلقة تركيز بلون العلامة */
+  const fieldSx = {
+    '& .MuiOutlinedInput-root': {
+      borderRadius: '16px',
+      height: 54,
+      fontSize: '0.95rem',
+      fontWeight: 600,
+      bgcolor: isDark ? alpha('#fff', 0.05) : '#F4F4F2',
+      transition: 'box-shadow 0.15s ease, background-color 0.15s ease',
+      '& fieldset': { border: 'none' },
+      '&.Mui-focused': {
+        bgcolor: isDark ? alpha('#fff', 0.07) : '#FFFFFF',
+        boxShadow: `0 0 0 2px ${alpha(premiumTokens.primary, isDark ? 0.55 : 0.32)}`,
+      },
+    },
+    '& .MuiInputBase-input::placeholder': {
+      color: 'text.disabled',
+      opacity: 1,
+      fontWeight: 500,
+    },
+  } as const;
+
   return (
     <Box
+      dir="rtl"
       sx={{
         minHeight: '100dvh',
         width: '100%',
         display: 'flex',
         flexDirection: 'column',
-        position: 'relative',
-        overflow: 'hidden',
-        direction: 'rtl',
+        alignItems: 'center',
+        bgcolor: 'background.default',
+        pt: 'calc(env(safe-area-inset-top, 0px) + 12px)',
+        pb: 'calc(env(safe-area-inset-bottom, 0px) + 20px)',
+        px: 3,
+        overflowX: 'hidden',
       }}
     >
-      {/* خلفية v2: تدرجات محلية فقط — أداء + هوية (بدون صور خارجية) */}
       <Box
+        component={motion.div}
+        initial={{ opacity: 0, y: 18 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.2, 0.8, 0.2, 1] }}
         sx={{
-          position: 'absolute',
-          top: 0, left: 0, right: 0, bottom: 0,
-          zIndex: 0,
-          background: `
-            radial-gradient(ellipse 120% 80% at 80% 10%, rgba(90, 130, 95, 0.25) 0%, transparent 50%),
-            radial-gradient(ellipse 90% 60% at 10% 90%, rgba(200, 192, 176, 0.12) 0%, transparent 45%),
-            linear-gradient(168deg, #0c120c 0%, #152218 38%, #1a2a1c 72%, #0e1410 100%)
-          `,
-        }}
-      />
-      <Box
-        className="etlala-hero-orb"
-        aria-hidden
-        sx={{
-          position: 'absolute',
-          zIndex: 0,
-          top: '8%',
-          left: '5%',
-          width: 220,
-          height: 220,
-          bgcolor: 'rgba(200, 192, 176, 0.12)',
-        }}
-      />
-      <Box
-        className="etlala-hero-orb"
-        aria-hidden
-        sx={{
-          position: 'absolute',
-          zIndex: 0,
-          bottom: '20%',
-          right: '-5%',
-          width: 280,
-          height: 280,
-          bgcolor: 'rgba(74, 93, 74, 0.18)',
-          animation: 'etlala-blob-float 18s var(--ease-smooth) infinite',
-          animationDelay: '-4s',
-        }}
-      />
-      <Box
-        className="etlala-hero-orb"
-        aria-hidden
-        sx={{
-          position: 'absolute',
-          zIndex: 0,
-          top: '40%',
-          right: '20%',
-          width: 120,
-          height: 120,
-          bgcolor: 'rgba(255, 255, 255, 0.04)',
-          animationDuration: '12s',
-        }}
-      />
-
-      {/* Content */}
-      <Container 
-        maxWidth="sm" 
-        sx={{ 
-          position: 'relative', zIndex: 10, 
-          flexGrow: 1, display: 'flex', flexDirection: 'column',
-          justifyContent: isMobile ? 'flex-end' : 'center',
-          px: { xs: 0, sm: 3 }, pb: { xs: 0, sm: 4 },
-          height: '100dvh',
+          width: '100%',
+          maxWidth: 400,
+          my: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
         }}
       >
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          style={{ width: '100%' }}
-        >
-          {/* Brand Section */}
-          <Box sx={{ mb: { xs: 5, md: 7 }, textAlign: 'center', pt: { xs: 0, md: 0 } }}>
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3, duration: 0.6 }}
-            >
-              <Typography
-                sx={{
-                  fontSize: { xs: '2.8rem', sm: '3.5rem' },
-                  fontWeight: 900,
-                  color: '#c8c0b0',
-                  letterSpacing: '0.05em',
-                  lineHeight: 1,
-                  fontFamily: "'Tajawal', sans-serif",
-                }}
-              >
-                إطلالة
-              </Typography>
-              <Typography
-                sx={{
-                  fontSize: '0.7rem',
-                  color: alpha('#c8c0b0', 0.45),
-                  letterSpacing: '0.3em',
-                  fontWeight: 500,
-                  textTransform: 'uppercase',
-                  fontFamily: "'Outfit', sans-serif",
-                  mt: 0.5,
-                }}
-              >
-                ARCHITECTURE & ENGINEERING
-              </Typography>
-              <Box sx={{ width: 40, height: 1.5, bgcolor: alpha('#c8c0b0', 0.25), mx: 'auto', mt: 2 }} />
-            </motion.div>
-          </Box>
-
-          {/* Login Form — زجاج محسّن + حد كريمي */}
+        {/* ─── العلامة ─── */}
+        <Stack alignItems="center" sx={{ mb: 4.5 }}>
           <Box
             sx={{
-              borderRadius: { xs: '28px 28px 0 0', sm: '22px' },
-              bgcolor: alpha('#0f1a12', 0.72),
-              backdropFilter: 'blur(28px) saturate(1.15)',
-              WebkitBackdropFilter: 'blur(28px) saturate(1.15)',
-              border: '1px solid rgba(200, 192, 176, 0.14)',
-              boxShadow: '0 24px 80px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06)',
-              borderBottom: { xs: 'none', sm: '1px solid rgba(200, 192, 176, 0.12)' },
-              p: { xs: 3.5, sm: 4.5 },
+              width: 108,
+              height: 108,
+              borderRadius: '30px',
+              overflow: 'hidden',
+              bgcolor: '#FFFFFF',
+              border: `1px solid ${isDark ? alpha('#C8B27D', 0.25) : 'rgba(31, 37, 33, 0.06)'}`,
+              boxShadow: isDark
+                ? '0 16px 40px rgba(0,0,0,0.5)'
+                : '0 1px 2px rgba(25, 34, 29, 0.04), 0 16px 40px rgba(25, 34, 29, 0.1)',
+              display: 'grid',
+              placeItems: 'center',
+              mb: 2.25,
             }}
           >
-            <Typography
+            <Box
+              component="img"
+              src={LOGO_SRC}
+              alt="شعار إطلالة"
+              sx={{ width: '78%', height: '78%', objectFit: 'contain', display: 'block' }}
+              draggable={false}
+            />
+          </Box>
+          <Typography
+            sx={{
+              fontSize: '1.9rem',
+              fontWeight: 800,
+              color: 'text.primary',
+              lineHeight: 1.15,
+              letterSpacing: '-0.01em',
+            }}
+          >
+            إطلالة
+          </Typography>
+          <Typography
+            sx={{
+              fontSize: '0.62rem',
+              color: 'text.secondary',
+              letterSpacing: '0.28em',
+              fontWeight: 600,
+              textTransform: 'uppercase',
+              mt: 0.75,
+              fontFamily: "'Outfit', 'Inter', sans-serif",
+            }}
+          >
+            Architectural &amp; Engineering
+          </Typography>
+        </Stack>
+
+        {/* ─── بطاقة الدخول ─── */}
+        <Box
+          sx={{
+            borderRadius: '24px',
+            bgcolor: 'background.paper',
+            border: `1px solid ${isDark ? alpha('#fff', 0.07) : 'rgba(31, 37, 33, 0.06)'}`,
+            boxShadow: isDark
+              ? '0 18px 50px rgba(0,0,0,0.45)'
+              : '0 1px 2px rgba(25, 34, 29, 0.03), 0 12px 36px rgba(25, 34, 29, 0.07)',
+            p: { xs: 3, sm: 3.5 },
+          }}
+        >
+          <Typography sx={{ fontWeight: 800, fontSize: '1.2rem', lineHeight: 1.3 }}>
+            تسجيل الدخول
+          </Typography>
+          <Typography
+            sx={{ color: 'text.secondary', fontSize: '0.82rem', fontWeight: 500, mt: 0.5, mb: 2.75 }}
+          >
+            أدخل بياناتك للمتابعة إلى لوحة التحكم
+          </Typography>
+
+          {error && (
+            <Box
+              role="alert"
               sx={{
-                color: alpha('#fff', 0.85),
-                fontWeight: 700,
-                fontSize: '1.1rem',
-                mb: 3,
+                mb: 2,
+                px: 1.75,
+                py: 1.25,
+                borderRadius: '14px',
+                bgcolor: alpha('#d64545', isDark ? 0.16 : 0.08),
+                border: `1px solid ${alpha('#d64545', 0.22)}`,
               }}
             >
-              تسجيل الدخول
-            </Typography>
+              <Typography sx={{ color: isDark ? '#fca5a5' : '#b83b3b', fontWeight: 700, fontSize: '0.8rem' }}>
+                {error}
+              </Typography>
+            </Box>
+          )}
 
-            {error && (
-              <Fade in>
-                <Alert 
-                  severity="error" variant="filled"
-                  sx={{ mb: 2.5, borderRadius: 3, bgcolor: alpha('#d64545', 0.12), color: '#fca5a5', border: '1px solid rgba(214,69,69,0.2)', fontWeight: 600, fontSize: '0.8rem' }}
-                >
-                  {error}
-                </Alert>
-              </Fade>
-            )}
+          <form onSubmit={handleSubmit}>
+            <Stack spacing={1.75}>
+              <TextField
+                fullWidth
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="البريد الإلكتروني"
+                type="email"
+                required
+                autoComplete="email"
+                sx={fieldSx}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start" sx={{ ml: 1 }}>
+                      <Mail size={18} strokeWidth={2} color={theme.palette.text.secondary} />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+              <TextField
+                fullWidth
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="كلمة المرور"
+                type={showPassword ? 'text' : 'password'}
+                required
+                autoComplete="current-password"
+                sx={fieldSx}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start" sx={{ ml: 1 }}>
+                      <Lock size={18} strokeWidth={2} color={theme.palette.text.secondary} />
+                    </InputAdornment>
+                  ),
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        onClick={() => setShowPassword(!showPassword)}
+                        aria-label={showPassword ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'}
+                        edge="end"
+                        sx={{ color: 'text.disabled', width: 40, height: 40 }}
+                      >
+                        {showPassword ? <EyeOff size={18} strokeWidth={2} /> : <Eye size={18} strokeWidth={2} />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
 
-            <form onSubmit={handleSubmit}>
-              <Stack spacing={2}>
-                <TextField
-                  fullWidth value={email} onChange={(e) => setEmail(e.target.value)}
-                  placeholder="البريد الإلكتروني" type="email" required size="small"
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      color: 'white', bgcolor: 'rgba(255,255,255,0.06)', borderRadius: 3, height: 48,
-                      '& fieldset': { borderColor: 'rgba(255,255,255,0.06)' },
-                      '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.15)' },
-                      '&.Mui-focused fieldset': { borderColor: '#4a5d4a' },
-                    },
-                    '& .MuiInputBase-input::placeholder': { color: 'rgba(255,255,255,0.3)' },
-                  }}
-                  InputProps={{ startAdornment: <InputAdornment position="start"><Email sx={{ color: alpha('#fff', 0.3), fontSize: 18 }} /></InputAdornment> }}
-                />
-                <TextField
-                  fullWidth value={password} onChange={(e) => setPassword(e.target.value)}
-                  placeholder="كلمة المرور"
-                  type={showPassword ? 'text' : 'password'} required size="small"
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      color: 'white', bgcolor: 'rgba(255,255,255,0.06)', borderRadius: 3, height: 48,
-                      '& fieldset': { borderColor: 'rgba(255,255,255,0.06)' },
-                      '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.15)' },
-                      '&.Mui-focused fieldset': { borderColor: '#4a5d4a' },
-                    },
-                    '& .MuiInputBase-input::placeholder': { color: 'rgba(255,255,255,0.3)' },
-                  }}
-                  InputProps={{
-                    startAdornment: <InputAdornment position="start"><Lock sx={{ color: alpha('#fff', 0.3), fontSize: 18 }} /></InputAdornment>,
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <IconButton onClick={() => setShowPassword(!showPassword)} sx={{ color: alpha('#fff', 0.3) }}>
-                          {showPassword ? <VisibilityOff sx={{ fontSize: 18 }} /> : <Visibility sx={{ fontSize: 18 }} />}
-                        </IconButton>
-                      </InputAdornment>
-                    ),
-                  }}
-                />
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                disabled={loading}
+                sx={{
+                  mt: 0.75,
+                  height: 54,
+                  borderRadius: '16px',
+                  fontSize: '1rem',
+                  fontWeight: 800,
+                  backgroundColor: premiumTokens.primary,
+                  boxShadow: `0 10px 24px ${alpha(premiumTokens.primary, 0.28)}`,
+                  '&:hover': {
+                    backgroundColor: premiumTokens.primaryDark,
+                    boxShadow: `0 12px 28px ${alpha(premiumTokens.primary, 0.34)}`,
+                  },
+                  '&:disabled': { opacity: 0.6, color: '#fff' },
+                }}
+              >
+                {loading ? (
+                  <Stack direction="row" alignItems="center" spacing={1.25}>
+                    <CircularProgress size={18} thickness={5} sx={{ color: '#fff' }} />
+                    <span>جاري التحقق...</span>
+                  </Stack>
+                ) : (
+                  'دخول'
+                )}
+              </Button>
+            </Stack>
+          </form>
+        </Box>
 
-                <Button
-                  type="submit"
-                  fullWidth
-                  variant="contained"
-                  color="primary"
-                  size="large"
-                  disabled={loading}
-                  endIcon={!loading && <LoginIcon sx={{ mr: 1, fontSize: 18 }} />}
-                  sx={{ py: 1.5, mt: 1, fontSize: '0.95rem', fontWeight: 800 }}
-                >
-                  {loading ? 'جاري التحقق...' : 'دخول'}
-                </Button>
-              </Stack>
-            </form>
-          </Box>
-
-          {/* Footer */}
-          <Box sx={{ mt: 2, mb: { xs: 2, sm: 0 }, textAlign: 'center' }}>
-            <Typography sx={{ color: alpha('#fff', 0.25), fontSize: '0.65rem' }}>
-              {COMPANY_INFO.fullName} © {new Date().getFullYear()}
-            </Typography>
-          </Box>
-        </motion.div>
-      </Container>
+        {/* ─── تذييل ─── */}
+        <Typography
+          sx={{
+            mt: 3,
+            textAlign: 'center',
+            color: 'text.disabled',
+            fontSize: '0.68rem',
+            fontWeight: 500,
+          }}
+        >
+          {COMPANY_INFO.fullName} © {new Date().getFullYear()}
+        </Typography>
+      </Box>
     </Box>
   );
 };

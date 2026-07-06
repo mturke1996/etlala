@@ -10,6 +10,7 @@ React + Vite + TypeScript PWA; MUI; Firebase (Firestore, Cloud Functions, FCM). 
 
 ## Recent sessions
 
+- 2026-07-06 — iOS-native design refresh + PM follow-up: instant QuickExpenseSheet FAB, lightweight ExpensesPage (no recharts, 30-row pagination), clean-white LoginPage, full-ratio hero; **root cause of "nothing changed" = site hosted on Vercel `etlala.ly`, local work undeployed → deployed to production + added `vercel.json` SPA rewrites** → `sessions/2026-07-06.md`
 - 2026-07-05 — PDF upgrade from rkeaz-group (pdfKit, lazy load, Tajawal, branded headers) → `sessions/2026-07-05.md`
 - 2026-04-27 — Bootstrapped `.cursor/memory` + knowledge-base rule → `sessions/2026-04-27.md`
 
