@@ -37,6 +37,9 @@ import { z } from 'zod';
 import type { SxProps, Theme } from '@mui/material/styles';
 import type { Client } from '../types';
 import { PageScaffold } from '../components/layout/PageScaffold';
+import { useIsDesktopLayout } from '../hooks/useIsDesktopLayout';
+import { DesktopRecordTable, DesktopRecordRow } from '../components/desktop/DesktopRecordTable';
+import { DESKTOP_NUM_FONT } from '../components/desktop/desktopChrome';
 import { EtlalaEmptyState, EtlalaAccentSurface, etlalaContentFieldSx, etlalaHeroActionButtonSx } from '../components/etlala/EtlalaMobileUi';
 
 const clientSchema = z.object({
@@ -49,9 +52,17 @@ const clientSchema = z.object({
 
 type ClientFormData = z.infer<typeof clientSchema>;
 
+const CLIENT_DESKTOP_COLS = [
+  { key: 'name', label: 'العميل', width: 'minmax(0, 1.5fr)' },
+  { key: 'type', label: 'النوع', width: '110px' },
+  { key: 'phone', label: 'الهاتف', width: 'minmax(0, 1fr)' },
+  { key: 'address', label: 'العنوان', width: 'minmax(0, 1.3fr)' },
+];
+
 export const ClientsPage = () => {
   const navigate = useNavigate();
   const theme = useTheme();
+  const isDesktop = useIsDesktopLayout();
   const reduceMotion = useReducedMotion();
   const { clients, addClient, updateClient, deleteClient } = useDataStore();
 
@@ -167,8 +178,7 @@ export const ClientsPage = () => {
         </Stack>
       )}
     >
-        <Stack spacing={1.25} sx={{ mt: 0.5 }}>
-          {filteredClients.length === 0 ? (
+        {filteredClients.length === 0 ? (
             <EtlalaEmptyState
               icon={<Users size={46} strokeWidth={1.6} />}
               title={searchQuery ? 'لا نتائج للبحث' : 'لا يوجد عملاء'}
@@ -176,8 +186,25 @@ export const ClientsPage = () => {
               actionLabel={!searchQuery ? 'إضافة عميل' : undefined}
               onAction={!searchQuery ? () => handleOpenDialog() : undefined}
             />
+          ) : isDesktop ? (
+            <DesktopRecordTable columns={CLIENT_DESKTOP_COLS}>
+              {filteredClients.map((client) => (
+                <DesktopRecordRow
+                  key={client.id}
+                  columns={CLIENT_DESKTOP_COLS}
+                  onClick={() => navigate(`/clients/${client.id}`)}
+                  cells={[
+                    <Typography key="n" fontWeight={800} noWrap>{client.name}</Typography>,
+                    <Chip key="t" size="small" label={client.type === 'company' ? 'شركة' : 'فرد'} sx={{ height: 22, fontWeight: 750 }} />,
+                    <Typography key="p" dir="ltr" sx={{ fontFamily: DESKTOP_NUM_FONT, fontSize: '0.84rem' }}>{client.phone}</Typography>,
+                    <Typography key="a" noWrap color="text.secondary" sx={{ fontSize: '0.82rem' }}>{client.address}</Typography>,
+                  ]}
+                />
+              ))}
+            </DesktopRecordTable>
           ) : (
-            filteredClients.map((client, index) => (
+            <Stack spacing={1.25} sx={{ mt: 0.5 }}>
+            {filteredClients.map((client, index) => (
               <Box
                 key={client.id}
                 component={motion.div}
@@ -266,9 +293,9 @@ export const ClientsPage = () => {
                   </CardContent>
                 </EtlalaAccentSurface>
               </Box>
-            ))
+            ))}
+            </Stack>
           )}
-        </Stack>
     </PageScaffold>
 
       {/* Full-screen Add/Edit Dialog */}

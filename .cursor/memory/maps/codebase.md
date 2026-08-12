@@ -25,13 +25,15 @@
 ## `src/` modules
 
 - `src/pages/` — route-level screens (e.g. `HomePage`, `InvoicesPage`, `ClientProfilePage`, `LoginPage`, `DashboardHomePage`, …)
-  - **`DashboardHomePage`:** الرئيسية — إحصائيات + قوائم؛ على **≥lg (1200px)** شبكة هيرو+KPIs ثلاثية الأعمدة وقوائم متعددة الأعمدة
+  - **`DashboardHomePage`:** الرئيسية — إحصائيات + قوائم؛ على **≥lg** هيرو أفقي + نبض الشهر + مؤشرات ثم تحليل 12 شهراً وتوزيع مصروفات، القوائم بعرض كامل؛ بطاقة العهدة شريط أفقي (`DesktopCustodyFundCard`)
+  - **`FundPage`:** صندوق العهدة؛ على **≥lg** مؤشرات bento + دفتر جدولي لكل مستخدم (`DesktopCustodyLedger`)، ونموذج إضافة/تعديل نافذة متمركزة وليس شاشة كاملة. الجوال يبقى هيرو داكن + بطاقات.
   - **`ExpensesPage`:** خفيفة — بدون recharts، ترقيم 30 صف + `QuickExpenseSheet`
   - **`LoginPage`:** أبيض نظيف iOS — squircle logo، حقول 54px
-  - **`ClientProfilePage`:** ملخص مالي تحت الهيرو
+  - **`ClientProfilePage`:** ملخص مالي تحت الهيرو؛ على **≥lg** `ClientProfileDesktop` + نوافذ داخلية كـ لوحة عمل (`profileListDialogProps` / جداول `DesktopRecordTable`) وليس شاشة جوال كاملة
 - `src/components/`
   - **`Layout.tsx`** — `< lg`: إطار جوال 430px + شريط سفلي؛ **`≥ lg`:** `DesktopSidebar` + محتوى كامل (`etlala-desktop-shell`)
-  - **`layout/DesktopSidebar.tsx`** — تنقل جانبي احترافي (سطح المكتب)
+  - **`layout/DesktopSidebar.tsx`** — تنقل جانبي فاتح احترافي (260px، عنصر نشط بطاقة + ذهب)
+  - **`desktop/`** — طبقة سطح المكتب فقط: `ClientProfileDesktop`, `DesktopTrendChart` (recharts lazy), `DesktopKpiBento`, `DesktopRecordTable`, `DesktopMonthPulse`, `DesktopCategoryMix`, `DesktopCustodyFundCard`, `DesktopCustodyLedger`, `profileWorkspace.ts`, `ProfileWorkspaceChrome.tsx`
   - **`layout/PageScaffold.tsx`** — هيكل الصفحات؛ `maxWidth` يتوسّع إلى `xl` على سطح المكتب
   - `expense/QuickExpenseSheet.tsx` — shared "مصروف جديد" sheet used by Layout FAB + ExpensesPage (client select, qty×price, date)
   - `etlala/` — mobile UI (`EtlalaMobileUi`)

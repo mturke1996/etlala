@@ -12,7 +12,7 @@
 
 ## Layout breakpoints
 - **Mobile / tablet portrait (`< 1200px`):** إطار 430px متمركز، شريط تنقل سفلي iOS-style — **بدون تغيير**.
-- **Desktop (`≥ lg` / 1200px):** `etlala-desktop-shell` — شريط جانبي 272px (`DesktopSidebar`)، محتوى `maxWidth: xl` في `PageScaffold`، بدون شريط سفلي.
+- **Desktop (`≥ lg` / 1200px):** `etlala-desktop-shell` — شريط جانبي فاتح 260px ثابت (`height: 100dvh`، التمرير داخل `main` فقط)، هيدر `PageScaffold` مسطّح لاصق بدون زوايا سفلية وبدون زر رجوع في الصفحات الجذرية، محتوى `maxWidth: xl`.
 
 ## Atmosphere (2026-07 refresh — iOS-native premium)
 - B2B ops / engineering: trust, calm, clarity; **iOS clean-white + hairline** language (rkeaz-group quality traits, Etlala colors).
@@ -60,12 +60,17 @@
 - Bottom nav: fixed, height **64px** + safe-area, blur 22px, 5 equal items, active capsule refined to 44×26 + improved hover/press feedback. **No center FAB.**
 - **FAB**: 58×58, radius 20px, subtle hairline + richer elevation, `insetInlineEnd: 16` (= left in RTL), floats `bottom: 64px + safe + 14px`, z 1190, **opens `QuickExpenseSheet` in place (state, no navigation — instant)**; hidden when route has sticky CTA (`/invoices/new`) or no `expenses` access.
 - Sticky CTA bars sit at `bottom: calc(64px + safe)` (`etlalaIssueStickyBarSx`, NewInvoicePage).
-- `PageScaffold`: refined premium gradient headers (softer shadows, cleaner bottom edge, subtler overlay), compact frosted back button (42px / radius 14), and cleaner default title sizing.
+- `PageScaffold`: جوال = هيرو متدرج بزوايا سفلية؛ **سطح المكتب** = شريط أوامر لاصق مسطّح (بدون radius، بدون رجوع في الصفحات الجذرية `backTo="/"`)، عنوان أوضح، محتوى `xl`.
+- **DesktopSidebar:** خلفية فاتحة `#F3F4F2` (داكن: `#141A16`)، عنصر نشط بطاقة بيضاء + شريط ذهب 3px، زر «مصروف جديد» زيتوني مصمت.
+- **DashboardHomePage ≥lg:** هيرو كبير (عمود ~65%، ارتفاع ≥460px يمتد بجانب النبض وتوزيع المصروفات) ثم مؤشرات ثم مخطط 12 شهراً بعرض كامل. الجوال كما هو.
+- **ClientProfile ≥lg:** `ClientProfileDesktop` — هيدر فاتح لاصق، KPI bento غير متماثل، مخطط حركة المشروع، إجراءات، آخر مدفوعات/مصروفات. الصفحات الداخلية (مصروفات/مدفوعات/ديون/عمال/عهد + نماذج) = لوحة عمل `etlala-profile-workspace` (~1280px) أو نموذج `etlala-profile-form`، هيدر فاتح، جداول كثيفة — الجوال يبقى هيرو داكن + بطاقات.
+- **قوائم سطح المكتب:** جداول كثيفة (`DesktopRecordTable`) للعملاء/الفواتير/المدفوعات/المصروفات — الجوال يبقى بطاقات.
+- **صندوق العهدة ≥lg:** بطاقة الرئيسية شريط أفقي (`DesktopCustodyFundCard`)؛ صفحة `/fund` مؤشرات bento + دفتر جدولي؛ نموذج إضافة/تعديل عهدة نافذة متمركزة ~720px (`profileFormDialogProps` md) مع قائمة مستخدم منسدلة. الجوال يبقى شاشة كاملة.
 - Global windows polish via theme: `MuiDialog`/`MuiDrawer`/`MuiMenu`/`MuiPopover` use hairline borders, calmer shadows, and cleaner paper surfaces; `MuiDialog.paperFullScreen` also has dedicated premium full-screen surface styling.
 
 ## PWA
-- SW = `public/firebase-messaging-sw.js` only (FCM + manifest/logo precache, **no bundle/navigation caching**). Bump `CACHE_STATIC` (now v4) when `manifest.json` or icon paths change.
-- PWA/iPhone icon quality: app icons switched to high-res square source `/logo-hero-3d.png` (1024x1024) in `manifest.json`, Apple touch icons, SW notification icons, and favicon to avoid blurry install icons on modern iPhones.
+- SW = `public/firebase-messaging-sw.js` only (FCM + manifest/logo precache, **no bundle/navigation caching**). Bump `CACHE_STATIC` (now v5) when `manifest.json` or icon paths change.
+- PWA/iPhone home-screen icon uses legacy brand mark `/logo-icon.jpg` in `manifest.json`, Apple touch icons, SW notification icons, and favicon (user preference over gold `/logo-hero-3d.png`).
 - iOS zoom guards: viewport `maximum-scale=1`, inputs ≥16px on coarse pointers.
 - Added `format-detection` meta guard in `index.html` to prevent Safari auto-link styling (phone/date/email/address) from distorting app-like UI.
 

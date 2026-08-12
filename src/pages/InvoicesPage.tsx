@@ -29,8 +29,11 @@ import {
 import dayjs from 'dayjs';
 import 'dayjs/locale/ar';
 import { useDataStore } from '../store/useDataStore';
-import { formatCurrency, getStatusLabel } from '../utils/formatters';
+import { formatCurrency, formatDate, getStatusLabel } from '../utils/formatters';
 import { PageScaffold } from '../components/layout/PageScaffold';
+import { useIsDesktopLayout } from '../hooks/useIsDesktopLayout';
+import { DesktopRecordTable, DesktopRecordRow } from '../components/desktop/DesktopRecordTable';
+import { DESKTOP_NUM_FONT } from '../components/desktop/desktopChrome';
 import {
   EtlalaEmptyState,
   etlalaContentFieldSx,
@@ -45,9 +48,18 @@ const Grid = MuiGrid as any;
 
 const FILTER_STATUSES = ['all', 'paid', 'partially_paid', 'draft', 'overdue', 'sent'] as const;
 
+const INVOICE_DESKTOP_COLS = [
+  { key: 'num', label: 'رقم الفاتورة', width: 'minmax(0, 1fr)' },
+  { key: 'client', label: 'العميل', width: 'minmax(0, 1.3fr)' },
+  { key: 'date', label: 'التاريخ', width: '120px' },
+  { key: 'amount', label: 'المبلغ', width: '140px', align: 'end' as const },
+  { key: 'status', label: 'الحالة', width: '120px' },
+];
+
 export const InvoicesPage = () => {
   const navigate = useNavigate();
   const theme = useTheme();
+  const isDesktop = useIsDesktopLayout();
   const isDark = theme.palette.mode === 'dark';
   const { invoices, clients } = useDataStore();
   const [searchQuery, setSearchQuery] = useState('');
@@ -376,6 +388,27 @@ export const InvoicesPage = () => {
               actionLabel="فاتورة جديدة"
               onAction={() => navigate('/invoices/new')}
             />
+          ) : isDesktop ? (
+            <DesktopRecordTable columns={INVOICE_DESKTOP_COLS}>
+              {filteredInvoices.map((inv) => {
+                const client = clients.find((c) => c.id === inv.clientId);
+                const clientName = client?.name || inv.tempClientName || 'عميل غير معروف';
+                return (
+                  <DesktopRecordRow
+                    key={inv.id}
+                    columns={INVOICE_DESKTOP_COLS}
+                    onClick={() => navigate(`/invoices/${inv.id}`)}
+                    cells={[
+                      <Typography key="n" fontWeight={800} noWrap sx={{ fontFamily: DESKTOP_NUM_FONT, fontSize: '0.84rem' }}>{inv.invoiceNumber}</Typography>,
+                      <Typography key="c" noWrap fontWeight={650}>{clientName}</Typography>,
+                      <Typography key="d" color="text.secondary" sx={{ fontSize: '0.8rem' }}>{formatDate(inv.issueDate)}</Typography>,
+                      <Typography key="a" fontWeight={800} sx={{ fontFamily: DESKTOP_NUM_FONT, fontVariantNumeric: 'tabular-nums' }}>{formatCurrency(inv.total)}</Typography>,
+                      <Chip key="s" size="small" label={getStatusLabel(inv.status)} sx={{ height: 22, fontWeight: 750 }} />,
+                    ]}
+                  />
+                );
+              })}
+            </DesktopRecordTable>
           ) : (
             <Stack spacing={0.5}>
               {groupedInvoices.map((group) => (

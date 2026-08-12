@@ -1,8 +1,9 @@
-import { Box, Stack, Typography, IconButton, alpha, type SxProps, type Theme } from '@mui/material';
+import { Box, Stack, Typography, IconButton, alpha, useTheme, type SxProps, type Theme } from '@mui/material';
 import { ArrowBack } from '@mui/icons-material';
 import type { ReactNode } from 'react';
 import type { ProfileSessionModule } from './profileSessionTokens';
 import { PROFILE_MODULE } from './profileSessionTokens';
+import { useIsDesktopLayout } from '../../hooks/useIsDesktopLayout';
 
 type ProfileListSessionHeaderProps = {
   module: ProfileSessionModule;
@@ -146,8 +147,75 @@ export function ProfileListSessionHeader({
   premium = false,
   integratedSlot,
 }: ProfileListSessionHeaderProps) {
+  const isDesktop = useIsDesktopLayout();
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
   const resolvedAccent = accent ?? PROFILE_MODULE[module].accent;
   const resolvedOverline = overline ?? PROFILE_MODULE[module].overline;
+
+  if (isDesktop) {
+    const hairline = isDark ? alpha('#fff', 0.08) : 'rgba(31, 37, 33, 0.08)';
+    return (
+      <Box
+        sx={{
+          flexShrink: 0,
+          bgcolor: isDark ? '#161C18' : '#FFFFFF',
+          borderBottom: `1px solid ${hairline}`,
+          px: 2.5,
+          py: 1.75,
+        }}
+      >
+        <Stack direction="row" alignItems="center" gap={1.5}>
+          <IconButton
+            onClick={onBack}
+            aria-label="رجوع"
+            sx={{
+              width: 40,
+              height: 40,
+              borderRadius: '11px',
+              border: `1px solid ${hairline}`,
+              bgcolor: isDark ? alpha('#fff', 0.05) : '#F8F8F8',
+              color: 'text.primary',
+            }}
+          >
+            <ArrowBack />
+          </IconButton>
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography sx={{ fontSize: '0.68rem', fontWeight: 750, color: 'text.secondary', mb: 0.2 }}>
+              {resolvedOverline}
+            </Typography>
+            <Typography noWrap sx={{ fontWeight: 800, fontSize: '1.12rem', lineHeight: 1.2, color: 'text.primary' }}>
+              {title}
+            </Typography>
+            {subtitle ? (
+              <Typography noWrap sx={{ fontSize: '0.78rem', color: 'text.secondary', mt: 0.25 }}>
+                {subtitle}
+              </Typography>
+            ) : null}
+          </Box>
+          <Stack direction="row" alignItems="center" gap={0.75} sx={{ flexShrink: 0 }}>
+            {endAdornment}
+            {primaryAction}
+          </Stack>
+        </Stack>
+        {integratedSlot ? (
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: 'minmax(280px, 1.2fr) minmax(0, 1fr)',
+              gap: 1.5,
+              mt: 1.75,
+              alignItems: 'stretch',
+            }}
+          >
+            {integratedSlot}
+          </Box>
+        ) : null}
+        {pdfRow ? <Box sx={{ mt: 1.5 }}>{pdfRow}</Box> : null}
+      </Box>
+    );
+  }
+
   const tight = strip && compact;
   const ehd = etlalaHomeDensity && tight && !premium;
   const prm = premium && compact;

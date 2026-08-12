@@ -1,4 +1,4 @@
-import { Box, Button, Divider, Typography, alpha, useTheme } from "@mui/material";
+import { Box, Button, Typography, alpha, useTheme } from "@mui/material";
 import { useLocation, useNavigate } from "react-router-dom";
 import { LogOut, Moon, Plus, Sun } from "lucide-react";
 import {
@@ -11,7 +11,7 @@ import { useAuthStore } from "../../store/useAuthStore";
 import { useThemeStore } from "../../store/useThemeStore";
 import { premiumTokens } from "../../theme/tokens";
 
-const SIDEBAR_WIDTH = 272;
+const SIDEBAR_WIDTH = 260;
 
 type DesktopSidebarProps = {
   onQuickExpense?: () => void;
@@ -30,7 +30,6 @@ const SidebarLink = ({
   const theme = useTheme();
   const isDark = theme.palette.mode === "dark";
   const Icon = item.icon;
-  const activeColor = isDark ? "#D4C9A3" : premiumTokens.accent;
 
   return (
     <Box
@@ -40,71 +39,93 @@ const SidebarLink = ({
       aria-current={active ? "page" : undefined}
       sx={{
         appearance: "none",
-        border: "none",
         width: "100%",
         cursor: "pointer",
         display: "flex",
         flexDirection: "row",
         alignItems: "center",
-        gap: 1.25,
-        px: 1.35,
-        py: 1.05,
-        minHeight: 46,
-        borderRadius: "12px",
+        gap: 1.15,
+        px: 1.1,
+        py: 0.85,
+        minHeight: 42,
+        borderRadius: "10px",
         textAlign: "right",
+        position: "relative",
         color: active
           ? isDark
             ? "#F4F1EC"
-            : "#fff"
+            : premiumTokens.primaryDark
           : isDark
-            ? alpha("#F4F1EC", 0.72)
-            : alpha("#fff", 0.82),
+            ? alpha("#F4F1EC", 0.68)
+            : alpha(premiumTokens.text, 0.78),
         bgcolor: active
           ? isDark
-            ? alpha("#D4C9A3", 0.14)
-            : alpha("#fff", 0.12)
+            ? alpha("#D4C9A3", 0.12)
+            : "#FFFFFF"
           : "transparent",
-        borderInlineStart: active
-          ? `3px solid ${activeColor}`
-          : "3px solid transparent",
-        transition: "background 180ms ease, color 180ms ease",
+        boxShadow: active
+          ? isDark
+            ? "none"
+            : "0 1px 2px rgba(31, 37, 33, 0.04), 0 4px 14px rgba(31, 37, 33, 0.05)"
+          : "none",
+        border: active
+          ? `1px solid ${isDark ? alpha("#D4C9A3", 0.22) : "rgba(31, 37, 33, 0.07)"}`
+          : "1px solid transparent",
+        transition:
+          "background 160ms cubic-bezier(0.2, 0.8, 0.2, 1), color 160ms ease, box-shadow 160ms ease",
+        "&::before": {
+          content: '""',
+          position: "absolute",
+          insetInlineStart: 0,
+          top: 8,
+          bottom: 8,
+          width: 3,
+          borderRadius: "0 3px 3px 0",
+          bgcolor: active ? premiumTokens.accent : "transparent",
+        },
         "@media (hover: hover) and (pointer: fine)": {
           "&:hover": {
             bgcolor: active
               ? isDark
-                ? alpha("#D4C9A3", 0.18)
-                : alpha("#fff", 0.16)
+                ? alpha("#D4C9A3", 0.16)
+                : "#FFFFFF"
               : isDark
-                ? alpha("#fff", 0.06)
-                : alpha("#fff", 0.08),
+                ? alpha("#fff", 0.05)
+                : alpha("#fff", 0.7),
           },
         },
       }}
     >
       <Box
         sx={{
-          width: 34,
-          height: 34,
-          borderRadius: "10px",
+          width: 30,
+          height: 30,
+          borderRadius: "8px",
           display: "grid",
           placeItems: "center",
           flexShrink: 0,
           bgcolor: active
-            ? alpha(activeColor, isDark ? 0.22 : 0.28)
+            ? isDark
+              ? alpha("#D4C9A3", 0.2)
+              : alpha(premiumTokens.primary, 0.1)
             : isDark
-              ? alpha("#fff", 0.06)
-              : alpha("#fff", 0.1),
+              ? alpha("#fff", 0.05)
+              : alpha(premiumTokens.primary, 0.05),
+          color: active
+            ? isDark
+              ? "#D4C9A3"
+              : premiumTokens.primary
+            : "inherit",
         }}
       >
-        <Icon size={17} strokeWidth={active ? 2.1 : 1.85} />
+        <Icon size={16} strokeWidth={active ? 2.15 : 1.8} />
       </Box>
       <Box sx={{ minWidth: 0, flex: 1 }}>
         <Typography
           sx={{
-            fontSize: "0.88rem",
+            fontSize: "0.84rem",
             fontWeight: active ? 800 : 650,
             lineHeight: 1.25,
-            letterSpacing: 0.02,
           }}
         >
           {item.label}
@@ -112,11 +133,11 @@ const SidebarLink = ({
         {item.subtitle ? (
           <Typography
             sx={{
-              fontSize: "0.68rem",
+              fontSize: "0.64rem",
               fontWeight: 500,
-              opacity: 0.72,
-              lineHeight: 1.3,
-              mt: 0.15,
+              opacity: 0.62,
+              lineHeight: 1.25,
+              mt: 0.1,
               display: "block",
               overflow: "hidden",
               textOverflow: "ellipsis",
@@ -155,6 +176,9 @@ export function DesktopSidebar({
     (i) => i.sidebar && i.sidebarSection === "management" && visible(i),
   );
 
+  const hairline = isDark ? alpha("#fff", 0.08) : "rgba(31, 37, 33, 0.07)";
+  const muted = isDark ? alpha("#F4F1EC", 0.52) : alpha(premiumTokens.text, 0.52);
+
   return (
     <Box
       component="aside"
@@ -164,37 +188,22 @@ export function DesktopSidebar({
       sx={{
         width: SIDEBAR_WIDTH,
         flexShrink: 0,
-        position: "sticky",
-        top: 0,
-        height: "100dvh",
+        alignSelf: "stretch",
+        height: "100%",
+        maxHeight: "100dvh",
         display: "flex",
         flexDirection: "column",
         overflow: "hidden",
-        background: isDark
-          ? "linear-gradient(180deg, #141916 0%, #101512 55%, #0E1210 100%)"
-          : `linear-gradient(180deg, ${premiumTokens.primary} 0%, ${premiumTokens.primaryDark} 100%)`,
-        borderInlineStart: `1px solid ${isDark ? alpha("#fff", 0.08) : alpha("#fff", 0.12)}`,
-        boxShadow: isDark
-          ? "4px 0 32px rgba(0,0,0,0.35)"
-          : "4px 0 28px rgba(31, 37, 33, 0.12)",
-        "&::before": {
-          content: '""',
-          position: "absolute",
-          inset: 0,
-          background: isDark
-            ? "radial-gradient(ellipse 90% 60% at 100% 0%, rgba(194,178,128,0.1) 0%, transparent 55%)"
-            : "radial-gradient(ellipse 85% 55% at 100% 0%, rgba(255,255,255,0.12) 0%, transparent 52%)",
-          pointerEvents: "none",
-        },
+        bgcolor: isDark ? "#141A16" : "#F3F4F2",
+        borderInlineEnd: `1px solid ${hairline}`,
       }}
     >
       <Box
         sx={{
-          position: "relative",
-          zIndex: 1,
-          px: 2,
-          pt: "calc(env(safe-area-inset-top, 0px) + 22px)",
-          pb: 2,
+          px: 1.75,
+          pt: "calc(env(safe-area-inset-top, 0px) + 18px)",
+          pb: 1.75,
+          borderBottom: `1px solid ${hairline}`,
         }}
       >
         <Box
@@ -202,7 +211,7 @@ export function DesktopSidebar({
             display: "flex",
             flexDirection: "row",
             alignItems: "center",
-            gap: 1.25,
+            gap: 1.15,
           }}
         >
           <Box
@@ -210,12 +219,16 @@ export function DesktopSidebar({
             src="/logog.png"
             alt="إطلالة"
             sx={{
-              width: 42,
-              height: 42,
-              borderRadius: "12px",
+              width: 38,
+              height: 38,
+              borderRadius: "11px",
               objectFit: "contain",
-              bgcolor: alpha("#fff", 0.12),
-              p: 0.5,
+              bgcolor: isDark ? alpha("#fff", 0.08) : "#FFFFFF",
+              border: `1px solid ${hairline}`,
+              p: 0.4,
+              boxShadow: isDark
+                ? "none"
+                : "0 1px 2px rgba(31, 37, 33, 0.04)",
             }}
             onError={(e) => {
               (e.target as HTMLImageElement).style.display = "none";
@@ -225,9 +238,8 @@ export function DesktopSidebar({
             <Typography
               sx={{
                 fontWeight: 800,
-                fontSize: "1.05rem",
-                color: "#fff",
-                letterSpacing: 0.04,
+                fontSize: "0.98rem",
+                color: isDark ? "#F4F1EC" : premiumTokens.primaryDark,
                 lineHeight: 1.2,
               }}
             >
@@ -235,10 +247,11 @@ export function DesktopSidebar({
             </Typography>
             <Typography
               sx={{
-                fontSize: "0.68rem",
-                fontWeight: 500,
-                color: alpha("#fff", 0.72),
+                fontSize: "0.66rem",
+                fontWeight: 600,
+                color: muted,
                 lineHeight: 1.3,
+                mt: 0.15,
               }}
             >
               لوحة العمليات
@@ -249,20 +262,18 @@ export function DesktopSidebar({
 
       <Box
         sx={{
-          position: "relative",
-          zIndex: 1,
           flex: 1,
           overflowY: "auto",
-          px: 1.25,
-          pb: 1,
+          px: 1.15,
+          py: 1.25,
           "&::-webkit-scrollbar": { width: 4 },
           "&::-webkit-scrollbar-thumb": {
-            bgcolor: alpha("#fff", 0.18),
+            bgcolor: isDark ? alpha("#fff", 0.16) : alpha(premiumTokens.primary, 0.18),
             borderRadius: 4,
           },
         }}
       >
-        <Box sx={{ display: "grid", gap: 0.35 }}>
+        <Box sx={{ display: "grid", gap: 0.25 }}>
           {primaryItems.map((item) => (
             <SidebarLink
               key={item.path}
@@ -274,27 +285,20 @@ export function DesktopSidebar({
         </Box>
 
         {managementItems.length > 0 ? (
-          <>
-            <Divider
-              sx={{
-                my: 1.5,
-                borderColor: alpha("#fff", isDark ? 0.1 : 0.14),
-              }}
-            />
+          <Box sx={{ mt: 1.75 }}>
             <Typography
               sx={{
-                px: 1.35,
-                mb: 0.75,
-                fontSize: "0.68rem",
+                px: 1.15,
+                mb: 0.65,
+                fontSize: "0.64rem",
                 fontWeight: 750,
-                letterSpacing: 0.12,
-                textTransform: "uppercase",
-                color: alpha("#fff", 0.55),
+                letterSpacing: 0.08,
+                color: muted,
               }}
             >
               الإدارة
             </Typography>
-            <Box sx={{ display: "grid", gap: 0.35 }}>
+            <Box sx={{ display: "grid", gap: 0.25 }}>
               {managementItems.map((item) => (
                 <SidebarLink
                   key={item.path}
@@ -304,18 +308,16 @@ export function DesktopSidebar({
                 />
               ))}
             </Box>
-          </>
+          </Box>
         ) : null}
       </Box>
 
       <Box
         sx={{
-          position: "relative",
-          zIndex: 1,
-          px: 1.5,
-          pb: "calc(env(safe-area-inset-bottom, 0px) + 18px)",
-          pt: 1.25,
-          borderTop: `1px solid ${alpha("#fff", isDark ? 0.08 : 0.12)}`,
+          px: 1.35,
+          pb: "calc(env(safe-area-inset-bottom, 0px) + 16px)",
+          pt: 1.15,
+          borderTop: `1px solid ${hairline}`,
           display: "grid",
           gap: 1,
         }}
@@ -324,20 +326,23 @@ export function DesktopSidebar({
           <Button
             fullWidth
             variant="contained"
-            startIcon={<Plus size={18} strokeWidth={2.2} />}
+            startIcon={<Plus size={16} strokeWidth={2.3} />}
             onClick={onQuickExpense}
             sx={{
-              minHeight: 44,
-              borderRadius: "12px",
+              minHeight: 42,
+              borderRadius: "11px",
               fontWeight: 800,
-              fontSize: "0.84rem",
-              bgcolor: isDark ? alpha("#D4C9A3", 0.18) : alpha("#fff", 0.16),
+              fontSize: "0.82rem",
+              bgcolor: premiumTokens.primary,
               color: "#fff",
-              border: `1px solid ${alpha("#fff", 0.22)}`,
-              boxShadow: "none",
+              boxShadow: isDark
+                ? "none"
+                : "0 1px 2px rgba(47, 62, 52, 0.18), 0 6px 16px rgba(47, 62, 52, 0.16)",
               "&:hover": {
-                bgcolor: isDark ? alpha("#D4C9A3", 0.26) : alpha("#fff", 0.22),
-                boxShadow: "none",
+                bgcolor: premiumTokens.primaryDark,
+                boxShadow: isDark
+                  ? "none"
+                  : "0 2px 8px rgba(47, 62, 52, 0.22)",
               },
             }}
           >
@@ -352,16 +357,17 @@ export function DesktopSidebar({
             alignItems: "center",
             justifyContent: "space-between",
             gap: 1,
-            px: 0.5,
+            px: 0.35,
+            py: 0.35,
           }}
         >
           <Box sx={{ minWidth: 0, flex: 1 }}>
             <Typography
               noWrap
               sx={{
-                fontSize: "0.82rem",
-                fontWeight: 700,
-                color: "#fff",
+                fontSize: "0.8rem",
+                fontWeight: 750,
+                color: isDark ? "#F4F1EC" : premiumTokens.text,
               }}
             >
               {user?.displayName || "مستخدم"}
@@ -369,8 +375,9 @@ export function DesktopSidebar({
             <Typography
               noWrap
               sx={{
-                fontSize: "0.68rem",
-                color: alpha("#fff", 0.65),
+                fontSize: "0.64rem",
+                fontWeight: 600,
+                color: muted,
               }}
             >
               {user?.role === "admin"
@@ -380,7 +387,7 @@ export function DesktopSidebar({
                   : "موظف"}
             </Typography>
           </Box>
-          <Box sx={{ display: "flex", gap: 0.5, flexShrink: 0 }}>
+          <Box sx={{ display: "flex", gap: 0.45, flexShrink: 0 }}>
             <Box
               component="button"
               type="button"
@@ -388,24 +395,26 @@ export function DesktopSidebar({
               onClick={toggleTheme}
               sx={{
                 appearance: "none",
-                border: `1px solid ${alpha("#fff", 0.16)}`,
-                bgcolor: alpha("#fff", 0.08),
-                borderRadius: "10px",
-                width: 36,
-                height: 36,
+                border: `1px solid ${hairline}`,
+                bgcolor: isDark ? alpha("#fff", 0.06) : "#FFFFFF",
+                borderRadius: "9px",
+                width: 34,
+                height: 34,
                 display: "grid",
                 placeItems: "center",
-                color: "#fff",
+                color: isDark ? "#F4F1EC" : premiumTokens.primary,
                 cursor: "pointer",
                 "@media (hover: hover)": {
-                  "&:hover": { bgcolor: alpha("#fff", 0.14) },
+                  "&:hover": {
+                    bgcolor: isDark ? alpha("#fff", 0.1) : alpha(premiumTokens.primary, 0.06),
+                  },
                 },
               }}
             >
               {mode === "dark" ? (
-                <Sun size={16} strokeWidth={1.9} />
+                <Sun size={15} strokeWidth={1.9} />
               ) : (
-                <Moon size={16} strokeWidth={1.9} />
+                <Moon size={15} strokeWidth={1.9} />
               )}
             </Box>
             <Box
@@ -415,21 +424,23 @@ export function DesktopSidebar({
               onClick={() => logout()}
               sx={{
                 appearance: "none",
-                border: `1px solid ${alpha("#fff", 0.16)}`,
-                bgcolor: alpha("#fff", 0.08),
-                borderRadius: "10px",
-                width: 36,
-                height: 36,
+                border: `1px solid ${hairline}`,
+                bgcolor: isDark ? alpha("#fff", 0.06) : "#FFFFFF",
+                borderRadius: "9px",
+                width: 34,
+                height: 34,
                 display: "grid",
                 placeItems: "center",
-                color: alpha("#fff", 0.9),
+                color: isDark ? alpha("#F4F1EC", 0.85) : alpha(premiumTokens.text, 0.72),
                 cursor: "pointer",
                 "@media (hover: hover)": {
-                  "&:hover": { bgcolor: alpha("#fff", 0.14) },
+                  "&:hover": {
+                    bgcolor: isDark ? alpha("#fff", 0.1) : alpha(premiumTokens.primary, 0.06),
+                  },
                 },
               }}
             >
-              <LogOut size={16} strokeWidth={1.9} />
+              <LogOut size={15} strokeWidth={1.9} />
             </Box>
           </Box>
         </Box>

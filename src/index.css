@@ -110,12 +110,10 @@ html {
   min-height: -webkit-fill-available;
 }
 
-/* ── Desktop shell (≥1200px) — شريط جانبي + محتوى كامل العرض ── */
+/* ── Desktop shell (≥1200px) — شريط جانبي فاتح + لوحة محتوى ── */
 @media (min-width: 1200px) {
   .etlala-desktop-shell {
     background-color: var(--etlala-bg);
-    background-image: radial-gradient(var(--etlala-dot) 0.6px, transparent 0.6px);
-    background-size: 18px 18px;
   }
 
   .etlala-desktop-sidebar {
@@ -124,6 +122,48 @@ html {
 
   .etlala-page {
     min-height: 100dvh;
+  }
+
+  .etlala-desktop-shell .etlala-page {
+    background-image: radial-gradient(var(--etlala-dot) 0.55px, transparent 0.55px);
+    background-size: 20px 20px;
+  }
+
+  /* نوافذ الجوال كاملة الشاشة تصبح لوحة متمركزة على سطح المكتب */
+  .etlala-desktop-shell .MuiDialog-paperFullScreen {
+    width: min(960px, calc(100vw - 48px)) !important;
+    max-width: 960px !important;
+    height: min(88dvh, 920px) !important;
+    max-height: 88dvh !important;
+    margin: auto !important;
+    border-radius: 18px !important;
+    overflow: hidden;
+  }
+
+  /* قوائم ملف العميل — لوحة عمل أعرض من نافذة النماذج العامة */
+  .etlala-desktop-shell .MuiDialog-paper.etlala-profile-workspace {
+    width: min(1280px, calc(100vw - 48px)) !important;
+    max-width: 1280px !important;
+    height: min(90dvh, 940px) !important;
+    max-height: 90dvh !important;
+    margin: auto !important;
+    border-radius: 16px !important;
+    overflow: hidden;
+  }
+
+  .etlala-desktop-shell .MuiDialog-paper.etlala-profile-form {
+    width: min(560px, calc(100vw - 48px)) !important;
+    max-width: 560px !important;
+    height: auto !important;
+    max-height: 88dvh !important;
+    margin: auto !important;
+    border-radius: 16px !important;
+    overflow: hidden;
+  }
+
+  .etlala-desktop-shell .MuiDialog-paper.etlala-profile-form--wide {
+    width: min(720px, calc(100vw - 48px)) !important;
+    max-width: 720px !important;
   }
 }
 
@@ -150,6 +190,27 @@ body {
   -webkit-overflow-scrolling: touch;
   line-height: 1.6;
   text-rendering: optimizeSpeed;
+}
+
+/* سطح المكتب: الهيكل ثابت، التمرير داخل المحتوى فقط — السايدبار لا يتحرك */
+@media (min-width: 1200px) {
+  html,
+  body {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  #root {
+    height: 100% !important;
+    min-height: 100dvh;
+    overflow: hidden !important;
+  }
+
+  .etlala-desktop-shell {
+    height: 100dvh;
+    max-height: 100dvh;
+    overflow: hidden;
+  }
 }
 
 /* ── Typography ── */

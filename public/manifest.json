@@ -16,16 +16,16 @@
   "prefer_related_applications": false,
   "icons": [
     {
-      "src": "/logo-hero-3d.png",
-      "sizes": "1024x1024",
-      "type": "image/png",
+      "src": "/logo-icon.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
       "purpose": "any"
     },
     {
-      "src": "/logo-hero-3d.png",
-      "sizes": "1024x1024",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "src": "/logo-icon.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any"
     }
   ],
   "shortcuts": [
@@ -33,19 +33,19 @@
       "name": "الرئيسية",
       "short_name": "رئيسية",
       "url": "/",
-      "icons": [{ "src": "/logo-hero-3d.png", "sizes": "1024x1024", "type": "image/png" }]
+      "icons": [{ "src": "/logo-icon.jpg", "sizes": "192x192", "type": "image/jpeg" }]
     },
     {
       "name": "العملاء",
       "short_name": "عملاء",
       "url": "/clients",
-      "icons": [{ "src": "/logo-hero-3d.png", "sizes": "1024x1024", "type": "image/png" }]
+      "icons": [{ "src": "/logo-icon.jpg", "sizes": "192x192", "type": "image/jpeg" }]
     },
     {
       "name": "الفواتير",
       "short_name": "فواتير",
       "url": "/invoices",
-      "icons": [{ "src": "/logo-hero-3d.png", "sizes": "1024x1024", "type": "image/png" }]
+      "icons": [{ "src": "/logo-icon.jpg", "sizes": "192x192", "type": "image/jpeg" }]
     }
   ]
 }

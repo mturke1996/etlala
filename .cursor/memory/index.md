@@ -6,6 +6,11 @@ React + Vite + TypeScript PWA; MUI; Firebase. Arabic RTL — **mobile-first** (<
 
 ## Recent sessions
 
+- 2026-08-12 — صندوق العهدة على سطح المكتب (شريط الرئيسية + دفتر `/fund`) → `sessions/2026-08-12.md`
+- 2026-08-12 — تثبيت السايدبار + هيرو أفقي وتحليلات 12 شهراً على الرئيسية → `sessions/2026-08-12.md`
+- 2026-08-12 — صفحات بروفايل العميل الداخلية على سطح المكتب (لوحة عمل + جداول + نماذج) → `sessions/2026-08-12.md`
+- 2026-08-12 — Desktop analytics + profile command center + list tables (mobile unchanged) → `sessions/2026-08-12.md`
+- 2026-08-12 — Desktop dashboard chrome (light sidebar, sticky flat headers, KPI-first home) → `sessions/2026-08-12.md`
 - 2026-08-12 — Desktop professional layout (sidebar, xl content) without changing mobile UX → `sessions/2026-08-12.md`
 - 2026-07-06 — iOS-native design refresh + Vercel deploy / SPA rewrites → `sessions/2026-07-06.md`
 - 2026-07-05 — PDF upgrade from rkeaz-group (pdfKit, lazy load, Tajawal, branded headers) → `sessions/2026-07-05.md`

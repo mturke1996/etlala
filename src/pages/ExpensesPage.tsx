@@ -28,6 +28,9 @@ import {
 } from 'lucide-react';
 import { useDataStore } from '../store/useDataStore';
 import { PageScaffold } from '../components/layout/PageScaffold';
+import { useIsDesktopLayout } from '../hooks/useIsDesktopLayout';
+import { DesktopRecordTable, DesktopRecordRow } from '../components/desktop/DesktopRecordTable';
+import { DESKTOP_NUM_FONT } from '../components/desktop/desktopChrome';
 import { EtlalaAccentSurface, EtlalaEmptyState, EtlalaSectionTitle, etlalaContentFieldSx, etlalaHeroActionButtonSx } from '../components/etlala/EtlalaMobileUi';
 import { useAuthStore } from '../store/useAuthStore';
 import { useGlobalFundStore } from '../store/useGlobalFundStore';
@@ -39,8 +42,17 @@ import { ExpenseQuantityChip } from '../components/expense/ExpenseQuantityBlock'
 /** عدد السجلات المعروضة دفعة واحدة — يحافظ على خفة الصفحة مهما كبر الأرشيف */
 const PAGE_SIZE = 30;
 
+const EXPENSE_DESKTOP_COLS = [
+  { key: 'desc', label: 'الوصف', width: 'minmax(0, 1.5fr)' },
+  { key: 'cat', label: 'التصنيف', width: '130px' },
+  { key: 'client', label: 'العميل', width: 'minmax(0, 1fr)' },
+  { key: 'date', label: 'التاريخ', width: '120px' },
+  { key: 'amount', label: 'المبلغ', width: '140px', align: 'end' as const },
+];
+
 export const ExpensesPage = () => {
   const theme = useTheme();
+  const isDesktop = useIsDesktopLayout();
   const isDark = theme.palette.mode === 'dark';
   const { expenses, clients } = useDataStore();
   const { user } = useAuthStore();
@@ -388,6 +400,25 @@ export const ExpensesPage = () => {
               actionLabel={!searchQuery && categoryFilter === 'all' ? 'مصروف جديد' : undefined}
               onAction={!searchQuery && categoryFilter === 'all' ? openAddSheet : undefined}
             />
+          ) : isDesktop ? (
+            <DesktopRecordTable columns={EXPENSE_DESKTOP_COLS}>
+              {visibleExpenses.map((exp) => {
+                const clientName = clients.find(c => c.id === exp.clientId)?.name || 'مجهول';
+                return (
+                  <DesktopRecordRow
+                    key={exp.id}
+                    columns={EXPENSE_DESKTOP_COLS}
+                    cells={[
+                      <Typography key="d" fontWeight={800} noWrap>{exp.description}</Typography>,
+                      <Chip key="c" size="small" label={getExpenseCategoryLabel(exp.category)} sx={{ height: 22, fontWeight: 750 }} />,
+                      <Typography key="cl" noWrap color="text.secondary" sx={{ fontSize: '0.82rem' }}>{clientName}</Typography>,
+                      <Typography key="dt" color="text.secondary" sx={{ fontSize: '0.8rem' }}>{formatDate(exp.date)}</Typography>,
+                      <Typography key="a" fontWeight={800} sx={{ color: '#d64545', fontFamily: DESKTOP_NUM_FONT, fontVariantNumeric: 'tabular-nums' }}>{formatCurrency(exp.amount)}</Typography>,
+                    ]}
+                  />
+                );
+              })}
+            </DesktopRecordTable>
           ) : (
             visibleExpenses.map((exp) => {
               const clientName = clients.find(c => c.id === exp.clientId)?.name || 'مجهول';

@@ -53,8 +53,9 @@ export default defineConfig({
           // State management & data
           'vendor-state': ['zustand', '@tanstack/react-query', 'react-hook-form', 'zod', '@hookform/resolvers'],
 
-          // Utilities — recharts/xlsx أزيلا من الاستخدام فلا تُحمّل إطلاقاً
+          // Utilities
           'vendor-utils': ['dayjs', 'framer-motion'],
+          'vendor-charts': ['recharts'],
 
           // PDF generation — lazy-loaded
           'vendor-pdf': ['@react-pdf/renderer'],

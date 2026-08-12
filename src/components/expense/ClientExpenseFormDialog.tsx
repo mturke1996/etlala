@@ -10,6 +10,9 @@ import { expenseCategories } from '../../utils/formatters';
 import { expenseHasQuantityLine, parseDecimalInput } from '../../utils/pdfFormatters';
 import { ExpenseQuantityBlock, ExpenseAmountField } from './ExpenseQuantityBlock';
 import { expenseFormFieldSx, EXPENSE_FORM } from './ExpenseFormKit';
+import { useIsDesktopLayout } from '../../hooks/useIsDesktopLayout';
+import { profileFormDialogProps } from '../desktop/profileWorkspace';
+import { ProfileFormDialogHeader } from '../desktop/ProfileWorkspaceChrome';
 
 type WalletBanner = {
   remaining: number;
@@ -70,6 +73,8 @@ export function ClientExpenseFormDialog({
   onClearQuantity,
 }: Props) {
   const theme = useTheme();
+  const isDesktop = useIsDesktopLayout();
+  const isDark = theme.palette.mode === 'dark';
   const headerGradient = theme.palette.mode === 'light'
     ? `linear-gradient(160deg, ${EXPENSE_FORM.primary} 0%, ${EXPENSE_FORM.primarySoft} 100%)`
     : 'linear-gradient(160deg, #111814 0%, #1A221C 100%)';
@@ -82,25 +87,49 @@ export function ClientExpenseFormDialog({
 
   const clientWorkers = workers.filter((w) => w.clientId === clientId);
 
+  const amountChip = (
+    <Box
+      sx={{
+        px: 1.1,
+        py: 0.7,
+        borderRadius: '11px',
+        bgcolor: isDesktop
+          ? (isDark ? alpha('#fff', 0.06) : '#F4F1EC')
+          : alpha('#fff', 0.14),
+        border: `1px solid ${isDesktop ? (isDark ? alpha('#fff', 0.1) : 'rgba(31,37,33,0.08)') : alpha('#fff', 0.2)}`,
+        textAlign: 'center',
+        minWidth: 88,
+      }}
+    >
+      <Typography sx={{ fontSize: '0.58rem', opacity: isDesktop ? 0.7 : 0.8, lineHeight: 1, color: isDesktop ? 'text.secondary' : 'inherit' }}>
+        الإجمالي
+      </Typography>
+      <Typography sx={{ fontSize: '0.78rem', fontWeight: 850, mt: 0.2, lineHeight: 1.1, color: isDesktop ? 'text.primary' : 'inherit', ...MONEY_SX }}>
+        {Math.round(amountPreview).toLocaleString('ar-LY')} د.ل
+      </Typography>
+    </Box>
+  );
+
   return (
     <Dialog
       open={open}
       onClose={onClose}
-      fullScreen
-      slotProps={{
-        paper: {
-          sx: {
-            display: 'flex',
-            flexDirection: 'column',
-          },
-        },
-      }}
+      {...profileFormDialogProps(isDesktop, 'md')}
     >
       <Box
         component="form"
         onSubmit={(e) => { e.preventDefault(); onSubmit(); }}
-        sx={{ display: 'flex', flexDirection: 'column', minHeight: '100dvh' }}
+        sx={{ display: 'flex', flexDirection: 'column', minHeight: isDesktop ? 0 : '100dvh', height: isDesktop ? '100%' : undefined, maxHeight: isDesktop ? '88dvh' : undefined }}
       >
+        {isDesktop ? (
+          <ProfileFormDialogHeader
+            title={editingExpense ? 'تعديل مصروف' : 'إضافة مصروف'}
+            subtitle="تسجيل مصروف نظيف وسريع داخل ملف العميل"
+            onBack={onClose}
+            mobileGradient={headerGradient}
+            endAdornment={amountChip}
+          />
+        ) : (
         <Box
           sx={{
             flexShrink: 0,
@@ -124,26 +153,10 @@ export function ClientExpenseFormDialog({
                 تسجيل مصروف نظيف وسريع داخل ملف العميل
               </Typography>
             </Box>
-            <Box
-              sx={{
-                px: 1.1,
-                py: 0.7,
-                borderRadius: '11px',
-                bgcolor: alpha('#fff', 0.14),
-                border: `1px solid ${alpha('#fff', 0.2)}`,
-                textAlign: 'center',
-                minWidth: 88,
-              }}
-            >
-              <Typography sx={{ fontSize: '0.58rem', opacity: 0.8, lineHeight: 1 }}>
-                الإجمالي
-              </Typography>
-              <Typography sx={{ fontSize: '0.78rem', fontWeight: 850, mt: 0.2, lineHeight: 1.1, ...MONEY_SX }}>
-                {Math.round(amountPreview).toLocaleString('ar-LY')} د.ل
-              </Typography>
-            </Box>
+            {amountChip}
           </Stack>
         </Box>
+        )}
 
         <Box sx={{ flex: 1, overflow: 'auto', px: 2, py: 2 }}>
           <Stack spacing={1.75}>
@@ -304,7 +317,7 @@ export function ClientExpenseFormDialog({
             flexShrink: 0,
             px: 2,
             py: 1.5,
-            pb: 'calc(max(env(safe-area-inset-bottom), 12px) + 8px)',
+            pb: isDesktop ? 1.5 : 'calc(max(env(safe-area-inset-bottom), 12px) + 8px)',
             borderTop: `1px solid ${alpha(EXPENSE_FORM.primary, 0.08)}`,
             bgcolor: 'background.paper',
           }}

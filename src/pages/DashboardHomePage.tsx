@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, lazy, Suspense } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
@@ -78,6 +78,12 @@ import { useGlobalFundStore } from "../store/useGlobalFundStore";
 import { computeUserFundAllocTotals } from "../utils/custodyFundAlloc";
 import { formatCurrency } from "../utils/formatters";
 import { useIsDesktopLayout } from "../hooks/useIsDesktopLayout";
+import { buildMonthlyTrend, buildExpenseMix, buildInvoiceExposure, buildMonthPulse } from "../utils/desktopAnalytics";
+import { DesktopCategoryMix } from "../components/desktop/DesktopCategoryMix";
+import { DesktopMonthPulse } from "../components/desktop/DesktopMonthPulse";
+import { DesktopCustodyFundCard } from "../components/desktop/DesktopCustodyFundCard";
+
+const DesktopTrendChart = lazy(() => import("../components/desktop/DesktopTrendChart"));
 
 dayjs.extend(relativeTime);
 dayjs.locale("ar");
@@ -635,6 +641,17 @@ export const DashboardHomePage = () => {
     };
   }, [clients.length, expenses, payments]);
 
+  const monthlyTrend = useMemo(
+    () => buildMonthlyTrend(payments, expenses, 12),
+    [payments, expenses],
+  );
+  const expenseMix = useMemo(() => buildExpenseMix(expenses), [expenses]);
+  const invoiceExposure = useMemo(() => buildInvoiceExposure(invoices), [invoices]);
+  const monthPulse = useMemo(
+    () => buildMonthPulse(payments, expenses),
+    [payments, expenses],
+  );
+
   const allMenusVisible = useMemo(
     () => [...primaryMenuVisible, ...shortcutsMenuVisible],
     [primaryMenuVisible, shortcutsMenuVisible],
@@ -807,12 +824,110 @@ export const DashboardHomePage = () => {
       <Container
         maxWidth={isDesktop ? "xl" : "sm"}
         sx={{
-          px: isDesktop ? 3 : 2,
-          pt: "calc(env(safe-area-inset-top, 0px) + 16px)",
-          maxWidth: "100% !important",
+          px: isDesktop ? 3.5 : 2,
+          pt: isDesktop
+            ? "28px"
+            : "calc(env(safe-area-inset-top, 0px) + 16px)",
+          pb: isDesktop ? 4 : 0,
+          ...(isDesktop ? {} : { maxWidth: "100% !important" }),
         }}
       >
-        {/* MUI Stack row = theme RTL: inner order was [text,avatar] so avatar sat on the **left**; use div+rtl+Avatar first = far right */}
+        {isDesktop ? (
+          <Box
+            dir="rtl"
+            sx={{
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "flex-start",
+              justifyContent: "space-between",
+              gap: 2,
+              mb: 2,
+              pb: 2,
+              borderBottom: `1px solid ${isMuiDark ? alpha("#fff", 0.08) : "rgba(31, 37, 33, 0.07)"}`,
+            }}
+          >
+            <Box sx={{ minWidth: 0, flex: 1 }}>
+              <Typography
+                component="h1"
+                sx={{
+                  color: "text.primary",
+                  fontWeight: 800,
+                  fontSize: "1.45rem",
+                  letterSpacing: 0.02,
+                  lineHeight: 1.25,
+                }}
+              >
+                لوحة العمليات
+              </Typography>
+              <Typography
+                sx={{
+                  color: "text.secondary",
+                  fontSize: "0.86rem",
+                  fontWeight: 550,
+                  mt: 0.55,
+                }}
+              >
+                مرحباً م. {user?.displayName || "محمد"}
+                <Box
+                  component="span"
+                  sx={{
+                    mx: 0.85,
+                    color: isMuiDark ? alpha("#fff", 0.22) : "rgba(31, 37, 33, 0.22)",
+                  }}
+                >
+                  |
+                </Box>
+                {dayjs().format("dddd D MMMM YYYY")}
+              </Typography>
+            </Box>
+            <IconButton
+              onClick={() => setNotifOpen(true)}
+              aria-label="الإشعارات"
+              sx={{
+                width: 44,
+                height: 44,
+                borderRadius: "12px",
+                bgcolor: isMuiDark ? alpha("#fff", 0.06) : "#FFFFFF",
+                color: isMuiDark ? "common.white" : "#242B26",
+                border: `1px solid ${
+                  urgentNotifCount > 0
+                    ? "rgba(198,40,40,0.35)"
+                    : isMuiDark
+                      ? alpha("#fff", 0.1)
+                      : "rgba(31, 37, 33, 0.08)"
+                }`,
+                boxShadow: isMuiDark
+                  ? "none"
+                  : "0 1px 2px rgba(31, 37, 33, 0.04)",
+                "@media (hover: hover) and (pointer: fine)": {
+                  "&:hover": {
+                    bgcolor: isMuiDark
+                      ? alpha("#fff", 0.1)
+                      : alpha("#1F2521", 0.04),
+                  },
+                },
+              }}
+            >
+              <Badge
+                color="error"
+                invisible={relevantNotifCount === 0}
+                badgeContent={
+                  relevantNotifCount > 9 ? "9+" : relevantNotifCount
+                }
+                sx={{
+                  "& .MuiBadge-badge": {
+                    fontWeight: 800,
+                    fontSize: "0.65rem",
+                    minWidth: 18,
+                    height: 18,
+                  },
+                }}
+              >
+                <Bell size={18} />
+              </Badge>
+            </IconButton>
+          </Box>
+        ) : (
         <Box
           dir="rtl"
           sx={{
@@ -1021,19 +1136,39 @@ export const DashboardHomePage = () => {
             </Stack>
           </Stack>
         </Box>
+        )}
 
         <Box
           sx={{
             display: isDesktop ? "grid" : "block",
-            gridTemplateColumns: isDesktop ? "minmax(0, 1.05fr) minmax(0, 1.45fr)" : "1fr",
-            gap: isDesktop ? 3 : 0,
-            alignItems: "start",
-            mb: isDesktop ? 3 : 3.35,
+            gridTemplateColumns: isDesktop
+              ? "minmax(0, 1.8fr) minmax(300px, 0.82fr)"
+              : "1fr",
+            gridTemplateAreas: isDesktop
+              ? canAccess("stats")
+                ? `"hero pulse"
+                 "hero mix"
+                 "kpis kpis"
+                 "analytics analytics"
+                 "work work"`
+                : `"hero hero"
+                 "work work"`
+              : "none",
+            gap: isDesktop ? 2.25 : 0,
+            alignItems: isDesktop ? "stretch" : "start",
+            mb: isDesktop ? 0 : 3.35,
           }}
         >
           <Box
             component={motion.div}
-            sx={{ mb: { xs: 3.35, lg: 0 }, mx: { xs: -1.2, sm: -0.95, lg: 0 } }}
+            sx={{
+              gridArea: isDesktop ? "hero" : "auto",
+              mb: { xs: 3.35, lg: 0 },
+              mx: { xs: -1.2, sm: -0.95, lg: 0 },
+              alignSelf: "stretch",
+              height: isDesktop ? "100%" : undefined,
+              minHeight: isDesktop ? 460 : undefined,
+            }}
             initial={reduceMotion ? undefined : { opacity: 0, y: 14, scale: 0.985 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{
@@ -1045,8 +1180,9 @@ export const DashboardHomePage = () => {
               sx={{
                 position: "relative",
                 width: "100%",
-                aspectRatio: isDesktop ? "16 / 10" : "1024 / 780",
-                maxHeight: isDesktop ? 320 : undefined,
+                aspectRatio: isDesktop ? "auto" : "1024 / 780",
+                minHeight: isDesktop ? 460 : undefined,
+                height: isDesktop ? "100%" : undefined,
                 borderRadius: isDesktop ? "20px" : "26px",
               overflow: "hidden",
               isolation: "isolate",
@@ -1056,7 +1192,7 @@ export const DashboardHomePage = () => {
                 : alpha(COLORS.primary, 0.08),
               boxShadow: isMuiDark
                 ? "0 24px 48px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05)"
-                : "0 14px 30px rgba(31, 61, 53, 0.13), 0 2px 8px rgba(31, 61, 53, 0.05)",
+                : "0 18px 40px rgba(31, 61, 53, 0.14), 0 2px 8px rgba(31, 61, 53, 0.05)",
               backgroundColor: isMuiDark ? "#161C17" : "#EDF2F6",
             }}
           >
@@ -1072,18 +1208,38 @@ export const DashboardHomePage = () => {
                 width: "100%",
                 height: "100%",
                 objectFit: "cover",
-                objectPosition: "center",
+                objectPosition: isDesktop ? "center 22%" : "center",
                 display: "block",
                 userSelect: "none",
                 imageRendering: "auto",
-                filter: "contrast(1.04) saturate(1.02)",
+                filter: isDesktop
+                  ? "contrast(1.06) saturate(1.04)"
+                  : "contrast(1.04) saturate(1.02)",
               }}
               draggable={false}
             />
+            {isDesktop ? (
+              <Box
+                aria-hidden
+                sx={{
+                  position: "absolute",
+                  inset: 0,
+                  pointerEvents: "none",
+                  background:
+                    "linear-gradient(180deg, rgba(20, 28, 24, 0.04) 0%, rgba(20, 28, 24, 0) 28%, rgba(20, 28, 24, 0.18) 100%)",
+                }}
+              />
+            ) : null}
           </Box>
         </Box>
 
-          <Box sx={{ minWidth: 0, width: 1 }}>
+        {isDesktop && canAccess("stats") ? (
+          <Box sx={{ gridArea: "pulse", minWidth: 0, alignSelf: "stretch" }}>
+            <DesktopMonthPulse pulse={monthPulse} />
+          </Box>
+        ) : null}
+
+          <Box sx={{ minWidth: 0, width: 1, gridArea: isDesktop ? "kpis" : "auto" }}>
         <Stack spacing={3} sx={{ width: 1, mt: { xs: 1, lg: 0 } }} useFlexGap>
           {canAccess("stats") && (
             <Stack
@@ -1487,10 +1643,47 @@ export const DashboardHomePage = () => {
 
         </Stack>
           </Box>
-        </Box>
 
-        <Stack spacing={3} sx={{ width: 1, mt: 1 }} useFlexGap>
+        {isDesktop && canAccess("stats") ? (
+          <Box sx={{ gridArea: "analytics", minWidth: 0 }}>
+            <Suspense
+              fallback={
+                <Skeleton variant="rounded" height={320} sx={{ borderRadius: "16px" }} />
+              }
+            >
+              <DesktopTrendChart data={monthlyTrend} />
+            </Suspense>
+          </Box>
+        ) : null}
+
+        {isDesktop && canAccess("stats") ? (
+          <Box sx={{ gridArea: "mix", minWidth: 0, alignSelf: "stretch" }}>
+            <DesktopCategoryMix items={expenseMix} exposure={invoiceExposure} />
+          </Box>
+        ) : null}
+
+        <Box sx={{ gridArea: isDesktop ? "work" : "auto", minWidth: 0, mt: { xs: 1, lg: 0 } }}>
+        <Stack spacing={3} sx={{ width: 1 }} useFlexGap>
           {user && !fundLoading && myCustodyFund && (
+            isDesktop ? (
+              <DesktopCustodyFundCard
+                name={user?.displayName || "—"}
+                deposited={myCustodyFund.deposited}
+                spent={myCustodyFund.spent}
+                remaining={myCustodyFund.remaining}
+                canOpen={canOpenFund}
+                onOpen={() => {
+                  if (canOpenFund) {
+                    navigate("/fund");
+                    return;
+                  }
+                  toast(
+                    "للمتابعة التفصيلية في «صندوق العهدة» يلزم تفعيل هذه الصلاحية من إعدادات قفل التطبيق لحسابك.",
+                    { icon: "🔐", duration: 4200 },
+                  );
+                }}
+              />
+            ) : (
             <Card
               elevation={0}
               onClick={() => {
@@ -1615,6 +1808,7 @@ export const DashboardHomePage = () => {
                 </Typography>
               </Box>
             </Card>
+            )
           )}
 
           {allMenusVisible.length > 0 &&
@@ -1663,6 +1857,8 @@ export const DashboardHomePage = () => {
             </Card>
           )}
         </Stack>
+        </Box>
+        </Box>
       </Container>
 
       <Drawer

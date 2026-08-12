@@ -16,6 +16,7 @@ import { motion, useReducedMotion } from 'framer-motion';
 import { EtlalaAccentSurface } from '../etlala/EtlalaMobileUi';
 import type { ProfileSessionModule } from './profileSessionTokens';
 import { PROFILE_MODULE } from './profileSessionTokens';
+import { useIsDesktopLayout } from '../../hooks/useIsDesktopLayout';
 
 export type { ProfileSessionModule } from './profileSessionTokens';
 
@@ -35,12 +36,15 @@ export function ProfileSessionListShell({
 
   const defBg = theme.palette.background.default;
   const isDark = theme.palette.mode === 'dark';
+  const isDesktop = useIsDesktopLayout();
   return (
     <Box
       sx={{
         display: 'flex',
         flexDirection: 'column',
-        minHeight: '100dvh',
+        minHeight: isDesktop ? 0 : '100dvh',
+        height: isDesktop ? '100%' : undefined,
+        overflow: isDesktop ? 'hidden' : undefined,
         bgcolor: defBg,
         color: 'text.primary',
         background: isDark
@@ -208,14 +212,15 @@ export function ProfileSessionScroll({
   /** عرض كامل بدون هوامش أفقية — قوائم مصروفات مدمجة */
   flush?: boolean;
 }) {
+  const isDesktop = useIsDesktopLayout();
   return (
     <Box sx={{ flex: 1, overflowY: 'auto', minHeight: 0, WebkitOverflowScrolling: 'touch' }}>
       <Container
-        maxWidth="sm"
+        maxWidth={isDesktop ? 'lg' : 'sm'}
         disableGutters={dense || flush}
         sx={{
-          py: flush ? 0 : dense ? 1.25 : 2,
-          px: flush ? 0 : dense ? { xs: 1.5, sm: 2 } : 2,
+          py: flush ? 0 : dense ? 1.25 : isDesktop ? 2.5 : 2,
+          px: flush ? 0 : dense ? { xs: 1.5, sm: 2 } : isDesktop ? 3 : 2,
           pb: flush ? 3 : dense ? 4 : 3.5,
         }}
       >

@@ -342,6 +342,11 @@ export const etlalaHeroActionButtonSx: SxProps<Theme> = {
   '@media (prefers-reduced-motion: reduce)': { '&:active': { transform: 'none' } },
   '&.Mui-disabled': { opacity: 0.55, color: premiumTokens.primaryDark },
   '& .MuiButton-startIcon': { color: 'inherit', mr: 0.5, ml: -0.25 },
+  '@media (min-width: 1200px)': {
+    minHeight: 40,
+    borderRadius: '11px',
+    px: 2,
+  },
 };
 
 /** زر CTA أساسي — تدرج primary، نص أبيض واضح */

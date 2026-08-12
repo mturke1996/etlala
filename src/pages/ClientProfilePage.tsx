@@ -28,11 +28,16 @@ import { collection, query, onSnapshot } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useGlobalFundStore } from '../store/useGlobalFundStore';
 import { PageScaffold } from '../components/layout/PageScaffold';
+import { useIsDesktopLayout } from '../hooks/useIsDesktopLayout';
+import { ClientProfileDesktop } from '../components/desktop/ClientProfileDesktop';
+import { DesktopRecordTable, DesktopRecordRow } from '../components/desktop/DesktopRecordTable';
+import { DESKTOP_NUM_FONT } from '../components/desktop/desktopChrome';
+import { profileListDialogProps, profileFormDialogProps } from '../components/desktop/profileWorkspace';
+import { ProfileWorkspaceFrame, ProfileFormDialogHeader } from '../components/desktop/ProfileWorkspaceChrome';
 import { EtlalaSectionTitle, EtlalaAccentSurface, EtlalaEmptyState } from '../components/etlala/EtlalaMobileUi';
 import { ClientProfileHero } from '../components/client/ClientProfileHero';
 import {
   ProfileListSessionHeader,
-  profileHeroAddIconButtonSx,
   profileListSessionHeroIconAccentSx,
   profileListSessionHeroIconSecondarySx,
 } from '../components/client/ProfileListSessionHeader';
@@ -68,6 +73,49 @@ const ETLALA_UI = {
   accent: '#C8B27D',
 } as const;
 
+const EXP_DESKTOP_COLS = [
+  { key: 'desc', label: 'الوصف', width: 'minmax(0, 1.8fr)' },
+  { key: 'cat', label: 'التصنيف', width: '140px' },
+  { key: 'date', label: 'التاريخ', width: '120px' },
+  { key: 'by', label: 'بواسطة', width: 'minmax(0, 0.9fr)' },
+  { key: 'amount', label: 'المبلغ', width: '140px', align: 'end' as const },
+  { key: 'actions', label: '', width: '88px', align: 'end' as const },
+];
+
+const PAY_METHOD_LABELS: Record<string, string> = {
+  cash: 'نقدي',
+  bank_transfer: 'تحويل بنكي',
+  check: 'شيك',
+  credit_card: 'بطاقة',
+};
+
+const PAY_DESKTOP_COLS = [
+  { key: 'method', label: 'الطريقة', width: 'minmax(0, 1.2fr)' },
+  { key: 'notes', label: 'ملاحظات', width: 'minmax(0, 1.4fr)' },
+  { key: 'date', label: 'التاريخ', width: '120px' },
+  { key: 'by', label: 'بواسطة', width: 'minmax(0, 0.9fr)' },
+  { key: 'amount', label: 'المبلغ', width: '140px', align: 'end' as const },
+  { key: 'actions', label: '', width: '88px', align: 'end' as const },
+];
+
+const DEBT_DESKTOP_COLS = [
+  { key: 'party', label: 'الطرف', width: 'minmax(0, 1.4fr)' },
+  { key: 'total', label: 'الإجمالي', width: '130px', align: 'end' as const },
+  { key: 'paid', label: 'المدفوع', width: '130px', align: 'end' as const },
+  { key: 'remain', label: 'المتبقي', width: '130px', align: 'end' as const },
+  { key: 'actions', label: '', width: '88px', align: 'end' as const },
+];
+
+const WORKER_DESKTOP_COLS = [
+  { key: 'name', label: 'العامل', width: 'minmax(0, 1.3fr)' },
+  { key: 'job', label: 'طبيعة العمل', width: 'minmax(0, 1fr)' },
+  { key: 'total', label: 'الاتفاق', width: '120px', align: 'end' as const },
+  { key: 'paid', label: 'المدفوع', width: '120px', align: 'end' as const },
+  { key: 'remain', label: 'المتبقي', width: '120px', align: 'end' as const },
+  { key: 'status', label: 'الحالة', width: '90px' },
+  { key: 'actions', label: '', width: '160px', align: 'end' as const },
+];
+
 const clientSchema = z.object({
   name: z.string().min(2),
   email: z.string().optional(),
@@ -86,6 +134,7 @@ export const ClientProfilePage = () => {
   const { id: clientId } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const theme = useTheme();
+  const isDesktop = useIsDesktopLayout();
   const { user } = useAuthStore();
   const { canAccess } = useAppLockStore();
 
@@ -627,7 +676,23 @@ export const ClientProfilePage = () => {
   );
 
   return (
-    <Box sx={{ minHeight: '100dvh', background: pageBg, pb: 8 }}>
+    <Box sx={{ minHeight: '100dvh', background: isDesktop ? undefined : pageBg, bgcolor: isDesktop ? 'background.default' : undefined, pb: isDesktop ? 0 : 8 }}>
+      {isDesktop ? (
+        <ClientProfileDesktop
+          client={client}
+          activitySummary={clientActivitySummary}
+          summary={summary}
+          canSeeStats={canAccess('stats')}
+          overspent={summary.totalExpenses > summary.totalPaid}
+          negativeRemaining={summary.remaining < 0}
+          depletedNames={depletedBalances.map(([, data]) => data.name)}
+          menuItems={menuItems}
+          payments={clientPayments}
+          expenses={clientExpenses}
+          onBack={() => navigate('/clients')}
+          onEdit={() => setEditClientOpen(true)}
+        />
+      ) : (
       <PageScaffold
         headerVariant="profile"
         title={client.name}
@@ -929,32 +994,15 @@ export const ClientProfilePage = () => {
           ))}
         </Stack>
       </PageScaffold>
+      )}
 
       {/* ===== EXPENSES — هيرو + بحث + إحصائيات ≤ 25% ارتفاع الشاشة، باقي للقائمة (مطابق أسلوب الرئيسية) ===== */}
       <Dialog
         open={expensesListOpen}
         onClose={() => setExpensesListOpen(false)}
-        fullScreen
-        slotProps={{
-          paper: {
-            className: 'etlala-fill-viewport',
-            sx: {
-              m: 0,
-              width: '100%',
-              maxWidth: '100%',
-              height: '100%',
-              maxHeight: '100%',
-              overflow: 'hidden',
-              bgcolor: 'transparent',
-              boxShadow: 'none',
-            },
-          },
-        }}
+        {...profileListDialogProps(isDesktop)}
       >
-        <Box
-          className="etlala-fill-viewport"
-          sx={{ bgcolor: 'background.default', minHeight: '100%', display: 'flex', flexDirection: 'column' }}
-        >
+        <ProfileWorkspaceFrame>
           <Box sx={{ width: 1, flexShrink: 0, display: 'flex', flexDirection: 'column' }}>
             <ProfileListSessionHeader
               module="expenses"
@@ -1086,7 +1134,46 @@ export const ClientProfilePage = () => {
               bgcolor: 'background.default',
             }}
           >
-            {/* ── EXPENSE LIST: high-density rows ── */}
+            {isDesktop ? (
+              <Box sx={{ p: 2.5 }}>
+                {filteredExp.length === 0 ? (
+                  <Box sx={{ py: 8, textAlign: 'center' }}>
+                    <Search sx={{ fontSize: 28, color: '#C2B280', mb: 1 }} />
+                    <Typography sx={{ color: 'text.secondary', fontSize: '0.85rem' }}>{expSearch ? 'لا نتائج' : 'لا توجد مصروفات بعد'}</Typography>
+                  </Box>
+                ) : (
+                  <DesktopRecordTable columns={EXP_DESKTOP_COLS}>
+                    {filteredExp.map((exp) => (
+                      <DesktopRecordRow
+                        key={exp.id}
+                        columns={EXP_DESKTOP_COLS}
+                        onClick={() => { setViewingExpense(exp); }}
+                        cells={[
+                          <Box key="d" sx={{ minWidth: 0 }}>
+                            <Typography fontWeight={750} noWrap sx={{ fontSize: '0.88rem' }}>{exp.description}</Typography>
+                            {exp.invoiceNumber ? (
+                              <Typography noWrap sx={{ fontSize: '0.7rem', color: 'text.secondary' }}>ف#{exp.invoiceNumber}</Typography>
+                            ) : null}
+                          </Box>,
+                          <Typography key="c" noWrap sx={{ fontSize: '0.8rem', color: 'text.secondary' }}>{getCategoryLabel(exp.category)}</Typography>,
+                          <Typography key="dt" sx={{ fontSize: '0.8rem', color: 'text.secondary', fontFamily: DESKTOP_NUM_FONT }}>{formatDate(exp.date)}</Typography>,
+                          <Typography key="by" noWrap sx={{ fontSize: '0.78rem', color: 'text.secondary' }}>{exp.createdBy || '—'}</Typography>,
+                          <Typography key="a" sx={{ fontWeight: 800, fontFamily: DESKTOP_NUM_FONT, fontSize: '0.9rem', color: 'primary.main' }}>{formatCurrency(exp.amount)}</Typography>,
+                          <Stack key="x" direction="row" gap={0.25} onClick={(e) => e.stopPropagation()}>
+                            <IconButton size="small" aria-label="تعديل" onClick={() => { setEditingExpense(exp); setExpVal('description', exp.description); setExpVal('amount', exp.amount); setExpVal('category', exp.category); setExpVal('date', exp.date); setExpVal('invoiceNumber', exp.invoiceNumber || ''); setExpVal('notes', exp.notes || ''); setExpVal('userId', exp.userId || ''); setExpVal('quantity', exp.quantity ?? ''); setExpVal('unit', exp.unit ?? ''); setExpVal('unitPrice', exp.unitPrice ?? ''); setExpenseDialogOpen(true); }}>
+                              <Edit sx={{ fontSize: 16 }} />
+                            </IconButton>
+                            <IconButton size="small" aria-label="حذف" onClick={() => setDeletingExpense(exp)} sx={{ color: '#d64545' }}>
+                              <Delete sx={{ fontSize: 16 }} />
+                            </IconButton>
+                          </Stack>,
+                        ]}
+                      />
+                    ))}
+                  </DesktopRecordTable>
+                )}
+              </Box>
+            ) : (
             <Box
               sx={{
                 pt: 1,
@@ -1246,35 +1333,18 @@ export const ClientProfilePage = () => {
                 )}
               </Box>
             </Box>
+            )}
           </Box>
-        </Box>
+        </ProfileWorkspaceFrame>
       </Dialog>
 
       {/* ===== PAYMENTS LIST DIALOG (نمط هيرو موحّد مع المصروفات) ===== */}
       <Dialog
         open={paymentsListOpen}
         onClose={() => setPaymentsListOpen(false)}
-        fullScreen
-        slotProps={{
-          paper: {
-            className: 'etlala-fill-viewport',
-            sx: {
-              m: 0,
-              width: '100%',
-              maxWidth: '100%',
-              height: '100%',
-              maxHeight: '100%',
-              overflow: 'hidden',
-              bgcolor: 'transparent',
-              boxShadow: 'none',
-            },
-          },
-        }}
+        {...profileListDialogProps(isDesktop)}
       >
-        <Box
-          className="etlala-fill-viewport"
-          sx={{ bgcolor: 'background.default', minHeight: '100%', display: 'flex', flexDirection: 'column' }}
-        >
+        <ProfileWorkspaceFrame>
           <Box sx={{ width: 1, flexShrink: 0, display: 'flex', flexDirection: 'column' }}>
             <ProfileListSessionHeader
               module="payments"
@@ -1394,6 +1464,40 @@ export const ClientProfilePage = () => {
               bgcolor: 'background.default',
             }}
           >
+            {isDesktop ? (
+              <Box sx={{ p: 2.5 }}>
+                {filteredPay.length === 0 ? (
+                  <Box sx={{ py: 8, textAlign: 'center' }}>
+                    <Search sx={{ fontSize: 28, color: '#C2B280', mb: 1 }} />
+                    <Typography sx={{ color: 'text.secondary', fontSize: '0.85rem' }}>{paySearch ? 'لا نتائج' : 'لا توجد مدفوعات'}</Typography>
+                  </Box>
+                ) : (
+                  <DesktopRecordTable columns={PAY_DESKTOP_COLS}>
+                    {filteredPay.map((pay) => (
+                      <DesktopRecordRow
+                        key={pay.id}
+                        columns={PAY_DESKTOP_COLS}
+                        cells={[
+                          <Typography key="m" fontWeight={750} noWrap sx={{ fontSize: '0.88rem' }}>{PAY_METHOD_LABELS[pay.paymentMethod] || pay.paymentMethod}</Typography>,
+                          <Typography key="n" noWrap color="text.secondary" sx={{ fontSize: '0.8rem' }}>{pay.notes || '—'}</Typography>,
+                          <Typography key="dt" sx={{ fontSize: '0.8rem', color: 'text.secondary', fontFamily: DESKTOP_NUM_FONT }}>{formatDate(pay.paymentDate)}</Typography>,
+                          <Typography key="by" noWrap sx={{ fontSize: '0.78rem', color: 'text.secondary' }}>{pay.createdBy || '—'}</Typography>,
+                          <Typography key="a" sx={{ fontWeight: 800, fontFamily: DESKTOP_NUM_FONT, fontSize: '0.9rem', color: '#0d9668' }}>{formatCurrency(pay.amount)}</Typography>,
+                          <Stack key="x" direction="row" gap={0.25}>
+                            <IconButton size="small" aria-label="تعديل" onClick={() => { setEditingPayment(pay); setPayVal('amount', pay.amount); setPayVal('paymentMethod', pay.paymentMethod as any); setPayVal('paymentDate', pay.paymentDate); setPayVal('notes', pay.notes || ''); setPaymentDialogOpen(true); }}>
+                              <Edit sx={{ fontSize: 16 }} />
+                            </IconButton>
+                            <IconButton size="small" aria-label="حذف" onClick={() => { if (window.confirm('حذف؟')) deletePayment(pay.id).then(() => msg('تم الحذف')); }} sx={{ color: '#d64545' }}>
+                              <Delete sx={{ fontSize: 16 }} />
+                            </IconButton>
+                          </Stack>,
+                        ]}
+                      />
+                    ))}
+                  </DesktopRecordTable>
+                )}
+              </Box>
+            ) : (
             <Box
               sx={{
                 pt: 1,
@@ -1498,35 +1602,18 @@ export const ClientProfilePage = () => {
                 )}
               </Box>
             </Box>
+            )}
           </Box>
-        </Box>
+        </ProfileWorkspaceFrame>
       </Dialog>
 
       {/* ===== DEBTS LIST DIALOG (نمط هيرو موحّد) ===== */}
       <Dialog
         open={debtsListOpen}
         onClose={() => setDebtsListOpen(false)}
-        fullScreen
-        slotProps={{
-          paper: {
-            className: 'etlala-fill-viewport',
-            sx: {
-              m: 0,
-              width: '100%',
-              maxWidth: '100%',
-              height: '100%',
-              maxHeight: '100%',
-              overflow: 'hidden',
-              bgcolor: 'transparent',
-              boxShadow: 'none',
-            },
-          },
-        }}
+        {...profileListDialogProps(isDesktop)}
       >
-        <Box
-          className="etlala-fill-viewport"
-          sx={{ display: 'flex', flexDirection: 'column', minHeight: '100%', bgcolor: 'background.default' }}
-        >
+        <ProfileWorkspaceFrame>
           <Box
             sx={{
               flexShrink: 0,
@@ -1576,6 +1663,51 @@ export const ClientProfilePage = () => {
           <Box
             sx={{ flex: 1, minHeight: 0, overflowY: 'auto', WebkitOverflowScrolling: 'touch', bgcolor: 'background.default' }}
           >
+            {isDesktop ? (
+              <Box sx={{ p: 2.5 }}>
+                {clientDebts.length === 0 ? (
+                  <EtlalaEmptyState icon={<CreditCard />} title="لا توجد ديون" hint="سجّل ديناً من الزر أعلاه" />
+                ) : (
+                  <DesktopRecordTable columns={DEBT_DESKTOP_COLS}>
+                    {clientDebts.map((debt) => (
+                      <DesktopRecordRow
+                        key={debt.id}
+                        columns={DEBT_DESKTOP_COLS}
+                        cells={[
+                          <Box key="p" sx={{ minWidth: 0 }}>
+                            <Typography fontWeight={750} noWrap sx={{ fontSize: '0.88rem' }}>{debt.partyName}</Typography>
+                            {debt.description ? (
+                              <Typography noWrap color="text.secondary" sx={{ fontSize: '0.72rem' }}>{debt.description}</Typography>
+                            ) : null}
+                          </Box>,
+                          <Typography key="t" sx={{ fontWeight: 750, fontFamily: DESKTOP_NUM_FONT, fontSize: '0.86rem' }}>{formatCurrency(debt.amount)}</Typography>,
+                          <Typography key="pd" sx={{ fontWeight: 750, fontFamily: DESKTOP_NUM_FONT, fontSize: '0.86rem', color: '#0d9668' }}>{formatCurrency(debt.paidAmount)}</Typography>,
+                          <Typography key="r" sx={{ fontWeight: 800, fontFamily: DESKTOP_NUM_FONT, fontSize: '0.86rem', color: 'error.main' }}>{formatCurrency(debt.remainingAmount)}</Typography>,
+                          <Stack key="x" direction="row" gap={0.25}>
+                            <IconButton size="small" aria-label="تعديل" onClick={() => { setEditingDebt(debt); setDebtVal('partyName', debt.partyName); setDebtVal('description', debt.description); setDebtVal('amount', debt.amount); setDebtVal('date', debt.date); setDebtVal('notes', debt.notes || ''); setDebtDialogOpen(true); }}>
+                              <Edit sx={{ fontSize: 16 }} />
+                            </IconButton>
+                            <IconButton size="small" aria-label="حذف" onClick={() => { if (window.confirm('حذف؟')) deleteStandaloneDebt(debt.id).then(() => msg('تم الحذف')); }} sx={{ color: '#d64545' }}>
+                              <Delete sx={{ fontSize: 16 }} />
+                            </IconButton>
+                          </Stack>,
+                        ]}
+                      />
+                    ))}
+                  </DesktopRecordTable>
+                )}
+                {clientDebts.length > 0 && (
+                  <Box sx={{ mt: 2 }}>
+                    <ProfileSessionTotalBar
+                      module="debts"
+                      label="إجمالي الديون المستحقة (متبقي)"
+                      amount={formatCurrency(clientDebts.reduce((s, d) => s + d.remainingAmount, 0))}
+                      tone="default"
+                    />
+                  </Box>
+                )}
+              </Box>
+            ) : (
             <Container
               maxWidth="sm"
               disableGutters
@@ -1633,8 +1765,9 @@ export const ClientProfilePage = () => {
               />
             )}
             </Container>
+            )}
           </Box>
-        </Box>
+        </ProfileWorkspaceFrame>
       </Dialog>
       {/* ===== EXPENSES PER USER DIALOG ===== */}
       <Dialog
@@ -1715,12 +1848,14 @@ export const ClientProfilePage = () => {
       />
 
       {/* ===== ADD/EDIT PAYMENT DIALOG ===== */}
-      <Dialog open={paymentDialogOpen} onClose={() => setPaymentDialogOpen(false)} fullScreen>
+      <Dialog open={paymentDialogOpen} onClose={() => setPaymentDialogOpen(false)} {...profileFormDialogProps(isDesktop)}>
         <form onSubmit={handlePaySubmit(onSubmitPayment)}>
-          <Box sx={{ background: headerGradient, color: 'white', p: 2, pt: 'calc(max(env(safe-area-inset-top), 50px) + 16px)' }}>
-            <Stack direction="row" alignItems="center" spacing={2}><IconButton onClick={() => setPaymentDialogOpen(false)} sx={{ color: 'white' }}><ArrowBack /></IconButton><Typography variant="h6" fontWeight={700}>{editingPayment ? 'تعديل دفعة' : 'إضافة دفعة'}</Typography></Stack>
-          </Box>
-          <Box sx={{ p: 3.5 }}>
+          <ProfileFormDialogHeader
+            title={editingPayment ? 'تعديل دفعة' : 'إضافة دفعة'}
+            onBack={() => setPaymentDialogOpen(false)}
+            mobileGradient={headerGradient}
+          />
+          <Box sx={{ p: 3.5, overflowY: 'auto' }}>
             <Stack spacing={3}>
               <Controller name="amount" control={payCtrl} render={({ field }) => <TextField {...field} fullWidth label="المبلغ" type="number" InputProps={{ endAdornment: <InputAdornment position="end">د.ل</InputAdornment> }} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2.5, bgcolor: 'background.paper' } }} />} />
               <Controller name="paymentMethod" control={payCtrl} render={({ field }) => <FormControl fullWidth><InputLabel>طريقة الدفع</InputLabel><Select {...field} label="طريقة الدفع" sx={{ borderRadius: 2.5, bgcolor: 'background.paper' }}><MenuItem value="cash">نقدي</MenuItem><MenuItem value="bank_transfer">تحويل بنكي</MenuItem><MenuItem value="check">شيك</MenuItem><MenuItem value="credit_card">بطاقة</MenuItem></Select></FormControl>} />
@@ -1736,12 +1871,14 @@ export const ClientProfilePage = () => {
       </Dialog>
 
       {/* ===== ADD/EDIT DEBT DIALOG ===== */}
-      <Dialog open={debtDialogOpen} onClose={() => setDebtDialogOpen(false)} fullScreen>
+      <Dialog open={debtDialogOpen} onClose={() => setDebtDialogOpen(false)} {...profileFormDialogProps(isDesktop)}>
         <form onSubmit={handleDebtSubmit(onSubmitDebt)}>
-          <Box sx={{ background: headerGradient, color: 'white', p: 2, pt: 'calc(max(env(safe-area-inset-top), 50px) + 16px)' }}>
-            <Stack direction="row" alignItems="center" spacing={2}><IconButton onClick={() => setDebtDialogOpen(false)} sx={{ color: 'white' }}><ArrowBack /></IconButton><Typography variant="h6" fontWeight={700}>{editingDebt ? 'تعديل دين' : 'إضافة دين'}</Typography></Stack>
-          </Box>
-          <Box sx={{ p: 3.5 }}>
+          <ProfileFormDialogHeader
+            title={editingDebt ? 'تعديل دين' : 'إضافة دين'}
+            onBack={() => setDebtDialogOpen(false)}
+            mobileGradient={headerGradient}
+          />
+          <Box sx={{ p: 3.5, overflowY: 'auto' }}>
             <Stack spacing={3}>
               <Controller name="partyName" control={debtCtrl} render={({ field }) => <TextField {...field} fullWidth label="اسم الطرف" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2.5, bgcolor: 'background.paper' } }} />} />
               <Controller name="description" control={debtCtrl} render={({ field }) => <TextField {...field} fullWidth label="وصف الدين" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2.5, bgcolor: 'background.paper' } }} />} />
@@ -1771,12 +1908,14 @@ export const ClientProfilePage = () => {
       </Dialog>
 
       {/* ===== EDIT CLIENT DIALOG ===== */}
-      <Dialog open={editClientOpen} onClose={() => setEditClientOpen(false)} fullScreen>
+      <Dialog open={editClientOpen} onClose={() => setEditClientOpen(false)} {...profileFormDialogProps(isDesktop)}>
         <form onSubmit={handleClientSubmit(onSubmitClient)}>
-          <Box sx={{ background: headerGradient, color: 'white', p: 2, pt: 'calc(max(env(safe-area-inset-top), 50px) + 16px)' }}>
-            <Stack direction="row" alignItems="center" spacing={2}><IconButton onClick={() => setEditClientOpen(false)} sx={{ color: 'white' }}><ArrowBack /></IconButton><Typography variant="h6" fontWeight={700}>تعديل بيانات العميل</Typography></Stack>
-          </Box>
-          <Box sx={{ p: 3.5 }}>
+          <ProfileFormDialogHeader
+            title="تعديل بيانات العميل"
+            onBack={() => setEditClientOpen(false)}
+            mobileGradient={headerGradient}
+          />
+          <Box sx={{ p: 3.5, overflowY: 'auto' }}>
             <Stack spacing={3}>
               <Controller name="name" control={clientControl} render={({ field }) => <TextField {...field} fullWidth label="الاسم" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2.5, bgcolor: 'background.paper' } }} />} />
               <Controller name="type" control={clientControl} render={({ field }) => <FormControl fullWidth><InputLabel>النوع</InputLabel><Select {...field} label="النوع" sx={{ borderRadius: 2.5, bgcolor: 'background.paper' }}><MenuItem value="individual">فرد</MenuItem><MenuItem value="company">شركة</MenuItem></Select></FormControl>} />
@@ -1799,27 +1938,9 @@ export const ClientProfilePage = () => {
       <Dialog
         open={workersListOpen}
         onClose={() => setWorkersListOpen(false)}
-        fullScreen
-        slotProps={{
-          paper: {
-            className: 'etlala-fill-viewport',
-            sx: {
-              m: 0,
-              width: '100%',
-              maxWidth: '100%',
-              height: '100%',
-              maxHeight: '100%',
-              overflow: 'hidden',
-              bgcolor: 'transparent',
-              boxShadow: 'none',
-            },
-          },
-        }}
+        {...profileListDialogProps(isDesktop)}
       >
-        <Box
-          className="etlala-fill-viewport"
-          sx={{ display: 'flex', flexDirection: 'column', minHeight: '100%', bgcolor: 'background.default' }}
-        >
+        <ProfileWorkspaceFrame>
           <Box
             sx={{
               flexShrink: 0,
@@ -1904,7 +2025,49 @@ export const ClientProfilePage = () => {
             )}
           </Box>
 
-        <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', WebkitOverflowScrolling: 'touch', bgcolor: 'background.default', pt: 2, pb: 'calc(16px + env(safe-area-inset-bottom, 0px))' }}>
+        <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', WebkitOverflowScrolling: 'touch', bgcolor: 'background.default', pt: isDesktop ? 0 : 2, pb: isDesktop ? 0 : 'calc(16px + env(safe-area-inset-bottom, 0px))' }}>
+          {isDesktop ? (
+            <Box sx={{ p: 2.5 }}>
+              {clientWorkers.length === 0 ? (
+                <Box sx={{ textAlign: 'center', py: 10 }}>
+                  <PersonAdd sx={{ fontSize: 48, color: alpha('#4a5d4a', 0.25), mb: 1.5 }} />
+                  <Typography variant="h6" fontWeight={800} color="text.secondary">لا يوجد عمال بعد</Typography>
+                  <Typography variant="body2" color="text.disabled" sx={{ mt: 1 }}>اضغط على زر الإضافة لتسجيل عمال المشروع</Typography>
+                </Box>
+              ) : (
+                <DesktopRecordTable columns={WORKER_DESKTOP_COLS}>
+                  {clientWorkers.map((worker) => {
+                    const done = worker.remainingAmount <= 0;
+                    return (
+                      <DesktopRecordRow
+                        key={worker.id}
+                        columns={WORKER_DESKTOP_COLS}
+                        cells={[
+                          <Typography key="n" fontWeight={750} noWrap sx={{ fontSize: '0.88rem' }}>{worker.name}</Typography>,
+                          <Typography key="j" noWrap color="text.secondary" sx={{ fontSize: '0.8rem' }}>{worker.jobType || 'عامل / مقاول'}</Typography>,
+                          <Typography key="t" sx={{ fontFamily: DESKTOP_NUM_FONT, fontWeight: 750, fontSize: '0.86rem' }}>{formatCurrency(worker.totalAmount)}</Typography>,
+                          <Typography key="p" sx={{ fontFamily: DESKTOP_NUM_FONT, fontWeight: 750, fontSize: '0.86rem', color: '#0d9668' }}>{formatCurrency(worker.paidAmount)}</Typography>,
+                          <Typography key="r" sx={{ fontFamily: DESKTOP_NUM_FONT, fontWeight: 800, fontSize: '0.86rem', color: done ? '#0d9668' : 'error.main' }}>{formatCurrency(worker.remainingAmount)}</Typography>,
+                          <Chip key="s" size="small" label={done ? 'مكتمل' : 'جارٍ'} sx={{ height: 22, fontWeight: 750, bgcolor: done ? 'rgba(13,150,104,0.1)' : 'rgba(201,165,78,0.12)', color: done ? '#0d9668' : '#c9a54e' }} />,
+                          <Stack key="x" direction="row" gap={0.25} alignItems="center">
+                            <Button size="small" onClick={() => { resetExp({ description: `دفعة حساب: ${worker.name}`, amount: '' as any, category: 'labor', date: dayjs().format('YYYY-MM-DD'), notes: '', workerId: worker.id }); setEditingExpense(null); setExpenseDialogOpen(true); }} sx={{ fontWeight: 750, fontSize: '0.72rem', minWidth: 0, px: 1, color: '#0d9668' }}>
+                              صرف
+                            </Button>
+                            <IconButton size="small" aria-label="تعديل" onClick={() => { setEditingWorker(worker); setWorkVal('name', worker.name); setWorkVal('jobType', worker.jobType || ''); setWorkVal('totalAmount', worker.totalAmount); setWorkerDialogOpen(true); }}>
+                              <Edit sx={{ fontSize: 16 }} />
+                            </IconButton>
+                            <IconButton size="small" aria-label="حذف" onClick={() => { if (window.confirm('هل تريد حذف هذا العامل؟')) deleteWorker(worker.id).then(() => msg('تم الحذف')); }} sx={{ color: '#d64545' }}>
+                              <Delete sx={{ fontSize: 16 }} />
+                            </IconButton>
+                          </Stack>,
+                        ]}
+                      />
+                    );
+                  })}
+                </DesktopRecordTable>
+              )}
+            </Box>
+          ) : (
           <Container maxWidth="sm" disableGutters sx={{ pl: { xs: 'max(12px, env(safe-area-inset-left, 0px))', sm: 2 }, pr: { xs: 'max(12px, env(safe-area-inset-right, 0px))', sm: 2 } }}>
             {clientWorkers.length === 0 ? (
               <Box sx={{ textAlign: 'center', py: 10, bgcolor: (t) => (t.palette.mode === 'dark' ? alpha('#fff', 0.04) : alpha('#fff', 0.7)), border: '1px solid', borderColor: (t) => alpha(PROFILE_MODULE.workers.listAccent, t.palette.mode === 'dark' ? 0.2 : 0.15), borderRadius: 2.5, mt: 1, boxShadow: (t) => (t.palette.mode === 'light' ? '0 1px 0 rgba(255,255,255,0.9) inset' : 'none') }}>
@@ -2016,18 +2179,19 @@ export const ClientProfilePage = () => {
               </Stack>
             )}
           </Container>
+          )}
         </Box>
-        </Box>
+        </ProfileWorkspaceFrame>
       </Dialog>
 
       {/* ===== ADD/EDIT WORKER DIALOG ===== */}
-      <Dialog open={workerDialogOpen} onClose={() => setWorkerDialogOpen(false)} fullScreen sx={{ '& .MuiDialog-paper': { bgcolor: 'background.default' } }}>
+      <Dialog open={workerDialogOpen} onClose={() => setWorkerDialogOpen(false)} {...profileFormDialogProps(isDesktop)}>
         <form onSubmit={handleWorkSubmit(onSubmitWorker)} style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-          {/* MD3 Top App Bar */}
-          <Box sx={{ background: headerGradient, color: 'white', px: 1, py: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
-            <IconButton onClick={() => setWorkerDialogOpen(false)} sx={{ color: 'white' }}><ArrowBack /></IconButton>
-            <Typography variant="h6" fontWeight={700} sx={{ flex: 1 }}>{editingWorker ? 'تعديل بيانات العامل' : 'إضافة عامل / مقاول'}</Typography>
-          </Box>
+          <ProfileFormDialogHeader
+            title={editingWorker ? 'تعديل بيانات العامل' : 'إضافة عامل / مقاول'}
+            onBack={() => setWorkerDialogOpen(false)}
+            mobileGradient={headerGradient}
+          />
           {/* Flat Form - No Cards, No Radius */}
           <Box sx={{ flex: 1, overflowY: 'auto', bgcolor: 'background.paper' }}>
             <Box sx={{ px: 0 }}>
@@ -2072,7 +2236,8 @@ export const ClientProfilePage = () => {
       </Dialog>
 
       {/* ===== BALANCES LIST DIALOG ===== */}
-      <Dialog open={balancesListOpen} onClose={() => setBalancesListOpen(false)} fullScreen sx={{ '& .MuiDialog-paper': { bgcolor: 'transparent', boxShadow: 'none' } }}>
+      <Dialog open={balancesListOpen} onClose={() => setBalancesListOpen(false)} {...profileListDialogProps(isDesktop)}>
+        <ProfileWorkspaceFrame>
         <ProfileSessionListShell module="balances">
         <ProfileListSessionHeader
           module="balances"
@@ -2088,14 +2253,14 @@ export const ClientProfilePage = () => {
             <IconButton
               onClick={() => { setEditingBalance(null); resetBal(); setBalanceDialogOpen(true); }}
               aria-label="إضافة عهدة"
-              sx={profileHeroAddIconButtonSx}
+              sx={profileListSessionHeroIconAccentSx(ETLALA_UI.accent)}
             >
               <Add />
             </IconButton>
           )}
         />
-        <Box sx={{ flex: 1, overflowY: 'auto', pb: 4, pt: 2.5 }}>
-          <Container maxWidth="sm">
+        <Box sx={{ flex: 1, overflowY: 'auto', minHeight: 0, pb: 4, pt: 2.5 }}>
+          <Container maxWidth={isDesktop ? 'lg' : 'sm'} sx={{ px: isDesktop ? 3 : undefined }}>
             {/* Show User Summary Cards first */}
             {Object.entries(userBalancesSummary).length > 0 && (
               <Box sx={{ mb: {xs: 4, sm: 5} }}>
@@ -2220,34 +2385,22 @@ export const ClientProfilePage = () => {
           </Container>
         </Box>
         </ProfileSessionListShell>
+        </ProfileWorkspaceFrame>
       </Dialog>
 
       {/* ===== ADD/EDIT BALANCE DIALOG (MOBILE OPTIMIZED) ===== */}
-      <Dialog open={balanceDialogOpen} onClose={() => setBalanceDialogOpen(false)} fullScreen>
+      <Dialog open={balanceDialogOpen} onClose={() => setBalanceDialogOpen(false)} {...profileFormDialogProps(isDesktop)}>
         <form onSubmit={handleBalSubmit(onSubmitBalance)} style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-          
-          <Box sx={{ 
-            background: theme.palette.mode === 'dark' 
-              ? 'radial-gradient(120% 120% at 50% 0%, #152219 0%, #0a110c 50%, #050806 100%)' 
-              : 'radial-gradient(120% 120% at 50% 0%, #213526 0%, #132217 50%, #0b140e 100%)', 
-            pt: 'calc(env(safe-area-inset-top) + 24px)', pb: 4, px: 2, position: 'relative', overflow: 'hidden'
-          }}>
-            <Stack direction="row" alignItems="center" spacing={1.5} mb={2}>
-              <IconButton onClick={() => setBalanceDialogOpen(false)} sx={{ color: '#fff', bgcolor: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.1)', '&:active': { transform: 'scale(0.95)' } }}>
-                <ArrowBack fontSize="small" />
-              </IconButton>
-              <Box>
-                <Typography sx={{ color: '#fff', fontWeight: 900, fontSize: '1.05rem', letterSpacing: '-0.2px' }}>
-                  {editingBalance ? 'تعديل رصيد العهدة' : 'إضافة عهدة للمشروع'}
-                </Typography>
-                <Typography sx={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.7rem', fontWeight: 500 }}>
-                  يرجى تحديد الموظف وإدخال تفاصيل الدفعة المالية
-                </Typography>
-              </Box>
-            </Stack>
-          </Box>
+          <ProfileFormDialogHeader
+            title={editingBalance ? 'تعديل رصيد العهدة' : 'إضافة عهدة للمشروع'}
+            subtitle="تحديد الموظف وتفاصيل الدفعة المالية"
+            onBack={() => setBalanceDialogOpen(false)}
+            mobileGradient={theme.palette.mode === 'dark'
+              ? 'radial-gradient(120% 120% at 50% 0%, #152219 0%, #0a110c 50%, #050806 100%)'
+              : 'radial-gradient(120% 120% at 50% 0%, #213526 0%, #132217 50%, #0b140e 100%)'}
+          />
 
-          <Box sx={{ flex: 1, overflowY: 'auto', p: 3, mt: -2, bgcolor: theme.palette.mode === 'dark' ? '#0a0e14' : '#f0f2f5', borderTopLeftRadius: 16, borderTopRightRadius: 16, zIndex: 2 }}>
+          <Box sx={{ flex: 1, overflowY: 'auto', p: 3, mt: isDesktop ? 0 : -2, bgcolor: theme.palette.mode === 'dark' ? '#0a0e14' : '#f0f2f5', borderTopLeftRadius: isDesktop ? 0 : 16, borderTopRightRadius: isDesktop ? 0 : 16, zIndex: 2 }}>
             <Stack spacing={3}>
               
               <Controller name="userId" control={balCtrl} render={({ field }) => (
@@ -2305,17 +2458,14 @@ export const ClientProfilePage = () => {
       </Dialog>
 
       {/* ===== EDIT CLIENT DIALOG ===== */}
-      <Dialog open={editClientOpen} onClose={() => setEditClientOpen(false)} fullScreen>
+      <Dialog open={editClientOpen} onClose={() => setEditClientOpen(false)} {...profileFormDialogProps(isDesktop)}>
         <form onSubmit={handleClientSubmit(onSubmitClient)}>
-          <Box sx={{ background: headerGradient, color: 'white', p: 2, pt: 'calc(max(env(safe-area-inset-top), 50px) + 16px)' }}>
-            <Stack direction="row" alignItems="center" justifyContent="space-between">
-              <Stack direction="row" alignItems="center" spacing={1.5}>
-                <IconButton onClick={() => setEditClientOpen(false)} sx={{ color: 'white' }}><ArrowBack /></IconButton>
-                <Typography variant="h5" fontWeight={800}>تعديل العميل</Typography>
-              </Stack>
-            </Stack>
-          </Box>
-          <Box sx={{ p: 3.5 }}>
+          <ProfileFormDialogHeader
+            title="تعديل العميل"
+            onBack={() => setEditClientOpen(false)}
+            mobileGradient={headerGradient}
+          />
+          <Box sx={{ p: 3.5, overflowY: 'auto' }}>
             <Stack spacing={3}>
               <Controller name="name" control={clientControl} render={({ field }) => <TextField {...field} fullWidth label="اسم العميل" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2.5, bgcolor: 'background.paper' } }} />} />
               <Controller name="phone" control={clientControl} render={({ field }) => <TextField {...field} fullWidth label="رقم الهاتف" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2.5, bgcolor: 'background.paper' } }} />} />
@@ -2371,17 +2521,16 @@ export const ClientProfilePage = () => {
       <Dialog
         open={!!viewingExpense}
         onClose={() => setViewingExpense(null)}
-        fullScreen
-        PaperProps={{ sx: { bgcolor: 'background.paper' } }}
+        {...profileFormDialogProps(isDesktop, 'md')}
       >
-        <Box sx={{ bgcolor: '#2F3E34', color: 'white', p: 2, pt: 'calc(max(env(safe-area-inset-top), 50px) + 16px)' }}>
-          <Stack direction="row" alignItems="center" justifyContent="space-between">
-            <Stack direction="row" alignItems="center" spacing={2}>
-              <IconButton onClick={() => setViewingExpense(null)} sx={{ color: 'white' }}><ArrowBack /></IconButton>
-              <Typography variant="h6" fontWeight={700}>تفاصيل المصروف</Typography>
-            </Stack>
-            <Stack direction="row" spacing={1}>
+        <ProfileFormDialogHeader
+          title="تفاصيل المصروف"
+          onBack={() => setViewingExpense(null)}
+          mobileGradient="linear-gradient(160deg, #2F3E34 0%, #4A5E50 100%)"
+          endAdornment={(
+            <Stack direction="row" gap={0.75}>
               <IconButton
+                aria-label="تعديل"
                 onClick={() => {
                   if (viewingExpense) {
                     setEditingExpense(viewingExpense);
@@ -2396,30 +2545,23 @@ export const ClientProfilePage = () => {
                     setViewingExpense(null);
                   }
                 }}
-                sx={{
-                  color: 'white',
-                  bgcolor: 'rgba(255,255,255,0.1)',
-                  '&:hover': { bgcolor: 'rgba(255,255,255,0.2)' },
-                }}
+                sx={isDesktop ? profileListSessionHeroIconSecondarySx : { color: 'white', bgcolor: 'rgba(255,255,255,0.1)', '&:hover': { bgcolor: 'rgba(255,255,255,0.2)' } }}
               >
                 <Edit sx={{ fontSize: 20 }} />
               </IconButton>
               <IconButton
+                aria-label="حذف"
                 onClick={() => {
                   setDeletingExpense(viewingExpense);
                   setViewingExpense(null);
                 }}
-                sx={{
-                  color: '#fda4a4',
-                  bgcolor: 'rgba(255,255,255,0.1)',
-                  '&:hover': { bgcolor: 'rgba(214, 69, 69, 0.3)' },
-                }}
+                sx={isDesktop ? { ...profileListSessionHeroIconSecondarySx, color: '#d64545' } : { color: '#fda4a4', bgcolor: 'rgba(255,255,255,0.1)', '&:hover': { bgcolor: 'rgba(214, 69, 69, 0.3)' } }}
               >
                 <Delete sx={{ fontSize: 20 }} />
               </IconButton>
             </Stack>
-          </Stack>
-        </Box>
+          )}
+        />
         <Box sx={{ p: 2.5 }}>
           <Box sx={{ bgcolor: 'background.paper', borderRadius: 2, border: 1, borderColor: 'divider', overflow: 'hidden', mb: 2 }}>
             <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>

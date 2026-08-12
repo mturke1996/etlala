@@ -116,8 +116,8 @@ export async function showEtlalaNotification(
     await reg.showNotification(title, {
       body,
       tag,
-      icon: "/logo-hero-3d.png",
-      badge: "/logo-hero-3d.png",
+      icon: "/logo-icon.jpg",
+      badge: "/logo-icon.jpg",
       vibrate: [160, 70, 160],
       dir: "rtl",
       lang: "ar",

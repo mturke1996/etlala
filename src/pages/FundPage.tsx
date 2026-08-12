@@ -3,6 +3,7 @@ import { useState, useMemo, useEffect } from 'react';
 import {
   Box, Button, Typography, Stack,
   IconButton, Dialog, TextField, Avatar, Divider, Collapse, useTheme,
+  FormControl, InputLabel, Select, MenuItem,
 } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import {
@@ -21,6 +22,12 @@ import dayjs from 'dayjs';
 import 'dayjs/locale/ar';
 import toast from 'react-hot-toast';
 import { PageScaffold } from '../components/layout/PageScaffold';
+import { useIsDesktopLayout } from '../hooks/useIsDesktopLayout';
+import { DesktopKpiBento } from '../components/desktop/DesktopKpiBento';
+import { DesktopCustodyLedger } from '../components/desktop/DesktopCustodyLedger';
+import { profileFormDialogProps } from '../components/desktop/profileWorkspace';
+import { ProfileFormDialogHeader } from '../components/desktop/ProfileWorkspaceChrome';
+import { etlalaHeroActionButtonSx } from '../components/etlala/EtlalaMobileUi';
 
 dayjs.locale('ar');
 const fmt = (d: string) => dayjs(d).format('DD/MM/YYYY');
@@ -39,6 +46,7 @@ const FN = "'Outfit', monospace";
 export const FundPage = () => {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
+  const isDesktop = useIsDesktopLayout();
   const { user } = useAuthStore();
   const { canAccess } = useAppLockStore();
   const isAdmin = canAccess('stats');
@@ -265,6 +273,10 @@ export const FundPage = () => {
   const totalFund = transactions.filter(t => t.type === 'deposit').reduce((s, t) => s + t.amount, 0);
   const totalSpentAll = expenses.filter(e => e.userId).reduce((s, e) => s + e.amount, 0);
   const totalDeposits = transactions.filter(t => t.type === 'deposit').length;
+  const totalRemaining = perUser.reduce(
+    (sum, [, ud]) => sum + ud.custodies.reduce((s, c) => s + c.remaining, 0),
+    0,
+  );
 
   const handleSave = async () => {
     const amount = parseFloat(form.amount);
@@ -324,14 +336,14 @@ export const FundPage = () => {
   };
 
   return (
-    <Box sx={{ minHeight: '100dvh', bgcolor: BG, fontFamily: F }}>
+    <Box sx={{ minHeight: '100dvh', bgcolor: isDesktop ? 'background.default' : BG, fontFamily: F }}>
 
       <PageScaffold
-        title="صندوق العهد"
+        title="صندوق العهدة"
         subtitle="إدارة رصيد العهدات"
         backTo="/"
         contentOffset={2}
-        headerSx={{
+        headerSx={isDesktop ? undefined : {
           background: isDark
             ? 'linear-gradient(168deg, #0F1812 0%, #1A2218 40%, #121814 100%)'
             : 'linear-gradient(168deg, #1F3D35 0%, #2A4036 40%, #2C4A42 100%)',
@@ -365,9 +377,10 @@ export const FundPage = () => {
         }}
         rightAction={isAdmin ? (
               <Button onClick={openAdd}
+                variant="contained"
                 size="small"
                 startIcon={<Add sx={{ ml: 0.5, mr: -0.5 }} />}
-                sx={{
+                sx={isDesktop ? etlalaHeroActionButtonSx : {
                   bgcolor: 'rgba(200, 192, 176, 0.95)',
                   color: '#1f291f',
                   fontWeight: 800,
@@ -381,7 +394,7 @@ export const FundPage = () => {
                 عهدة جديدة
               </Button>
         ) : undefined}
-        headerExtra={(
+        headerExtra={isDesktop ? undefined : (
           <Box sx={{ 
               bgcolor: 'rgba(0,0,0,0.2)',
               backdropFilter: 'blur(20px)', 
@@ -440,7 +453,63 @@ export const FundPage = () => {
       >
 
       {/* ══ BODY ═════════════════════════════════════════════════════════════ */}
-        {!fundBodyReady ? null : perUser.length === 0 ? (
+        {!fundBodyReady ? null : isDesktop ? (
+          <Stack spacing={2.5} useFlexGap>
+            <DesktopKpiBento
+              items={[
+                {
+                  key: 'total',
+                  label: 'إجمالي الصندوق',
+                  value: formatCurrency(totalFund),
+                  hint: `${totalDeposits} عهدة مسجّلة`,
+                  featured: true,
+                  icon: <AccountBalanceWallet sx={{ fontSize: 22 }} />,
+                },
+                {
+                  key: 'spent',
+                  label: 'المنفّذ',
+                  value: formatCurrency(totalSpentAll),
+                  hint: 'مصروفات مخصومة من العهدات',
+                },
+                {
+                  key: 'remaining',
+                  label: totalRemaining < 0 ? 'العجز' : 'المتبقي',
+                  value: totalRemaining < 0
+                    ? `−${formatCurrency(Math.abs(totalRemaining))}`
+                    : formatCurrency(totalRemaining),
+                  tone: totalRemaining < 0 ? 'danger' : 'ok',
+                  hint: totalRemaining < 0 ? 'تجاوز إجمالي العهدات' : 'رصيد متاح عبر العهدات',
+                },
+                {
+                  key: 'count',
+                  label: 'عدد العهدات',
+                  value: String(totalDeposits),
+                  hint: `${perUser.length} مستخدم`,
+                },
+              ]}
+            />
+            {perUser.length === 0 ? (
+              <Box sx={{ textAlign: 'center', py: 8 }}>
+                <AccountBalanceWallet sx={{ fontSize: 56, color: 'text.disabled', opacity: 0.2, mb: 2 }} />
+                <Typography sx={{ color: 'text.secondary', fontWeight: 700 }}>لا توجد عهدات بعد</Typography>
+                {isAdmin && (
+                  <Button onClick={openAdd} variant="contained" startIcon={<Add />} sx={{ mt: 2, borderRadius: 1.5 }}>
+                    إضافة أول عهدة
+                  </Button>
+                )}
+              </Box>
+            ) : (
+              <DesktopCustodyLedger
+                groups={perUser.map(([, ud]) => ud)}
+                isAdmin={isAdmin}
+                openId={openId}
+                onToggle={setOpenId}
+                onEdit={openEdit}
+                onDelete={handleDelete}
+              />
+            )}
+          </Stack>
+        ) : perUser.length === 0 ? (
           <Box sx={{ textAlign: 'center', py: 10 }}>
             <AccountBalanceWallet sx={{ fontSize: 60, color: 'text.disabled', opacity: 0.2, mb: 2 }} />
             <Typography sx={{ color: 'text.secondary', fontWeight: 700, fontFamily: F }}>لا توجد عهدات بعد</Typography>
@@ -787,10 +856,25 @@ export const FundPage = () => {
       </PageScaffold>
 
       {/* ══ ADD/EDIT DIALOG ══════════════════════════════════════════════════ */}
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} fullScreen
-        PaperProps={{ sx: { fontFamily: F } }}>
-
-        {/* Dialog Header */}
+      <Dialog
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        {...profileFormDialogProps(isDesktop, 'md')}
+        PaperProps={!isDesktop ? { sx: { fontFamily: F } } : undefined}
+      >
+        {isDesktop ? (
+          <ProfileFormDialogHeader
+            title={editingTx ? 'تعديل العهدة' : 'عهدة جديدة'}
+            subtitle={editingTx ? 'تعديل بيانات العهدة' : 'منح رصيد جديد للمستخدم'}
+            onBack={() => setDialogOpen(false)}
+            mobileGradient={HEADER}
+            endAdornment={form.amount ? (
+              <Typography sx={{ fontFamily: FN, fontWeight: 800, fontSize: '1.05rem', color: 'text.primary' }}>
+                {parseFloat(form.amount).toLocaleString('ar-LY')} د.ل
+              </Typography>
+            ) : null}
+          />
+        ) : (
         <Box sx={{ background: HEADER, pt: 'calc(env(safe-area-inset-top) + 28px)', pb: 4.5, px: 2.5, position: 'relative', overflow: 'hidden', '&::after': { content: '""', position: 'absolute', top: '-40%', right: '-20%', width: '60%', height: '160%', background: 'radial-gradient(ellipse, rgba(16,185,129,0.06) 0%, transparent 60%)', pointerEvents: 'none' } }}>
           <Stack direction="row" alignItems="center" spacing={1.5} mb={3}>
             <IconButton onClick={() => setDialogOpen(false)}
@@ -806,7 +890,6 @@ export const FundPage = () => {
               </Typography>
             </Box>
           </Stack>
-          {/* Amount preview */}
           <Box sx={{ textAlign: 'center' }}>
             <Typography sx={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.6rem', letterSpacing: 1.5, fontWeight: 700, mb: 0.5, fontFamily: F }}>
               مبلغ العهدة
@@ -817,14 +900,33 @@ export const FundPage = () => {
             <Typography sx={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.72rem', fontFamily: F, mt: 0.3 }}>دينار ليبي</Typography>
           </Box>
         </Box>
+        )}
 
-        {/* Dialog Body */}
-        <Box sx={{ flex: 1, overflowY: 'auto', px: 2.5, pt: 3, pb: 2 }}>
+        <Box sx={{ flex: 1, overflowY: 'auto', px: isDesktop ? 3 : 2.5, pt: isDesktop ? 2.5 : 3, pb: 2, minHeight: 0 }}>
 
-          {/* Select User */}
           <Typography sx={{ fontSize: '0.6rem', fontWeight: 800, color: 'text.disabled', letterSpacing: 2, mb: 1.5, fontFamily: F }}>
             ١ — اختر المستخدم
           </Typography>
+          {isDesktop ? (
+            <FormControl fullWidth sx={{ mb: 3 }}>
+              <InputLabel sx={{ fontFamily: F }}>المستخدم</InputLabel>
+              <Select
+                value={form.userId}
+                label="المستخدم"
+                onChange={(e) => setForm(f => ({ ...f, userId: e.target.value }))}
+                sx={{ borderRadius: 2, fontFamily: F, bgcolor: 'background.paper' }}
+              >
+                {systemUsers.map(u => {
+                  const uid = u.uid || u.id;
+                  return (
+                    <MenuItem key={uid} value={uid} sx={{ fontFamily: F }}>
+                      {u.displayName || u.email}
+                    </MenuItem>
+                  );
+                })}
+              </Select>
+            </FormControl>
+          ) : (
           <Stack spacing={1} mb={3}>
             {systemUsers.map(u => {
               const uid = u.uid || u.id;
@@ -856,10 +958,10 @@ export const FundPage = () => {
               );
             })}
           </Stack>
+          )}
 
           <Divider sx={{ mb: 3 }} />
 
-          {/* Amount Input */}
           <Typography sx={{ fontSize: '0.6rem', fontWeight: 800, color: 'text.disabled', letterSpacing: 2, mb: 1.5, fontFamily: F }}>
             ٢ — المبلغ
           </Typography>
@@ -873,13 +975,12 @@ export const FundPage = () => {
                 type="number" value={form.amount}
                 onChange={e => setForm(f => ({ ...f, amount: e.target.value }))}
                 placeholder="0.00"
-                style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontSize: '1.6rem', fontWeight: 900, color: isDark ? '#fff' : '#0d1117', fontFamily: "'Outfit', monospace", direction: 'rtl' }}
+                style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontSize: isDesktop ? '1.35rem' : '1.6rem', fontWeight: 900, color: isDark ? '#fff' : '#0d1117', fontFamily: "'Outfit', monospace", direction: 'rtl' }}
               />
               <Typography sx={{ color: 'text.disabled', fontWeight: 700, fontFamily: F, flexShrink: 0 }}>د.ل</Typography>
             </Stack>
           </Box>
-          {/* Quick amounts grid */}
-          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, mb: 3 }}>
+          <Box sx={{ display: 'grid', gridTemplateColumns: isDesktop ? '1fr 1fr 1fr 1fr' : '1fr 1fr', gap: 1, mb: 3 }}>
             {[
               { amount: 10000, label: '10 آلاف' },
               { amount: 20000, label: '20 ألف' },
@@ -888,13 +989,13 @@ export const FundPage = () => {
             ].map(({ amount: a, label }) => (
               <Box key={a} onClick={() => setForm(f => ({ ...f, amount: String(a) }))}
                 sx={{
-                  px: 2, py: 1.4, borderRadius: 1.5, cursor: 'pointer',
+                  px: 2, py: isDesktop ? 1.1 : 1.4, borderRadius: 1.5, cursor: 'pointer',
                   border: `1.5px solid ${form.amount === String(a) ? '#10b981' : (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.09)')}`,
                   bgcolor: form.amount === String(a) ? '#10b981' : (isDark ? 'rgba(255,255,255,0.03)' : '#fff'),
                   textAlign: 'center', transition: 'all 0.18s',
                   boxShadow: form.amount === String(a) ? '0 4px 14px rgba(16,185,129,0.3)' : 'none',
                 }}>
-                <Typography sx={{ fontSize: '1rem', fontWeight: 900, color: form.amount === String(a) ? '#fff' : 'text.primary', fontFamily: FN, lineHeight: 1 }}>
+                <Typography sx={{ fontSize: isDesktop ? '0.92rem' : '1rem', fontWeight: 900, color: form.amount === String(a) ? '#fff' : 'text.primary', fontFamily: FN, lineHeight: 1 }}>
                   {(a / 1000).toLocaleString()}k
                 </Typography>
                 <Typography sx={{ fontSize: '0.6rem', color: form.amount === String(a) ? 'rgba(255,255,255,0.75)' : 'text.disabled', fontWeight: 600, fontFamily: F, mt: 0.3 }}>
@@ -906,7 +1007,6 @@ export const FundPage = () => {
 
           <Divider sx={{ mb: 3 }} />
 
-          {/* Details */}
           <Typography sx={{ fontSize: '0.6rem', fontWeight: 800, color: 'text.disabled', letterSpacing: 2, mb: 1.5, fontFamily: F }}>
             ٣ — التفاصيل
           </Typography>
@@ -926,8 +1026,15 @@ export const FundPage = () => {
           </Stack>
         </Box>
 
-        {/* Dialog Footer */}
-        <Box sx={{ px: 2.5, py: 2, pb: 'calc(env(safe-area-inset-bottom, 8px) + 16px)', bgcolor: isDark ? '#0a0e14' : '#e8eaed', borderTop: '1px solid', borderColor: 'divider' }}>
+        <Box sx={{
+          flexShrink: 0,
+          px: isDesktop ? 3 : 2.5,
+          py: 2,
+          pb: isDesktop ? 2 : 'calc(env(safe-area-inset-bottom, 8px) + 16px)',
+          bgcolor: isDesktop ? 'background.paper' : (isDark ? '#0a0e14' : '#e8eaed'),
+          borderTop: '1px solid',
+          borderColor: 'divider',
+        }}>
           {form.userId && form.amount && (
             <Box sx={{ mb: 1.5, px: 1.8, py: 1, borderRadius: 1.5, bgcolor: 'rgba(16,185,129,0.07)', border: '1px solid rgba(16,185,129,0.15)' }}>
               <Typography sx={{ fontSize: '0.65rem', fontWeight: 800, color: '#10b981', mb: 0.2, fontFamily: F }}>ملخص</Typography>

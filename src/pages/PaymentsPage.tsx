@@ -17,12 +17,23 @@ import { useNavigate } from 'react-router-dom';
 import { useDataStore } from '../store/useDataStore';
 import { formatCurrency, formatDate } from '../utils/formatters';
 import { PageScaffold } from '../components/layout/PageScaffold';
+import { useIsDesktopLayout } from '../hooks/useIsDesktopLayout';
+import { DesktopRecordTable, DesktopRecordRow } from '../components/desktop/DesktopRecordTable';
+import { DESKTOP_NUM_FONT } from '../components/desktop/desktopChrome';
 import { EtlalaAccentSurface, EtlalaEmptyState, EtlalaSectionTitle, etlalaContentFieldSx, etlalaHeroActionButtonSx } from '../components/etlala/EtlalaMobileUi';
 
 const Grid = MuiGrid as any;
 
+const PAYMENT_DESKTOP_COLS = [
+  { key: 'client', label: 'العميل', width: 'minmax(0, 1.4fr)' },
+  { key: 'date', label: 'التاريخ', width: '130px' },
+  { key: 'method', label: 'الطريقة', width: '130px' },
+  { key: 'amount', label: 'المبلغ', width: '150px', align: 'end' as const },
+];
+
 export const PaymentsPage = () => {
   const theme = useTheme();
+  const isDesktop = useIsDesktopLayout();
   const isDark = theme.palette.mode === 'dark';
   const navigate = useNavigate();
   const { payments, clients, invoices } = useDataStore();
@@ -127,6 +138,26 @@ export const PaymentsPage = () => {
               title={searchQuery ? 'لا نتائج' : 'لا توجد مدفوعات'}
               hint={searchQuery ? 'غيّر نص البحث أو امسح الحقل' : 'سجّل دفعة من بروفايل العميل أو من الفواتير'}
             />
+          ) : isDesktop ? (
+            <DesktopRecordTable columns={PAYMENT_DESKTOP_COLS}>
+              {filteredPayments.map((payment) => {
+                const client = clients.find(c => c.id === payment.clientId);
+                const invoice = invoices.find(inv => inv.id === payment.invoiceId);
+                const clientName = client?.name || invoice?.tempClientName || 'عميل غير معروف';
+                return (
+                  <DesktopRecordRow
+                    key={payment.id}
+                    columns={PAYMENT_DESKTOP_COLS}
+                    cells={[
+                      <Typography key="c" fontWeight={800} noWrap>{clientName}</Typography>,
+                      <Typography key="d" color="text.secondary" sx={{ fontSize: '0.8rem' }}>{formatDate(payment.paymentDate)}</Typography>,
+                      <Chip key="m" size="small" label={getPaymentMethodLabel(payment.paymentMethod)} sx={{ height: 22, fontWeight: 750 }} />,
+                      <Typography key="a" fontWeight={800} color="primary.main" sx={{ fontFamily: DESKTOP_NUM_FONT, fontVariantNumeric: 'tabular-nums' }}>+{formatCurrency(payment.amount)}</Typography>,
+                    ]}
+                  />
+                );
+              })}
+            </DesktopRecordTable>
           ) : (
             filteredPayments.map((payment) => {
               const client = clients.find(c => c.id === payment.clientId);

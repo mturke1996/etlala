@@ -140,10 +140,12 @@ export const Layout = () => {
         sx={{
           display: "flex",
           flexDirection: "row",
-          minHeight: "100dvh",
+          height: "100dvh",
+          maxHeight: "100dvh",
+          overflow: "hidden",
           width: "100%",
           bgcolor: "background.default",
-          "@media print": { display: "block" },
+          "@media print": { display: "block", height: "auto", overflow: "visible" },
         }}
       >
         <DesktopSidebar
@@ -155,10 +157,12 @@ export const Layout = () => {
           sx={{
             flex: 1,
             minWidth: 0,
+            minHeight: 0,
+            height: "100%",
             position: "relative",
-            minHeight: "100dvh",
             overflow: "auto",
-            "@media print": { width: "100%" },
+            bgcolor: "background.default",
+            "@media print": { width: "100%", overflow: "visible", height: "auto" },
           }}
         >
           <Box
@@ -170,13 +174,15 @@ export const Layout = () => {
             aria-hidden
             sx={{
               position: "fixed",
-              inset: 0,
-              left: DESKTOP_SIDEBAR_WIDTH,
+              top: 0,
+              bottom: 0,
+              insetInlineStart: DESKTOP_SIDEBAR_WIDTH,
+              insetInlineEnd: 0,
               zIndex: 0,
               pointerEvents: "none",
             }}
           />
-          <Box sx={{ position: "relative", zIndex: 1 }}>
+          <Box sx={{ position: "relative", zIndex: 1, minHeight: "100%" }}>
             <Outlet />
           </Box>
         </Box>

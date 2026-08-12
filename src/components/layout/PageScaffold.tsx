@@ -7,7 +7,7 @@ import { useIsDesktopLayout } from '../../hooks/useIsDesktopLayout';
 
 /**
  * Etlala — هيكل صفحات موحّد
- * UI/UX Pro Max: Swiss spacing، تدرج علوي نقي، تركيز واضح، ومساحة بيضاء سخية.
+ * جوال: هيرو متدرج بزوايا سفلية. سطح المكتب: شريط أوامر مسطّح لاصق (لوحة تحكم).
  */
 export interface PageScaffoldProps {
   title: ReactNode;
@@ -50,8 +50,9 @@ export function PageScaffold({
   const effectiveMaxWidth =
     maxWidth === 'sm' && isDesktop ? 'xl' : maxWidth;
   const pageBottomPad = isDesktop
-    ? 3
+    ? 4
     : 'calc(80px + env(safe-area-inset-bottom, 0px))';
+  const hideBack = isDesktop && backTo === '/' && !useHistoryBack;
 
   const onBack = () => {
     if (useHistoryBack) navigate(-1);
@@ -72,43 +73,46 @@ export function PageScaffold({
         className={isProfile ? 'etlala-home-hero--mesh' : undefined}
         sx={[
           {
-            ...(isDesktop && !isProfile
-              ? {
-                  borderRadius: 0,
-                  borderBottom: `1px solid ${alpha(theme.palette.divider, isDark ? 0.85 : 0.65)}`,
-                  boxShadow: isDark
-                    ? '0 4px 24px rgba(0,0,0,0.22)'
-                    : '0 2px 16px rgba(31, 37, 33, 0.06)',
-                }
-              : {}),
             background: isProfile
               ? (isDark
                 ? 'linear-gradient(166deg, #111A14 0%, #1A251D 42%, #121A15 100%)'
                 : 'linear-gradient(166deg, #304238 0%, #2A3A31 45%, #233229 100%)')
               : (isDark
-                ? 'linear-gradient(166deg, #1B251E 0%, #141C17 55%, #101713 100%)'
-                : 'linear-gradient(166deg, #35483D 0%, #2C3D33 52%, #25342B 100%)'),
+                ? 'linear-gradient(180deg, #1B251E 0%, #141C17 100%)'
+                : 'linear-gradient(180deg, #35483D 0%, #2C3D33 100%)'),
             pt: isProfile
-              ? 'calc(env(safe-area-inset-top) + 17px)'
+              ? (isDesktop
+                ? '18px'
+                : 'calc(env(safe-area-inset-top) + 17px)')
               : isDesktop
-                ? 'calc(env(safe-area-inset-top, 0px) + 20px)'
+                ? '16px'
                 : 'calc(env(safe-area-inset-top) + 14px)',
-            pb: isProfile ? 3.25 : isDesktop ? 2.5 : 2.95,
-            px: isDesktop ? 3 : 2,
+            pb: isProfile ? (isDesktop ? 2.5 : 3.25) : isDesktop ? 2 : 2.95,
+            px: isDesktop ? 0 : 2,
             color: 'common.white',
-            borderRadius: isProfile
-              ? { xs: '0 0 30px 30px', sm: '0 0 36px 36px' }
-              : { xs: '0 0 24px 24px', sm: '0 0 30px 30px' },
-            boxShadow: isProfile
-              ? (isDark
-                ? '0 20px 54px -16px rgba(0,0,0,0.62), inset 0 0 100px -50px rgba(194, 178, 128, 0.05), inset 0 -1px 0 rgba(226, 232, 240, 0.07)'
-                : '0 16px 44px -14px rgba(20, 28, 22, 0.4), inset 0 0 72px -34px rgba(255,255,255,0.05)')
-              : (isDark
-                ? '0 14px 40px -16px rgba(0,0,0,0.56), inset 0 -1px 0 rgba(226, 232, 240, 0.05)'
-                : '0 12px 34px -14px rgba(20, 28, 22, 0.28), inset 0 -1px 0 rgba(255,255,255,0.1)'),
-            position: 'relative',
+            position: isDesktop ? 'sticky' : 'relative',
+            top: isDesktop ? 0 : undefined,
+            zIndex: isDesktop ? 20 : 1,
             overflow: 'hidden',
-            borderBottom: `1px solid ${isDark ? 'rgba(226, 232, 240, 0.14)' : 'rgba(226, 232, 240, 0.24)'}`,
+            borderRadius: isDesktop
+              ? 0
+              : isProfile
+                ? { xs: '0 0 30px 30px', sm: '0 0 36px 36px' }
+                : { xs: '0 0 24px 24px', sm: '0 0 30px 30px' },
+            borderBottom: isDesktop
+              ? `1px solid ${isDark ? 'rgba(212, 201, 163, 0.16)' : 'rgba(194, 178, 128, 0.28)'}`
+              : `1px solid ${isDark ? 'rgba(226, 232, 240, 0.14)' : 'rgba(226, 232, 240, 0.24)'}`,
+            boxShadow: isDesktop
+              ? (isDark
+                ? '0 8px 28px rgba(0,0,0,0.28)'
+                : '0 8px 24px rgba(20, 28, 22, 0.12)')
+              : isProfile
+                ? (isDark
+                  ? '0 20px 54px -16px rgba(0,0,0,0.62), inset 0 0 100px -50px rgba(194, 178, 128, 0.05), inset 0 -1px 0 rgba(226, 232, 240, 0.07)'
+                  : '0 16px 44px -14px rgba(20, 28, 22, 0.4), inset 0 0 72px -34px rgba(255,255,255,0.05)')
+                : (isDark
+                  ? '0 14px 40px -16px rgba(0,0,0,0.56), inset 0 -1px 0 rgba(226, 232, 240, 0.05)'
+                  : '0 12px 34px -14px rgba(20, 28, 22, 0.28), inset 0 -1px 0 rgba(255,255,255,0.1)'),
             '&::before': {
               content: '""',
               position: 'absolute',
@@ -118,8 +122,8 @@ export function PageScaffold({
                   ? 'radial-gradient(ellipse 110% 90% at 100% 0%, rgba(194, 178, 128, 0.12) 0%, transparent 48%), radial-gradient(ellipse 62% 52% at 0% 100%, rgba(255,255,255,0.05) 0%, transparent 52%)'
                   : 'radial-gradient(ellipse 100% 86% at 0% 0%, rgba(255,255,255,0.14) 0%, transparent 50%), radial-gradient(ellipse 70% 62% at 100% 100%, rgba(194, 178, 128, 0.1) 0%, transparent 56%)')
                 : (isDark
-                  ? 'radial-gradient(ellipse 95% 72% at 100% 0%, rgba(194, 178, 128, 0.09) 0%, transparent 53%)'
-                  : 'radial-gradient(ellipse 86% 66% at 0% 0%, rgba(255,255,255,0.2) 0%, transparent 56%)'),
+                  ? 'radial-gradient(ellipse 80% 120% at 100% 0%, rgba(194, 178, 128, 0.1) 0%, transparent 55%)'
+                  : 'radial-gradient(ellipse 70% 140% at 0% 0%, rgba(255,255,255,0.16) 0%, transparent 58%)'),
               pointerEvents: 'none',
             },
             '&::after': {
@@ -129,13 +133,9 @@ export function PageScaffold({
               left: 0,
               right: 0,
               height: 1,
-              background: isProfile
-                ? (isDark
-                  ? 'linear-gradient(90deg, transparent, rgba(226, 232, 240, 0.3) 50%, transparent)'
-                  : 'linear-gradient(90deg, transparent, rgba(255,255,255,0.5) 50%, transparent)')
-                : (isDark
-                  ? 'linear-gradient(90deg, transparent, rgba(255,255,255,0.14), transparent)'
-                  : 'linear-gradient(90deg, transparent, rgba(255,255,255,0.38), transparent)'),
+              background: isDark
+                ? 'linear-gradient(90deg, transparent, rgba(255,255,255,0.14), transparent)'
+                : 'linear-gradient(90deg, transparent, rgba(255,255,255,0.38), transparent)',
               pointerEvents: 'none',
             },
           },
@@ -145,38 +145,40 @@ export function PageScaffold({
         {isProfile ? (
           <Box className="etlala-dot-overlay" sx={{ zIndex: 0, pointerEvents: 'none' }} aria-hidden />
         ) : null}
-        <Container maxWidth={effectiveMaxWidth} sx={{ position: 'relative', zIndex: 1 }}>
+        <Container maxWidth={effectiveMaxWidth} sx={{ position: 'relative', zIndex: 1, px: { xs: 0, lg: 3.5 } }}>
           <Stack
             direction="row"
             alignItems="center"
             gap={1.5}
-            sx={{ mb: headerExtra ? 2 : 0, minHeight: 46 }}
+            sx={{ mb: headerExtra ? (isDesktop ? 1.75 : 2) : 0, minHeight: isDesktop ? 44 : 46 }}
           >
-            <IconButton
-              onClick={onBack}
-              aria-label="رجوع"
-              sx={{
-                width: 42,
-                height: 42,
-                borderRadius: '14px',
-                color: alpha('#fff', 0.95),
-                bgcolor: alpha('#fff', 0.08),
-                border: `1px solid ${alpha('#fff', 0.14)}`,
-                backdropFilter: 'blur(8px)',
-                WebkitBackdropFilter: 'blur(8px)',
-                '&:hover': { bgcolor: alpha('#fff', 0.16), borderColor: alpha('#fff', 0.22) },
-                flexShrink: 0,
-              }}
-            >
-              <ArrowRight size={20} strokeWidth={2} />
-            </IconButton>
+            {hideBack ? null : (
+              <IconButton
+                onClick={onBack}
+                aria-label="رجوع"
+                sx={{
+                  width: 42,
+                  height: 42,
+                  borderRadius: '14px',
+                  color: alpha('#fff', 0.95),
+                  bgcolor: alpha('#fff', 0.08),
+                  border: `1px solid ${alpha('#fff', 0.14)}`,
+                  backdropFilter: 'blur(8px)',
+                  WebkitBackdropFilter: 'blur(8px)',
+                  '&:hover': { bgcolor: alpha('#fff', 0.16), borderColor: alpha('#fff', 0.22) },
+                  flexShrink: 0,
+                }}
+              >
+                <ArrowRight size={20} strokeWidth={2} />
+              </IconButton>
+            )}
             <Box sx={{ flex: 1, minWidth: 0, textAlign: 'right' }}>
               <Typography
                 component="h1"
                 variant={isProfile ? 'h4' : 'h5'}
                 sx={{
                   fontWeight: 800,
-                  letterSpacing: isProfile ? 0.2 : 0.15,
+                  letterSpacing: isProfile ? 0.2 : 0.1,
                   lineHeight: 1.25,
                   color: '#fff',
                   fontFeatureSettings: '"kern" 1',
@@ -185,7 +187,9 @@ export function PageScaffold({
                     : '0 1px 18px rgba(0,0,0,0.15)',
                   fontSize: isProfile
                     ? { xs: '1.35rem', sm: '1.5rem' }
-                    : { xs: '1.14rem', sm: '1.24rem' },
+                    : isDesktop
+                      ? '1.28rem'
+                      : { xs: '1.14rem', sm: '1.24rem' },
                 }}
               >
                 {title}
@@ -197,9 +201,9 @@ export function PageScaffold({
                   sx={{
                     color: alpha('#fff', isProfile ? 0.75 : 0.7),
                     display: 'block',
-                    mt: 0.5,
+                    mt: 0.4,
                     lineHeight: 1.5,
-                    fontSize: isProfile ? '0.82rem' : '0.78rem',
+                    fontSize: isProfile ? '0.82rem' : isDesktop ? '0.8rem' : '0.78rem',
                     fontWeight: isProfile ? 500 : 400,
                     letterSpacing: isProfile ? 0.2 : undefined,
                   }}
@@ -217,8 +221,8 @@ export function PageScaffold({
       <Container
         maxWidth={effectiveMaxWidth}
         sx={{
-          py: isDesktop ? 3 : 2.5,
-          px: isDesktop ? 3 : 2,
+          py: isDesktop ? 3.5 : 2.5,
+          px: isDesktop ? 3.5 : 2,
           mt: contentOffset,
         }}
       >
