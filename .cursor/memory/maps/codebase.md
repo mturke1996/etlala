@@ -1,6 +1,6 @@
 # Codebase Map — Etlala
 
-**Last updated:** 2026-07-06
+**Last updated:** 2026-08-12
 
 ## Stack
 
@@ -25,12 +25,14 @@
 ## `src/` modules
 
 - `src/pages/` — route-level screens (e.g. `HomePage`, `InvoicesPage`, `ClientProfilePage`, `LoginPage`, `DashboardHomePage`, …)
-  - **`ExpensesPage`:** خفيفة — **بدون recharts** (شريط فئات CSS خالص `topCategories`)، ترقيم صفحات `PAGE_SIZE=30` + زر «عرض المزيد»، والنموذج عبر `QuickExpenseSheet` المشترك (يدعم `?new=1` القديمة)
-  - **`LoginPage`:** أبيض نظيف iOS — شعار القوس الذهبي `public/logo-arch-gold.jpg` في squircle، حقول 54px بلا إطار، زر أخضر داكن 54px
-  - **`DashboardHomePage`:** بطاقة عليا **صافي النسبة** — المبلغ الكامل (`CustodyMoneyLine` للمحصل−مصروفات) + سطر **هامش من المحصّل %**؛ موجة SVG؛ بطاقتا المحصّل/المصروفات بشرائط لون وتدرجات مميّزة (Swiss / soft UI)
-  - **`ClientProfilePage`:** لوحة الملخص المالي تحت الهيرو؛ أول خلية **النسبة المتفق عليها** (`profitPercentage`) مع «صافي المحسوب» كسطر فرعي
+  - **`DashboardHomePage`:** الرئيسية — إحصائيات + قوائم؛ على **≥lg (1200px)** شبكة هيرو+KPIs ثلاثية الأعمدة وقوائم متعددة الأعمدة
+  - **`ExpensesPage`:** خفيفة — بدون recharts، ترقيم 30 صف + `QuickExpenseSheet`
+  - **`LoginPage`:** أبيض نظيف iOS — squircle logo، حقول 54px
+  - **`ClientProfilePage`:** ملخص مالي تحت الهيرو
 - `src/components/`
-  - `Layout.tsx`, `PageScaffold.tsx` — shell / page frame; `Layout` renders the global FAB **and** `QuickExpenseSheet` (instant new-expense bottom sheet, no navigation)
+  - **`Layout.tsx`** — `< lg`: إطار جوال 430px + شريط سفلي؛ **`≥ lg`:** `DesktopSidebar` + محتوى كامل (`etlala-desktop-shell`)
+  - **`layout/DesktopSidebar.tsx`** — تنقل جانبي احترافي (سطح المكتب)
+  - **`layout/PageScaffold.tsx`** — هيكل الصفحات؛ `maxWidth` يتوسّع إلى `xl` على سطح المكتب
   - `expense/QuickExpenseSheet.tsx` — shared "مصروف جديد" sheet used by Layout FAB + ExpensesPage (client select, qty×price, date)
   - `etlala/` — mobile UI (`EtlalaMobileUi`)
   - `invoices/` — `InvoiceListItem` (dense mobile row + month header for `InvoicesPage`)
@@ -42,6 +44,8 @@
     - Service: `src/utils/pdfService.ts` (generate/download/share + font preload + brand assets)
     - Formatters: `src/utils/pdfFormatters.ts` (qty/unit columns for expense PDFs)
   - Other shared: `LoadingScreen`, `Logo`, `HeroLogo`, `PrintableInvoice`, `AppLockGuard`, etc.
+- `src/layout/navConfig.ts` — مصدر واحد لعناصر التنقل (جوال + سطح مكتب)
+- `src/hooks/useIsDesktopLayout.ts` — `useMediaQuery(lg)` للتبديل بين تخطيط الجوال وسطح المكتب
 - `src/store/` — Zustand stores (`useAuthStore`, `useDataStore`, `useThemeStore`, `useAppLockStore`, `useGlobalFundStore`, …)
 - `src/theme/` — MUI theme + `tokens.ts` (premium color tokens)
 - `src/index.css` — global CSS

@@ -77,6 +77,7 @@ import toast from "react-hot-toast";
 import { useGlobalFundStore } from "../store/useGlobalFundStore";
 import { computeUserFundAllocTotals } from "../utils/custodyFundAlloc";
 import { formatCurrency } from "../utils/formatters";
+import { useIsDesktopLayout } from "../hooks/useIsDesktopLayout";
 
 dayjs.extend(relativeTime);
 dayjs.locale("ar");
@@ -373,6 +374,7 @@ export const DashboardHomePage = () => {
   const [notifDismissMap, setNotifDismissMap] = useState(loadDismissMap);
   const [notifFilter, setNotifFilter] = useState<NotificationFilter>("all");
   const reduceMotion = useReducedMotion();
+  const isDesktop = useIsDesktopLayout();
 
   const canOpenFund = canAccess("balances");
   const canSeeStats = canAccess("stats");
@@ -646,6 +648,10 @@ export const DashboardHomePage = () => {
         p: 0.6,
         display: "grid",
         gap: 0.55,
+        gridTemplateColumns: isDesktop ? "repeat(2, minmax(0, 1fr))" : "1fr",
+        "@media (min-width: 1400px)": {
+          gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+        },
         bgcolor: isMuiDark ? alpha("#fff", 0.04) : "#FFFFFF",
         border: `1px solid ${isMuiDark ? alpha("#fff", 0.07) : "rgba(31, 37, 33, 0.06)"}`,
         boxShadow: isMuiDark
@@ -799,9 +805,9 @@ export const DashboardHomePage = () => {
       }}
     >
       <Container
-        maxWidth="sm"
+        maxWidth={isDesktop ? "xl" : "sm"}
         sx={{
-          px: 2,
+          px: isDesktop ? 3 : 2,
           pt: "calc(env(safe-area-inset-top, 0px) + 16px)",
           maxWidth: "100% !important",
         }}
@@ -832,6 +838,7 @@ export const DashboardHomePage = () => {
               onClick={() => setSideMenuOpen(true)}
               aria-label="القائمة الجانبية"
               sx={{
+                display: { xs: "inline-flex", lg: "none" },
                 width: 42,
                 height: 42,
                 borderRadius: "50%",
@@ -1016,22 +1023,31 @@ export const DashboardHomePage = () => {
         </Box>
 
         <Box
-          component={motion.div}
-          sx={{ mb: 3.35, mx: { xs: -1.2, sm: -0.95 } }}
-          initial={reduceMotion ? undefined : { opacity: 0, y: 14, scale: 0.985 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{
-            duration: reduceMotion ? 0 : 0.55,
-            ease: [0.2, 0.8, 0.2, 1],
+          sx={{
+            display: isDesktop ? "grid" : "block",
+            gridTemplateColumns: isDesktop ? "minmax(0, 1.05fr) minmax(0, 1.45fr)" : "1fr",
+            gap: isDesktop ? 3 : 0,
+            alignItems: "start",
+            mb: isDesktop ? 3 : 3.35,
           }}
         >
-          {/* هيرو — الصورة كاملة بنسبتها الأصلية بلا قصّ ولا تغطية تعتيم (أقصى وضوح للنص) */}
           <Box
-            sx={{
-              position: "relative",
-              width: "100%",
-              aspectRatio: "1024 / 780",
-              borderRadius: "26px",
+            component={motion.div}
+            sx={{ mb: { xs: 3.35, lg: 0 }, mx: { xs: -1.2, sm: -0.95, lg: 0 } }}
+            initial={reduceMotion ? undefined : { opacity: 0, y: 14, scale: 0.985 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{
+              duration: reduceMotion ? 0 : 0.55,
+              ease: [0.2, 0.8, 0.2, 1],
+            }}
+          >
+            <Box
+              sx={{
+                position: "relative",
+                width: "100%",
+                aspectRatio: isDesktop ? "16 / 10" : "1024 / 780",
+                maxHeight: isDesktop ? 320 : undefined,
+                borderRadius: isDesktop ? "20px" : "26px",
               overflow: "hidden",
               isolation: "isolate",
               border: "1px solid",
@@ -1067,9 +1083,19 @@ export const DashboardHomePage = () => {
           </Box>
         </Box>
 
-        <Stack spacing={3} sx={{ width: 1, mt: 1 }} useFlexGap>
+          <Box sx={{ minWidth: 0, width: 1 }}>
+        <Stack spacing={3} sx={{ width: 1, mt: { xs: 1, lg: 0 } }} useFlexGap>
           {canAccess("stats") && (
-            <Stack spacing={1.5} sx={{ width: 1 }} useFlexGap>
+            <Stack
+              spacing={1.5}
+              sx={{
+                width: 1,
+                display: { lg: "grid" },
+                gridTemplateColumns: { lg: "repeat(3, minmax(0, 1fr))" },
+                gap: { lg: 1.5 },
+              }}
+              useFlexGap
+            >
               <Card
                 elevation={0}
                 sx={{
@@ -1219,7 +1245,15 @@ export const DashboardHomePage = () => {
                 )}
               </Card>
 
-              <Stack direction="row" spacing={1.35} sx={{ width: 1 }} useFlexGap>
+              <Stack
+                direction="row"
+                spacing={1.35}
+                sx={{
+                  width: 1,
+                  display: { lg: "contents" },
+                }}
+                useFlexGap
+              >
                 {(
                   [
                     {
@@ -1451,6 +1485,11 @@ export const DashboardHomePage = () => {
             </Stack>
           )}
 
+        </Stack>
+          </Box>
+        </Box>
+
+        <Stack spacing={3} sx={{ width: 1, mt: 1 }} useFlexGap>
           {user && !fundLoading && myCustodyFund && (
             <Card
               elevation={0}

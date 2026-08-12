@@ -3,6 +3,7 @@ import type { SxProps, Theme } from '@mui/material/styles';
 import { Box, Container, IconButton, Stack, Typography, useTheme, alpha } from '@mui/material';
 import { ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useIsDesktopLayout } from '../../hooks/useIsDesktopLayout';
 
 /**
  * Etlala — هيكل صفحات موحّد
@@ -43,8 +44,14 @@ export function PageScaffold({
 }: PageScaffoldProps) {
   const theme = useTheme();
   const navigate = useNavigate();
+  const isDesktop = useIsDesktopLayout();
   const isDark = theme.palette.mode === 'dark';
   const isProfile = headerVariant === 'profile';
+  const effectiveMaxWidth =
+    maxWidth === 'sm' && isDesktop ? 'xl' : maxWidth;
+  const pageBottomPad = isDesktop
+    ? 3
+    : 'calc(80px + env(safe-area-inset-bottom, 0px))';
 
   const onBack = () => {
     if (useHistoryBack) navigate(-1);
@@ -57,7 +64,7 @@ export function PageScaffold({
       sx={{
         minHeight: '100dvh',
         bgcolor: 'background.default',
-        pb: 'calc(80px + env(safe-area-inset-bottom, 0px))',
+        pb: pageBottomPad,
       }}
     >
       <Box
@@ -65,6 +72,15 @@ export function PageScaffold({
         className={isProfile ? 'etlala-home-hero--mesh' : undefined}
         sx={[
           {
+            ...(isDesktop && !isProfile
+              ? {
+                  borderRadius: 0,
+                  borderBottom: `1px solid ${alpha(theme.palette.divider, isDark ? 0.85 : 0.65)}`,
+                  boxShadow: isDark
+                    ? '0 4px 24px rgba(0,0,0,0.22)'
+                    : '0 2px 16px rgba(31, 37, 33, 0.06)',
+                }
+              : {}),
             background: isProfile
               ? (isDark
                 ? 'linear-gradient(166deg, #111A14 0%, #1A251D 42%, #121A15 100%)'
@@ -72,9 +88,13 @@ export function PageScaffold({
               : (isDark
                 ? 'linear-gradient(166deg, #1B251E 0%, #141C17 55%, #101713 100%)'
                 : 'linear-gradient(166deg, #35483D 0%, #2C3D33 52%, #25342B 100%)'),
-            pt: isProfile ? 'calc(env(safe-area-inset-top) + 17px)' : 'calc(env(safe-area-inset-top) + 14px)',
-            pb: isProfile ? 3.25 : 2.95,
-            px: 2,
+            pt: isProfile
+              ? 'calc(env(safe-area-inset-top) + 17px)'
+              : isDesktop
+                ? 'calc(env(safe-area-inset-top, 0px) + 20px)'
+                : 'calc(env(safe-area-inset-top) + 14px)',
+            pb: isProfile ? 3.25 : isDesktop ? 2.5 : 2.95,
+            px: isDesktop ? 3 : 2,
             color: 'common.white',
             borderRadius: isProfile
               ? { xs: '0 0 30px 30px', sm: '0 0 36px 36px' }
@@ -125,7 +145,7 @@ export function PageScaffold({
         {isProfile ? (
           <Box className="etlala-dot-overlay" sx={{ zIndex: 0, pointerEvents: 'none' }} aria-hidden />
         ) : null}
-        <Container maxWidth={maxWidth} sx={{ position: 'relative', zIndex: 1 }}>
+        <Container maxWidth={effectiveMaxWidth} sx={{ position: 'relative', zIndex: 1 }}>
           <Stack
             direction="row"
             alignItems="center"
@@ -195,10 +215,10 @@ export function PageScaffold({
       </Box>
 
       <Container
-        maxWidth={maxWidth}
+        maxWidth={effectiveMaxWidth}
         sx={{
-          py: 2.5,
-          px: 2,
+          py: isDesktop ? 3 : 2.5,
+          px: isDesktop ? 3 : 2,
           mt: contentOffset,
         }}
       >

@@ -2,15 +2,11 @@
 
 ## Current state
 
-React + Vite + TypeScript PWA; MUI; Firebase (Firestore, Cloud Functions, FCM). Arabic RTL, mobile-first, premium B2B ops UI. Source design spec: repo root `DESIGN.md`. Theme tokens: `src/theme/tokens.ts` and `src/theme/index.ts`.
-
-## Active TODOs
-
-- (None tracked here — add when needed.)
+React + Vite + TypeScript PWA; MUI; Firebase. Arabic RTL — **mobile-first** (<1200px) + **desktop shell** (≥lg sidebar) from same codebase.
 
 ## Recent sessions
 
-- 2026-07-06 — iOS-native design refresh + PM follow-up: instant QuickExpenseSheet FAB, lightweight ExpensesPage (no recharts, 30-row pagination), clean-white LoginPage, full-ratio hero; **root cause of "nothing changed" = site hosted on Vercel `etlala.ly`, local work undeployed → deployed to production + added `vercel.json` SPA rewrites** → `sessions/2026-07-06.md`
+- 2026-08-12 — Desktop professional layout (sidebar, xl content) without changing mobile UX → `sessions/2026-08-12.md` instant QuickExpenseSheet FAB, lightweight ExpensesPage (no recharts, 30-row pagination), clean-white LoginPage, full-ratio hero; **root cause of "nothing changed" = site hosted on Vercel `etlala.ly`, local work undeployed → deployed to production + added `vercel.json` SPA rewrites** → `sessions/2026-07-06.md`
 - 2026-07-05 — PDF upgrade from rkeaz-group (pdfKit, lazy load, Tajawal, branded headers) → `sessions/2026-07-05.md`
 - 2026-04-27 — Bootstrapped `.cursor/memory` + knowledge-base rule → `sessions/2026-04-27.md`
 

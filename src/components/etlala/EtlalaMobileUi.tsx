@@ -417,11 +417,12 @@ export const etlalaSharpPrimaryCtaButtonSx: SxProps<Theme> = {
 export const etlalaIssueStickyBarSx: SxProps<Theme> = {
   position: 'fixed',
   bottom: 'calc(64px + env(safe-area-inset-bottom, 0px))',
-  left: 0,
-  right: 0,
-  /** يلتزم بإطار الجوال 430px على الشاشات العريضة */
-  maxWidth: { xs: '100%', sm: '430px' },
-  mx: 'auto',
+  /** جوال: يتمركز ضمن إطار 430px — سطح المكتب: يمتد بجانب الشريط الجانبي */
+  left: { xs: 0, lg: 'auto' },
+  right: { xs: 0, lg: 0 },
+  maxWidth: { xs: '100%', sm: '430px', lg: 'none' },
+  mx: { xs: 'auto', lg: 0 },
+  width: { lg: 'calc(100% - 272px)' },
   zIndex: 1100,
   bgcolor: 'background.paper',
   borderTop: `3px solid ${premiumTokens.accent}`,

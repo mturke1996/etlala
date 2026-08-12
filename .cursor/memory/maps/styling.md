@@ -1,6 +1,6 @@
 # Styling & UI Rules — Etlala
 
-**Last updated:** 2026-07-06
+**Last updated:** 2026-08-12
 
 **Canonical spec:** [DESIGN.md](../../../DESIGN.md) (v2) at repo root. This file is a *compressed* snapshot for the knowledge base; after visual or token changes, sync both `DESIGN.md` (if applicable) and this file.
 
@@ -9,6 +9,10 @@
 - Code tokens: `src/theme/tokens.ts` (`premiumTokens` — light-first; dark derived in theme)
 - Global styles: `src/index.css`
 - If `DESIGN.md` and `tokens.ts` disagree, **reconcile** — usually `DESIGN.md` defines intent; `tokens.ts` is implementation.
+
+## Layout breakpoints
+- **Mobile / tablet portrait (`< 1200px`):** إطار 430px متمركز، شريط تنقل سفلي iOS-style — **بدون تغيير**.
+- **Desktop (`≥ lg` / 1200px):** `etlala-desktop-shell` — شريط جانبي 272px (`DesktopSidebar`)، محتوى `maxWidth: xl` في `PageScaffold`، بدون شريط سفلي.
 
 ## Atmosphere (2026-07 refresh — iOS-native premium)
 - B2B ops / engineering: trust, calm, clarity; **iOS clean-white + hairline** language (rkeaz-group quality traits, Etlala colors).

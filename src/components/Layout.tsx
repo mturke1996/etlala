@@ -3,42 +3,32 @@ import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { Box, Typography, alpha, useTheme } from "@mui/material";
 import { motion } from "framer-motion";
 import { useAppLockStore } from "../store/useAppLockStore";
-import { CreditCard, FileText, Home, Plus, Users, Wallet } from "lucide-react";
+import { Plus } from "lucide-react";
 import { premiumTokens } from "../theme/tokens";
 import { QuickExpenseSheet } from "./expense/QuickExpenseSheet";
+import { useIsDesktopLayout } from "../hooks/useIsDesktopLayout";
+import {
+  DesktopSidebar,
+  DESKTOP_SIDEBAR_WIDTH,
+} from "./layout/DesktopSidebar";
+import {
+  APP_NAV_ITEMS,
+  isNavPathActive,
+  type NavItemDef,
+} from "../layout/navConfig";
 
-/** إطار iPhone — التطبيق يتمركز على الشاشات الكبيرة بعرض جوال ثابت */
+/** إطار iPhone — التطبيق يتمركز على الشاشات المتوسطة بعرض جوال ثابت (أقل من lg) */
 export const APP_FRAME_MAX_WIDTH = 430;
 
 /** ارتفاع شريط التنقل السفلي (بدون المنطقة الآمنة) */
 const NAV_HEIGHT = 64;
-
-type NavItem = {
-  label: string;
-  icon: typeof Home;
-  path: string;
-};
-
-/** ترتيب RTL: الرئيسية أقصى اليمين — خمسة عناصر متساوية */
-const NAV_ITEMS: NavItem[] = [
-  { label: "الرئيسية", icon: Home, path: "/" },
-  { label: "العملاء", icon: Users, path: "/clients" },
-  { label: "الفواتير", icon: FileText, path: "/invoices" },
-  { label: "المدفوعات", icon: CreditCard, path: "/payments" },
-  { label: "العهدة", icon: Wallet, path: "/fund" },
-];
-
-const isPathActive = (path: string, pathname: string) => {
-  if (path === "/") return pathname === "/";
-  return pathname.startsWith(path);
-};
 
 const NavButton = ({
   item,
   active,
   onClick,
 }: {
-  item: NavItem;
+  item: NavItemDef;
   active: boolean;
   onClick: () => void;
 }) => {
@@ -82,7 +72,6 @@ const NavButton = ({
         "&:active": { transform: "scale(0.96)", opacity: 0.85 },
       }}
     >
-      {/* حبة خلف الأيقونة عند التفعيل — نمط iOS الحديث */}
       <Box
         sx={{
           width: 44,
@@ -130,14 +119,74 @@ export const Layout = () => {
   const location = useLocation();
   const theme = useTheme();
   const isDark = theme.palette.mode === "dark";
+  const isDesktop = useIsDesktopLayout();
   const { canAccess } = useAppLockStore();
 
-  /** نافذة «مصروف جديد» تُفتح فوراً هنا — بدون أي تنقّل أو تحميل صفحة */
   const [quickExpenseOpen, setQuickExpenseOpen] = useState(false);
 
-  /** يُخفى الزر العائم في صفحات لها CTA سفلي ثابت (تفادي التصادم) */
   const routeHasStickyCta = location.pathname.startsWith("/invoices/new");
   const showCreate = canAccess("expenses") && !routeHasStickyCta;
+
+  const bottomNavItems = APP_NAV_ITEMS.filter(
+    (item) =>
+      item.bottomNav && (!item.module || canAccess(item.module)),
+  );
+
+  if (isDesktop) {
+    return (
+      <Box
+        className="etlala-desktop-shell"
+        dir="rtl"
+        sx={{
+          display: "flex",
+          flexDirection: "row",
+          minHeight: "100dvh",
+          width: "100%",
+          bgcolor: "background.default",
+          "@media print": { display: "block" },
+        }}
+      >
+        <DesktopSidebar
+          showQuickExpense={showCreate}
+          onQuickExpense={() => setQuickExpenseOpen(true)}
+        />
+        <Box
+          component="main"
+          sx={{
+            flex: 1,
+            minWidth: 0,
+            position: "relative",
+            minHeight: "100dvh",
+            overflow: "auto",
+            "@media print": { width: "100%" },
+          }}
+        >
+          <Box
+            className={
+              isDark
+                ? "etlala-app-ambient etlala-app-ambient--dark"
+                : "etlala-app-ambient"
+            }
+            aria-hidden
+            sx={{
+              position: "fixed",
+              inset: 0,
+              left: DESKTOP_SIDEBAR_WIDTH,
+              zIndex: 0,
+              pointerEvents: "none",
+            }}
+          />
+          <Box sx={{ position: "relative", zIndex: 1 }}>
+            <Outlet />
+          </Box>
+        </Box>
+        <QuickExpenseSheet
+          open={quickExpenseOpen}
+          onClose={() => setQuickExpenseOpen(false)}
+        />
+      </Box>
+    );
+  }
 
   return (
     <Box
@@ -164,7 +213,6 @@ export const Layout = () => {
           pointerEvents: "none",
         }}
       />
-      {/* إطار iPhone — يتمركز في منتصف الشاشات العريضة بدون تمديد المكونات */}
       <Box
         sx={{
           position: "relative",
@@ -185,7 +233,6 @@ export const Layout = () => {
         <Outlet />
       </Box>
 
-      {/* زر إضافة مصروف — عائم على يسار الصفحة، مرتفع فوق شريط التنقل */}
       {showCreate ? (
         <Box
           aria-hidden={false}
@@ -217,7 +264,6 @@ export const Layout = () => {
               cursor: "pointer",
               pointerEvents: "auto",
               position: "absolute",
-              /* RTL: نهاية السطر = يسار الشاشة */
               insetInlineEnd: 16,
               bottom: `calc(${NAV_HEIGHT}px + env(safe-area-inset-bottom, 0px) + 14px)`,
               width: 58,
@@ -248,7 +294,6 @@ export const Layout = () => {
         </Box>
       ) : null}
 
-      {/* شريط تنقل سفلي — iOS: زجاج مصنفر + خط شعري + 5 عناصر متساوية */}
       <Box
         component="nav"
         aria-label="التنقل الرئيسي"
@@ -285,17 +330,16 @@ export const Layout = () => {
           "@media print": { display: "none" },
         }}
       >
-        {NAV_ITEMS.map((item) => (
+        {bottomNavItems.map((item) => (
           <NavButton
             key={item.path}
             item={item}
-            active={isPathActive(item.path, location.pathname)}
+            active={isNavPathActive(item.path, location.pathname)}
             onClick={() => navigate(item.path)}
           />
         ))}
       </Box>
 
-      {/* نافذة «مصروف جديد» الفورية — من أي صفحة، بدون تنقّل */}
       <QuickExpenseSheet
         open={quickExpenseOpen}
         onClose={() => setQuickExpenseOpen(false)}

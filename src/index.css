@@ -110,6 +110,23 @@ html {
   min-height: -webkit-fill-available;
 }
 
+/* ── Desktop shell (≥1200px) — شريط جانبي + محتوى كامل العرض ── */
+@media (min-width: 1200px) {
+  .etlala-desktop-shell {
+    background-color: var(--etlala-bg);
+    background-image: radial-gradient(var(--etlala-dot) 0.6px, transparent 0.6px);
+    background-size: 18px 18px;
+  }
+
+  .etlala-desktop-sidebar {
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .etlala-page {
+    min-height: 100dvh;
+  }
+}
+
 #root {
   min-height: 100dvh;
   height: auto !important;
