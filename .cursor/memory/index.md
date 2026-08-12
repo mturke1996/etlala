@@ -6,7 +6,8 @@ React + Vite + TypeScript PWA; MUI; Firebase. Arabic RTL — **mobile-first** (<
 
 ## Recent sessions
 
-- 2026-08-12 — Desktop professional layout (sidebar, xl content) without changing mobile UX → `sessions/2026-08-12.md` instant QuickExpenseSheet FAB, lightweight ExpensesPage (no recharts, 30-row pagination), clean-white LoginPage, full-ratio hero; **root cause of "nothing changed" = site hosted on Vercel `etlala.ly`, local work undeployed → deployed to production + added `vercel.json` SPA rewrites** → `sessions/2026-07-06.md`
+- 2026-08-12 — Desktop professional layout (sidebar, xl content) without changing mobile UX → `sessions/2026-08-12.md`
+- 2026-07-06 — iOS-native design refresh + Vercel deploy / SPA rewrites → `sessions/2026-07-06.md`
 - 2026-07-05 — PDF upgrade from rkeaz-group (pdfKit, lazy load, Tajawal, branded headers) → `sessions/2026-07-05.md`
 - 2026-04-27 — Bootstrapped `.cursor/memory` + knowledge-base rule → `sessions/2026-04-27.md`
 
