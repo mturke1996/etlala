@@ -445,7 +445,33 @@ export const ClientProfilePage = () => {
     // المتبقي = المدفوعات - النسبة - المصروفات - الديون المتبقية
     const totalObligations = totalExpenses + totalDebts;
     const remaining = totalPaid - profit - totalObligations;
-    return { totalExpenses, totalDebts, totalPaid, totalWorkersDue, totalWorkersAgreed, totalWorkersPaid, remaining, profit, profitPercentage: pct, totalObligations };
+
+    // عند وجود عجز، سداد قيمة العجز وحدها يترتب عليه خصم نسبة جديدة منها.
+    // لذلك نحسب قيمة النسبة الإضافية اللازمة لإغلاق العجز فعلياً:
+    // العجز ÷ (1 - النسبة) = إجمالي التحصيل المطلوب.
+    const clientDeficit = Math.max(0, -remaining);
+    const percentageRate = pct / 100;
+    const agreedPercentageDeficit =
+      clientDeficit > 0 && percentageRate > 0 && percentageRate < 1
+        ? (clientDeficit * percentageRate) / (1 - percentageRate)
+        : 0;
+    const requiredCollection = clientDeficit + agreedPercentageDeficit;
+
+    return {
+      totalExpenses,
+      totalDebts,
+      totalPaid,
+      totalWorkersDue,
+      totalWorkersAgreed,
+      totalWorkersPaid,
+      remaining,
+      profit,
+      profitPercentage: pct,
+      totalObligations,
+      clientDeficit,
+      agreedPercentageDeficit,
+      requiredCollection,
+    };
   }, [clientExpenses, clientDebts, clientPayments, clientWorkers, client]);
 
   const msg = (m: string) => setSnackbar({ open: true, message: m });
@@ -557,7 +583,7 @@ export const ClientProfilePage = () => {
   const handleSaveProfit = async () => {
     if (!clientId) return;
     const pct = parseFloat(profitPercentage);
-    if (isNaN(pct) || pct < 0 || pct > 100) { msg('النسبة يجب أن تكون بين 0 و 100'); return; }
+    if (isNaN(pct) || pct < 0 || pct >= 100) { msg('النسبة يجب أن تكون بين 0 وأقل من 100'); return; }
     try { await updateClient(clientId, { profitPercentage: pct }); window.dispatchEvent(new Event('profitPercentageUpdated')); msg('تم حفظ النسبة'); setProfitDialogOpen(false); } catch { msg('خطأ'); }
   };
 
@@ -724,7 +750,7 @@ export const ClientProfilePage = () => {
             expenses={clientExpenses}
           />
           {/* Financial Alerts */}
-          {canAccess('stats') && (summary.totalExpenses > summary.totalPaid || summary.remaining < 0) && (
+          {canAccess('stats') && (summary.totalExpenses > summary.totalPaid || summary.clientDeficit > 0) && (
             <Stack spacing={1.5} sx={{ mt: 3, mb: 1 }}>
               {summary.totalExpenses > summary.totalPaid && (
                 <Alert 
@@ -757,7 +783,19 @@ export const ClientProfilePage = () => {
                     '& .MuiAlert-icon': { color: '#2a3a2a' }
                   }}
                 >
-                  تنبيه: الرصيد الحالي بالسالب (يوجد عجز مالي بقيمة {formatCurrency(Math.abs(summary.remaining))})
+                  <Stack spacing={0.35}>
+                    <Typography component="span" fontWeight={900}>
+                      عجز في الرصيد المتبقي: −{formatCurrency(Math.abs(summary.remaining))}
+                    </Typography>
+                    {summary.agreedPercentageDeficit > 0 && (
+                      <Typography component="span" variant="body2">
+                        عجز النسبة ({summary.profitPercentage}%): −{formatCurrency(summary.agreedPercentageDeficit)}
+                      </Typography>
+                    )}
+                    <Typography component="span" variant="body2">
+                      إجمالي التحصيل المطلوب لإغلاق العجز: {formatCurrency(summary.requiredCollection)}
+                    </Typography>
+                  </Stack>
                 </Alert>
               )}
             </Stack>
@@ -851,18 +889,45 @@ export const ClientProfilePage = () => {
               <Grid container sx={{ position: 'relative' }}>
                 {[
                   {
-                    label: 'النسبة المتفق عليها',
-                    value: summary.profitPercentage > 0 ? `${summary.profitPercentage}%` : '—',
-                    sub:
-                      summary.profit > 0
-                        ? `مبلغ صافي النسبة: ${formatCurrency(summary.profit)}`
-                        : summary.profitPercentage > 0
-                          ? 'لا مدفوعات بعد'
-                          : 'حدّد النسبة من الحوار',
+                    label: 'المصروفات',
+                    value: formatCurrency(summary.totalExpenses),
+                    sub: `${clientExpenses.length} سجل`,
                   },
-                  { label: 'المصروفات', value: formatCurrency(summary.totalExpenses), sub: `${clientExpenses.length} سجل` },
-                  { label: 'الديون', value: formatCurrency(summary.totalDebts), sub: `${clientDebts.length} بند` },
-                  { label: 'المتبقي', value: formatCurrency(summary.remaining), sub: summary.remaining >= 0 ? 'رصيد' : 'عجز' },
+                  {
+                    label: 'الديون',
+                    value: formatCurrency(summary.totalDebts),
+                    sub: `${clientDebts.length} بند`,
+                  },
+                  {
+                    label: 'المتبقي',
+                    value:
+                      summary.remaining < 0
+                        ? `−${formatCurrency(Math.abs(summary.remaining))}`
+                        : formatCurrency(summary.remaining),
+                    isNegative: summary.remaining < 0,
+                    sub: summary.remaining < 0 ? 'عجز مالي بعد الالتزامات' : 'رصيد متاح',
+                  },
+                  {
+                    label:
+                      summary.profitPercentage > 0
+                        ? `النسبة (${summary.profitPercentage}%)`
+                        : 'النسبة المتفق عليها',
+                    value:
+                      summary.agreedPercentageDeficit > 0
+                        ? `−${formatCurrency(summary.agreedPercentageDeficit)}`
+                        : summary.profit > 0
+                        ? formatCurrency(summary.profit)
+                        : summary.profitPercentage > 0
+                        ? `${summary.profitPercentage}%`
+                        : '—',
+                    isNegative: summary.agreedPercentageDeficit > 0,
+                    sub:
+                      summary.agreedPercentageDeficit > 0
+                        ? `المطلوب: ${formatCurrency(summary.requiredCollection)}`
+                        : summary.profit > 0
+                        ? 'صافي النسبة'
+                        : 'حدّد النسبة من الإجراءات',
+                  },
                 ].map((c, i) => (
                   <Grid
                     size={{ xs: 6 }}
@@ -873,64 +938,52 @@ export const ClientProfilePage = () => {
                     }}
                   >
                     <Box
-                      component={i === 0 ? motion.div : 'div'}
-                      {...(i === 0
-                        ? {
-                            initial: reduceMotion ? false : { opacity: 0, y: 8 },
-                            animate: { opacity: 1, y: 0 },
-                            transition: {
-                              duration: reduceMotion ? 0 : 0.5,
-                              ease: [0.16, 1, 0.3, 1],
-                            },
-                          }
-                        : {})}
                       sx={{
                         p: 1.75,
                         height: '100%',
                         position: 'relative',
-                        ...(i === 0
-                          ? {
-                              overflow: 'hidden',
-                              '&::after': {
-                                content: '""',
-                                position: 'absolute',
-                                bottom: 0,
-                                left: 0,
-                                right: 0,
-                                height: 3,
-                                borderRadius: '3px 3px 0 0',
-                                background: 'linear-gradient(90deg, transparent, rgba(228,213,184,0.55), transparent)',
-                                opacity: 0.85,
-                              },
-                            }
-                          : {}),
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'space-between',
                       }}
                     >
-                      <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', fontWeight: 700, fontSize: '0.6rem', letterSpacing: 0.6, display: 'block', mb: 0.4 }}>
-                        {c.label}
-                      </Typography>
+                      <Box>
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            color: c.isNegative ? '#fda4a4' : 'rgba(255,255,255,0.55)',
+                            fontWeight: 700,
+                            fontSize: '0.62rem',
+                            letterSpacing: 0.6,
+                            display: 'block',
+                            mb: 0.35,
+                          }}
+                        >
+                          {c.label}
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          fontWeight={850}
+                          sx={{
+                            color: c.isNegative ? '#fda4a4' : '#fff',
+                            fontSize: { xs: '0.92rem', sm: '1.05rem' },
+                            fontFamily: 'Outfit, sans-serif',
+                            lineHeight: 1.25,
+                          }}
+                        >
+                          {c.value}
+                        </Typography>
+                      </Box>
                       <Typography
-                        variant="body2"
-                        fontWeight={800}
+                        variant="caption"
                         sx={{
-                          color: c.label === 'المتبقي' && summary.remaining < 0 ? '#fda4a4' : '#fff',
-                          fontSize:
-                            i === 0
-                              ? { xs: '1.15rem', sm: '1.28rem' }
-                              : { xs: '0.8rem', sm: '0.88rem' },
-                          fontFamily: 'Outfit, sans-serif',
-                          lineHeight: 1.25,
-                          ...(i === 0 && summary.profitPercentage > 0
-                            ? {
-                                fontWeight: 900,
-                                textShadow: '0 2px 18px rgba(228,213,184,0.35)',
-                              }
-                            : {}),
+                          color: c.isNegative ? 'rgba(253, 164, 164, 0.85)' : 'rgba(255,255,255,0.45)',
+                          fontWeight: c.isNegative ? 700 : 500,
+                          fontSize: '0.6rem',
+                          mt: 0.5,
+                          display: 'block',
                         }}
                       >
-                        {c.value}
-                      </Typography>
-                      <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.58rem', mt: 0.25, display: 'block' }}>
                         {c.sub}
                       </Typography>
                     </Box>

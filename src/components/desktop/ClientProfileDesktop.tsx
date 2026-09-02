@@ -58,6 +58,9 @@ type SummaryLike = {
   remaining: number;
   profit: number;
   profitPercentage: number;
+  clientDeficit: number;
+  agreedPercentageDeficit: number;
+  requiredCollection: number;
 };
 
 type PaymentLike = {
@@ -241,7 +244,19 @@ export function ClientProfileDesktop({
           ) : null}
           {canSeeStats && negativeRemaining ? (
             <Alert severity="warning" sx={{ borderRadius: "12px", fontWeight: 700 }}>
-              الرصيد الحالي بالسالب بقيمة {formatCurrency(Math.abs(summary.remaining))}
+              <Stack spacing={0.25}>
+                <Typography component="span" fontWeight={900}>
+                  عجز في الرصيد المتبقي: −{formatCurrency(Math.abs(summary.remaining))}
+                </Typography>
+                {summary.agreedPercentageDeficit > 0 ? (
+                  <Typography component="span" variant="body2">
+                    عجز النسبة المتفق عليها ({summary.profitPercentage}%): −{formatCurrency(summary.agreedPercentageDeficit)}
+                  </Typography>
+                ) : null}
+                <Typography component="span" variant="body2">
+                  إجمالي التحصيل المطلوب لإغلاق العجز: {formatCurrency(summary.requiredCollection)}
+                </Typography>
+              </Stack>
             </Alert>
           ) : null}
           {depletedNames.map((name) => (
@@ -258,11 +273,18 @@ export function ClientProfileDesktop({
                 {
                   key: "remain",
                   label: "المتبقي",
-                  value: formatCurrency(summary.remaining),
-                  hint: summary.remaining >= 0 ? "رصيد متاح بعد الالتزامات" : "عجز على المشروع",
+                  value:
+                    summary.remaining < 0
+                      ? `−${formatCurrency(Math.abs(summary.remaining))}`
+                      : formatCurrency(summary.remaining),
+                  hint:
+                    summary.remaining < 0
+                      ? "عجز مالي بعد الالتزامات"
+                      : "رصيد متاح بعد الالتزامات",
                   tone: summary.remaining < 0 ? "danger" : "ok",
                   featured: true,
                   icon: <Wallet size={18} />,
+                  badge: summary.remaining < 0 ? "عجز" : undefined,
                 },
                 {
                   key: "paid",
@@ -284,14 +306,24 @@ export function ClientProfileDesktop({
                 },
                 {
                   key: "profit",
-                  label: "صافي النسبة",
-                  value:
+                  label:
                     summary.profitPercentage > 0
+                      ? `النسبة المتفق عليها (${summary.profitPercentage}%)`
+                      : "النسبة المتفق عليها",
+                  value:
+                    summary.agreedPercentageDeficit > 0
+                      ? `−${formatCurrency(summary.agreedPercentageDeficit)}`
+                      : summary.profit > 0
+                      ? formatCurrency(summary.profit)
+                      : summary.profitPercentage > 0
                       ? `${summary.profitPercentage}%`
                       : "غير محددة",
+                  tone: summary.agreedPercentageDeficit > 0 ? "danger" : "default",
                   hint:
-                    summary.profit > 0
-                      ? formatCurrency(summary.profit)
+                    summary.agreedPercentageDeficit > 0
+                      ? `المطلوب تحصيله: ${formatCurrency(summary.requiredCollection)}`
+                      : summary.profit > 0
+                      ? `النسبة المعتمدة ${summary.profitPercentage}%`
                       : "حدّد النسبة من الإجراءات",
                   icon: <FileText size={16} />,
                 },

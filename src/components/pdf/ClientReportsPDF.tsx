@@ -213,6 +213,7 @@ interface FullReportPDFProps {
     totalPaid: number; profit: number; profitPercentage: number;
     totalExpenses: number; totalDebts: number; totalObligations: number;
     remaining: number; totalWorkersAgreed: number; totalWorkersPaid: number; totalWorkersDue: number;
+    clientDeficit: number; agreedPercentageDeficit: number; requiredCollection: number;
   };
 }
 
@@ -336,10 +337,24 @@ export const FullReportPDF: React.FC<FullReportPDFProps> = ({
         <PdfSummaryStrip
           s={s}
           cells={[
-            { label: 'إجمالي المدفوعات', value: summary.totalPaid, color: INK.success, accent: true },
-            { label: `النسبة المتفق عليها (${summary.profitPercentage}%)`, value: summary.profit, color: INK.warning },
-            { label: 'مصروفات + ديون', value: summary.totalObligations, color: INK.danger, accent: true },
-            { label: 'المتبقي', value: summary.remaining, color: remColor, accent: true },
+            { label: 'المدفوعات', value: summary.totalPaid, color: INK.success, accent: true },
+            { label: 'المصروفات', value: summary.totalExpenses, color: INK.danger },
+            { label: 'الديون', value: summary.totalDebts, color: INK.warning },
+            {
+              label: summary.remaining < 0 ? 'المتبقي (عجز)' : 'المتبقي',
+              value: summary.remaining,
+              color: summary.remaining < 0 ? INK.danger : INK.success,
+              accent: true,
+            },
+            {
+              label:
+                summary.agreedPercentageDeficit > 0
+                  ? `النسبة (${summary.profitPercentage}%) - المطلوب: ${Math.round(summary.requiredCollection).toLocaleString('en-US')}`
+                  : `النسبة المتفق عليها (${summary.profitPercentage}%)`,
+              value: summary.agreedPercentageDeficit > 0 ? -summary.agreedPercentageDeficit : summary.profit,
+              color: summary.agreedPercentageDeficit > 0 ? INK.danger : INK.warning,
+              accent: summary.agreedPercentageDeficit > 0,
+            },
           ]}
         />
 
