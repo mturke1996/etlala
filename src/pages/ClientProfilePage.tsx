@@ -795,7 +795,7 @@ export const ClientProfilePage = () => {
                 position: 'relative',
                 border: '1px solid rgba(255,255,255,0.16)',
                 background: 'linear-gradient(160deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.04) 45%, rgba(0,0,0,0.08) 100%)',
-                backdropFilter: 'blur(24px)',
+                backdropFilter: 'blur(12px)',
                 boxShadow: '0 12px 40px -8px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.1)',
                 '&::before': {
                   content: '""',

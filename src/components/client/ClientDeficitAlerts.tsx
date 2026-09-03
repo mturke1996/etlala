@@ -24,14 +24,14 @@ export type ClientDeficitAlertsProps = {
 const TONES = {
   danger: {
     gradient: 'linear-gradient(135deg, #E14B4B 0%, #B32E2E 100%)',
-    glow: '0 10px 26px -12px rgba(214, 69, 69, 0.85)',
+    glow: '0 6px 16px -10px rgba(214, 69, 69, 0.7)',
     ink: '#FFFFFF',
     softInk: 'rgba(255,255,255,0.82)',
     chipBg: 'rgba(255,255,255,0.18)',
   },
   warning: {
     gradient: 'linear-gradient(135deg, #F2B93D 0%, #D9930C 100%)',
-    glow: '0 10px 26px -12px rgba(217, 147, 12, 0.85)',
+    glow: '0 6px 16px -10px rgba(217, 147, 12, 0.7)',
     ink: '#2A2205',
     softInk: 'rgba(42,34,5,0.72)',
     chipBg: 'rgba(255,255,255,0.32)',
@@ -59,11 +59,11 @@ function DeficitAlertCard({
       sx={{
         position: 'relative',
         overflow: 'hidden',
-        borderRadius: 2.5,
-        px: 1.75,
-        py: 1.5,
+        borderRadius: 2.25,
+        px: 1.5,
+        py: 1.15,
         background: t.gradient,
-        border: `1px solid ${alpha('#fff', 0.2)}`,
+        border: `1px solid ${alpha('#fff', 0.18)}`,
         boxShadow: t.glow,
         color: t.ink,
         '&::after': {
@@ -71,45 +71,45 @@ function DeficitAlertCard({
           position: 'absolute',
           insetBlockStart: 0,
           insetInlineEnd: 0,
-          width: '48%',
+          width: '46%',
           height: '100%',
-          background: `radial-gradient(ellipse 90% 120% at 100% 0%, ${alpha('#fff', 0.22)} 0%, transparent 60%)`,
+          background: `radial-gradient(ellipse 90% 120% at 100% 0%, ${alpha('#fff', 0.2)} 0%, transparent 60%)`,
           pointerEvents: 'none',
         },
       }}
     >
-      <Stack direction="row" spacing={1.5} alignItems="center" sx={{ position: 'relative', zIndex: 1 }}>
+      <Stack direction="row" spacing={1.25} alignItems="center" sx={{ position: 'relative', zIndex: 1 }}>
         <Box
           sx={{
-            width: 42,
-            height: 42,
+            width: 36,
+            height: 36,
             flexShrink: 0,
-            borderRadius: 2,
+            borderRadius: 1.75,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             bgcolor: t.chipBg,
-            border: `1px solid ${alpha('#fff', 0.28)}`,
+            border: `1px solid ${alpha('#fff', 0.26)}`,
             color: 'inherit',
           }}
         >
           {icon}
         </Box>
         <Box sx={{ minWidth: 0, flex: 1 }}>
-          <Typography sx={{ fontWeight: 900, fontSize: '0.82rem', lineHeight: 1.35 }}>{title}</Typography>
+          <Typography sx={{ fontWeight: 900, fontSize: '0.72rem', lineHeight: 1.35 }}>{title}</Typography>
           <Typography
             sx={{
               fontWeight: 900,
-              fontSize: '1.02rem',
+              fontSize: '0.88rem',
               lineHeight: 1.3,
-              mt: 0.25,
+              mt: 0.15,
               fontFamily: 'Outfit, sans-serif',
             }}
           >
             {value}
           </Typography>
           {note ? (
-            <Typography sx={{ fontWeight: 700, fontSize: '0.66rem', color: t.softInk, mt: 0.35 }}>
+            <Typography sx={{ fontWeight: 700, fontSize: '0.58rem', color: t.softInk, mt: 0.3 }}>
               {note}
             </Typography>
           ) : null}
@@ -134,107 +134,100 @@ function TotalDeficitCard({
 }) {
   const isDark = surface === 'dark';
   const ink = isDark ? '#fff' : '#2E2320';
-  const softInk = isDark ? 'rgba(255,255,255,0.6)' : 'rgba(46,35,32,0.62)';
+  const softInk = isDark ? 'rgba(255,255,255,0.58)' : 'rgba(46,35,32,0.6)';
   const accent = isDark ? '#FFC2C2' : '#B54747';
+  const line = alpha(isDark ? '#fff' : '#2E2320', isDark ? 0.1 : 0.08);
+
+  const breakdown = [
+    { label: 'العجز العام', value: clientDeficit },
+    {
+      label: profitPercentage > 0 ? `عجز النسبة ${profitPercentage}%` : 'عجز النسبة',
+      value: agreedPercentageDeficit,
+    },
+  ];
 
   return (
     <Box
       sx={{
         position: 'relative',
         overflow: 'hidden',
-        borderRadius: 2.5,
-        px: 1.75,
-        py: 1.5,
+        borderRadius: 2,
+        px: 1.5,
+        py: 1.1,
         color: ink,
-        border: `1px solid ${alpha(isDark ? '#FFB4B4' : '#B54747', isDark ? 0.32 : 0.24)}`,
+        border: `1px solid ${alpha(isDark ? '#FFB4B4' : '#B54747', isDark ? 0.24 : 0.2)}`,
+        // خلفية زجاجية بدون blur لتخفيف الحِمل على الأداء
         background: isDark
-          ? `linear-gradient(140deg, ${alpha('#fff', 0.13)} 0%, ${alpha('#fff', 0.04)} 55%, ${alpha('#E14B4B', 0.14)} 100%)`
+          ? `linear-gradient(140deg, ${alpha('#FFFFFF', 0.08)} 0%, ${alpha('#E14B4B', 0.12)} 100%)`
           : 'linear-gradient(140deg, #FFF7F5 0%, #FFFBF0 100%)',
-        backdropFilter: isDark ? 'blur(18px)' : undefined,
-        boxShadow: isDark
-          ? `0 12px 32px -18px ${alpha('#000', 0.7)}, inset 0 1px 0 ${alpha('#fff', 0.12)}`
-          : '0 8px 22px -18px rgba(46,35,32,0.5)',
+        boxShadow: isDark ? 'none' : '0 4px 14px -12px rgba(46,35,32,0.4)',
       }}
     >
-      <Stack direction="row" spacing={1.5} alignItems="center">
+      <Stack direction="row" alignItems="center" spacing={1.25}>
         <Box
           sx={{
-            width: 42,
-            height: 42,
+            width: 34,
+            height: 34,
             flexShrink: 0,
-            borderRadius: 2,
+            borderRadius: 1.5,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             color: accent,
-            bgcolor: alpha(isDark ? '#FFB4B4' : '#B54747', isDark ? 0.16 : 0.1),
-            border: `1px solid ${alpha(isDark ? '#FFB4B4' : '#B54747', 0.28)}`,
+            bgcolor: alpha(isDark ? '#FFB4B4' : '#B54747', isDark ? 0.14 : 0.1),
+            border: `1px solid ${alpha(isDark ? '#FFB4B4' : '#B54747', 0.26)}`,
           }}
         >
-          <CalculateRounded sx={{ fontSize: 22 }} />
+          <CalculateRounded sx={{ fontSize: 18 }} />
         </Box>
+
         <Box sx={{ minWidth: 0, flex: 1 }}>
-          <Typography sx={{ fontWeight: 800, fontSize: '0.72rem', color: softInk, letterSpacing: 0.4 }}>
-            إجمالي العجز الكلي
+          <Typography sx={{ fontWeight: 800, fontSize: '0.62rem', color: softInk, letterSpacing: 0.3 }}>
+            إجمالي العجز الكلي المطلوب تحصيله
           </Typography>
           <Typography
             sx={{
               fontWeight: 900,
-              fontSize: '1.16rem',
-              lineHeight: 1.25,
+              fontSize: '1.02rem',
+              lineHeight: 1.2,
               color: accent,
               fontFamily: 'Outfit, sans-serif',
-              mt: 0.2,
+              mt: 0.05,
             }}
           >
             {formatCurrency(requiredCollection)}
           </Typography>
-          <Typography sx={{ fontWeight: 700, fontSize: '0.63rem', color: softInk, mt: 0.15 }}>
-            المطلوب تحصيله لإغلاق العجز بالكامل
-          </Typography>
         </Box>
-      </Stack>
 
-      <Stack
-        direction="row"
-        sx={{
-          mt: 1.25,
-          pt: 1.15,
-          borderTop: `1px solid ${alpha(isDark ? '#fff' : '#2E2320', isDark ? 0.12 : 0.08)}`,
-        }}
-      >
-        {[
-          { label: 'العجز العام', value: clientDeficit },
-          {
-            label: profitPercentage > 0 ? `عجز النسبة (${profitPercentage}%)` : 'عجز النسبة',
-            value: agreedPercentageDeficit,
-          },
-        ].map((item, i) => (
-          <Box
-            key={item.label}
-            sx={{
-              flex: 1,
-              minWidth: 0,
-              px: 0.5,
-              borderInlineStart:
-                i === 1 ? `1px solid ${alpha(isDark ? '#fff' : '#2E2320', isDark ? 0.12 : 0.08)}` : 'none',
-            }}
-          >
-            <Typography sx={{ fontWeight: 700, fontSize: '0.63rem', color: softInk, mb: 0.2 }}>
-              {item.label}
-            </Typography>
-            <Typography
+        <Stack spacing={0.5} sx={{ flexShrink: 0, textAlign: 'start' }}>
+          {breakdown.map((item) => (
+            <Box
+              key={item.label}
               sx={{
-                fontWeight: 800,
-                fontSize: '0.84rem',
-                color: ink,
-                fontFamily: 'Outfit, sans-serif',
+                px: 0.85,
+                py: 0.3,
+                borderRadius: 1.25,
+                bgcolor: alpha(isDark ? '#FFFFFF' : '#2E2320', isDark ? 0.07 : 0.04),
+                border: `1px solid ${line}`,
+                lineHeight: 1.1,
               }}
             >
-              {formatCurrency(item.value)}
-            </Typography>
-          </Box>
-        ))}
+              <Typography sx={{ fontWeight: 700, fontSize: '0.54rem', color: softInk, display: 'block' }}>
+                {item.label}
+              </Typography>
+              <Typography
+                sx={{
+                  fontWeight: 800,
+                  fontSize: '0.72rem',
+                  color: ink,
+                  fontFamily: 'Outfit, sans-serif',
+                }}
+              >
+                {formatCurrency(item.value)}
+              </Typography>
+            </Box>
+          ))}
+        </Stack>
       </Stack>
     </Box>
   );
@@ -261,11 +254,11 @@ export function ClientDeficitAlerts({
   if (!hasGeneral && !hasPercentage && !overspent) return null;
 
   return (
-    <Stack spacing={1.25} sx={sx}>
+    <Stack spacing={1} sx={sx}>
       {hasGeneral ? (
         <DeficitAlertCard
           tone="danger"
-          icon={<TrendingDown sx={{ fontSize: 22 }} />}
+          icon={<TrendingDown sx={{ fontSize: 19 }} />}
           title="تنبيه: الرصيد الحالي بالسالب"
           value={`يوجد عجز مالي بقيمة ${formatCurrency(clientDeficit)}`}
           note={overspent ? 'إجمالي المصروفات تجاوز قيمة المدفوعات' : undefined}
@@ -273,7 +266,7 @@ export function ClientDeficitAlerts({
       ) : overspent ? (
         <DeficitAlertCard
           tone="danger"
-          icon={<TrendingDown sx={{ fontSize: 22 }} />}
+          icon={<TrendingDown sx={{ fontSize: 19 }} />}
           title="تنبيه: تجاوز في المصروفات"
           value="إجمالي المصروفات تجاوز قيمة المدفوعات"
         />
@@ -282,7 +275,7 @@ export function ClientDeficitAlerts({
       {hasPercentage ? (
         <DeficitAlertCard
           tone="warning"
-          icon={<PercentRounded sx={{ fontSize: 22 }} />}
+          icon={<PercentRounded sx={{ fontSize: 19 }} />}
           title={`تنبيه: عجز في النسبة المتفق عليها${profitPercentage > 0 ? ` (${profitPercentage}%)` : ''}`}
           value={`قيمة العجز ${formatCurrency(agreedPercentageDeficit)}`}
           note="النسبة المستحقة على مبلغ العجز عند تحصيله"

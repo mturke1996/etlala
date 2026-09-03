@@ -23,7 +23,7 @@ export function ClientProfileHero({ client, activitySummary }: ClientProfileHero
           overflow: 'hidden',
           border: `1px solid ${alpha('#fff', 0.14)}`,
           background: `linear-gradient(150deg, ${alpha('#fff', 0.1)} 0%, ${alpha('#fff', 0.03)} 50%, ${alpha('#000', 0.1)} 100%)`,
-          backdropFilter: 'blur(18px)',
+          backdropFilter: 'blur(10px)',
           boxShadow: `0 12px 40px -16px ${alpha('#000', 0.4)}, inset 0 1px 0 ${alpha('#fff', 0.1)}`,
         }}
       >
