@@ -885,6 +885,7 @@ export const ClientProfilePage = () => {
                     valueColor: summary.profitPercentage > 0 ? '#FFFFFF' : undefined,
                     valueGlow: summary.profitPercentage > 0,
                     isWarning: summary.agreedPercentageDeficit > 0,
+                    subColor: summary.profitPercentage > 0 ? 'rgba(255,255,255,0.85)' : undefined,
                     sub:
                       summary.profitPercentage <= 0
                         ? 'حدّد النسبة من الإجراءات'
@@ -975,7 +976,9 @@ export const ClientProfilePage = () => {
                       <Typography
                         variant="caption"
                         sx={{
-                          color: c.isNegative
+                          color: c.subColor
+                            ? c.subColor
+                            : c.isNegative
                             ? 'rgba(253, 164, 164, 0.85)'
                             : c.isWarning
                             ? 'rgba(247, 208, 138, 0.92)'

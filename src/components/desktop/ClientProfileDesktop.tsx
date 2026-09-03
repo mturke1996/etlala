@@ -301,7 +301,7 @@ export function ClientProfileDesktop({
                       ? `${summary.profitPercentage}%`
                       : "غير محددة",
                   tone: "default",
-                  hintTone: summary.agreedPercentageDeficit > 0 ? "warn" : "default",
+                  hintTone: "default",
                   hint:
                     summary.profitPercentage <= 0
                       ? "حدّد النسبة من الإجراءات"
