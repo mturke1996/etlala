@@ -22,19 +22,21 @@ export type ClientDeficitAlertsProps = {
 };
 
 const TONES = {
-  danger: {
-    gradient: 'linear-gradient(135deg, #E14B4B 0%, #B32E2E 100%)',
-    glow: '0 6px 16px -10px rgba(214, 69, 69, 0.7)',
-    ink: '#FFFFFF',
-    softInk: 'rgba(255,255,255,0.82)',
-    chipBg: 'rgba(255,255,255,0.18)',
-  },
-  warning: {
+  // العجز العام (الرصيد الحالي بالسالب)
+  general: {
     gradient: 'linear-gradient(135deg, #F2B93D 0%, #D9930C 100%)',
     glow: '0 6px 16px -10px rgba(217, 147, 12, 0.7)',
     ink: '#2A2205',
     softInk: 'rgba(42,34,5,0.72)',
     chipBg: 'rgba(255,255,255,0.32)',
+  },
+  // عجز النسبة المتفق عليها
+  percentage: {
+    gradient: 'linear-gradient(135deg, #4CAF6D 0%, #2E8B4F 100%)',
+    glow: '0 6px 16px -10px rgba(46, 139, 79, 0.7)',
+    ink: '#FFFFFF',
+    softInk: 'rgba(255,255,255,0.82)',
+    chipBg: 'rgba(255,255,255,0.2)',
   },
 } as const;
 
@@ -127,10 +129,10 @@ function TotalDeficitLine({
   surface: Surface;
 }) {
   const isDark = surface === 'dark';
-  // لون محايد (رمادي مزرقّ) مختلف عن الأحمر والأصفر
-  const accent = isDark ? '#AAB4C2' : '#5B6675';
-  const bg = isDark ? alpha('#C4CDD9', 0.12) : alpha('#5B6675', 0.07);
-  const ink = isDark ? 'rgba(255,255,255,0.9)' : '#3B4553';
+  // أحمر: تنبيه إجمالي العجز الكلي (مجموع العجز العام وعجز النسبة)
+  const accent = isDark ? '#FF8A8A' : '#C23B3B';
+  const bg = isDark ? alpha('#E14B4B', 0.16) : alpha('#E14B4B', 0.08);
+  const ink = isDark ? 'rgba(255,255,255,0.92)' : '#5A2323';
 
   return (
     <Stack
@@ -161,9 +163,9 @@ function TotalDeficitLine({
 
 /**
  * تنبيهات العجز المالي للعميل:
- * - أحمر: العجز العام (الرصيد الحالي بالسالب)
- * - أصفر: عجز النسبة المتفق عليها
- * - بطاقة: مجموع العجز الكلي عند وجود العجزين معاً
+ * - أصفر: العجز العام (الرصيد الحالي بالسالب)
+ * - أخضر: عجز النسبة المتفق عليها
+ * - أحمر: مجموع العجز الكلي عند وجود العجزين معاً
  */
 export function ClientDeficitAlerts({
   clientDeficit,
@@ -183,7 +185,7 @@ export function ClientDeficitAlerts({
     <Stack spacing={1} sx={sx}>
       {hasGeneral ? (
         <DeficitAlertCard
-          tone="danger"
+          tone="general"
           icon={<TrendingDown sx={{ fontSize: 16 }} />}
           title="تنبيه: الرصيد الحالي بالسالب"
           value={`يوجد عجز مالي بقيمة ${formatCurrency(clientDeficit)}`}
@@ -191,7 +193,7 @@ export function ClientDeficitAlerts({
         />
       ) : overspent ? (
         <DeficitAlertCard
-          tone="danger"
+          tone="general"
           icon={<TrendingDown sx={{ fontSize: 16 }} />}
           title="تنبيه: تجاوز في المصروفات"
           value="إجمالي المصروفات تجاوز قيمة المدفوعات"
@@ -200,7 +202,7 @@ export function ClientDeficitAlerts({
 
       {hasPercentage ? (
         <DeficitAlertCard
-          tone="warning"
+          tone="percentage"
           icon={<PercentRounded sx={{ fontSize: 16 }} />}
           title={`تنبيه: عجز في النسبة المتفق عليها${profitPercentage > 0 ? ` (${profitPercentage}%)` : ''}`}
           value={`قيمة العجز ${formatCurrency(agreedPercentageDeficit)}`}
