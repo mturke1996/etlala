@@ -119,118 +119,43 @@ function DeficitAlertCard({
   );
 }
 
-function TotalDeficitCard({
-  clientDeficit,
-  agreedPercentageDeficit,
+function TotalDeficitLine({
   requiredCollection,
-  profitPercentage,
   surface,
 }: {
-  clientDeficit: number;
-  agreedPercentageDeficit: number;
   requiredCollection: number;
-  profitPercentage: number;
   surface: Surface;
 }) {
   const isDark = surface === 'dark';
-  const ink = isDark ? '#fff' : '#2E2320';
-  const softInk = isDark ? 'rgba(255,255,255,0.58)' : 'rgba(46,35,32,0.6)';
-  const accent = isDark ? '#FFC2C2' : '#B54747';
-  const line = alpha(isDark ? '#fff' : '#2E2320', isDark ? 0.1 : 0.08);
-
-  const breakdown = [
-    { label: 'العجز العام', value: clientDeficit },
-    {
-      label: profitPercentage > 0 ? `عجز النسبة ${profitPercentage}%` : 'عجز النسبة',
-      value: agreedPercentageDeficit,
-    },
-  ];
+  // لون محايد (رمادي مزرقّ) مختلف عن الأحمر والأصفر
+  const accent = isDark ? '#AAB4C2' : '#5B6675';
+  const bg = isDark ? alpha('#C4CDD9', 0.12) : alpha('#5B6675', 0.07);
+  const ink = isDark ? 'rgba(255,255,255,0.9)' : '#3B4553';
 
   return (
-    <Box
+    <Stack
+      direction="row"
+      alignItems="center"
+      spacing={0.75}
       sx={{
-        position: 'relative',
-        overflow: 'hidden',
-        borderRadius: 0,
-        px: 1.35,
-        py: 0.95,
+        px: 1,
+        py: 0.55,
+        bgcolor: bg,
+        borderInlineStart: `3px solid ${accent}`,
         color: ink,
-        border: `1px solid ${alpha(isDark ? '#FFB4B4' : '#B54747', isDark ? 0.24 : 0.2)}`,
-        borderInlineStart: `3px solid ${alpha(isDark ? '#FFB4B4' : '#B54747', 0.5)}`,
-        // خلفية زجاجية بدون blur لتخفيف الحِمل على الأداء
-        background: isDark
-          ? `linear-gradient(140deg, ${alpha('#FFFFFF', 0.08)} 0%, ${alpha('#E14B4B', 0.12)} 100%)`
-          : 'linear-gradient(140deg, #FFF7F5 0%, #FFFBF0 100%)',
-        boxShadow: isDark ? 'none' : '0 4px 14px -12px rgba(46,35,32,0.4)',
       }}
     >
-      <Stack direction="row" alignItems="center" spacing={1.25}>
+      <CalculateRounded sx={{ fontSize: 14, color: accent, flexShrink: 0 }} />
+      <Typography sx={{ fontWeight: 700, fontSize: '0.6rem', lineHeight: 1.35 }}>
+        إجمالي العجز الكلي المطلوب تحصيله:{' '}
         <Box
-          sx={{
-            width: 34,
-            height: 34,
-            flexShrink: 0,
-            borderRadius: 1.5,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: accent,
-            bgcolor: alpha(isDark ? '#FFB4B4' : '#B54747', isDark ? 0.14 : 0.1),
-            border: `1px solid ${alpha(isDark ? '#FFB4B4' : '#B54747', 0.26)}`,
-          }}
+          component="span"
+          sx={{ fontWeight: 900, fontSize: '0.66rem', fontFamily: 'Outfit, sans-serif', color: accent }}
         >
-          <CalculateRounded sx={{ fontSize: 18 }} />
+          {formatCurrency(requiredCollection)}
         </Box>
-
-        <Box sx={{ minWidth: 0, flex: 1 }}>
-          <Typography sx={{ fontWeight: 800, fontSize: '0.62rem', color: softInk, letterSpacing: 0.3 }}>
-            إجمالي العجز الكلي المطلوب تحصيله
-          </Typography>
-          <Typography
-            sx={{
-              fontWeight: 900,
-              fontSize: '1.02rem',
-              lineHeight: 1.2,
-              color: accent,
-              fontFamily: 'Outfit, sans-serif',
-              mt: 0.05,
-            }}
-          >
-            {formatCurrency(requiredCollection)}
-          </Typography>
-        </Box>
-
-        <Stack spacing={0.5} sx={{ flexShrink: 0, textAlign: 'start' }}>
-          {breakdown.map((item) => (
-            <Box
-              key={item.label}
-              sx={{
-                px: 0.85,
-                py: 0.3,
-                borderRadius: 1.25,
-                bgcolor: alpha(isDark ? '#FFFFFF' : '#2E2320', isDark ? 0.07 : 0.04),
-                border: `1px solid ${line}`,
-                lineHeight: 1.1,
-              }}
-            >
-              <Typography sx={{ fontWeight: 700, fontSize: '0.54rem', color: softInk, display: 'block' }}>
-                {item.label}
-              </Typography>
-              <Typography
-                sx={{
-                  fontWeight: 800,
-                  fontSize: '0.72rem',
-                  color: ink,
-                  fontFamily: 'Outfit, sans-serif',
-                }}
-              >
-                {formatCurrency(item.value)}
-              </Typography>
-            </Box>
-          ))}
-        </Stack>
-      </Stack>
-    </Box>
+      </Typography>
+    </Stack>
   );
 }
 
@@ -284,13 +209,7 @@ export function ClientDeficitAlerts({
       ) : null}
 
       {hasGeneral && hasPercentage ? (
-        <TotalDeficitCard
-          clientDeficit={clientDeficit}
-          agreedPercentageDeficit={agreedPercentageDeficit}
-          requiredCollection={requiredCollection}
-          profitPercentage={profitPercentage}
-          surface={surface}
-        />
+        <TotalDeficitLine requiredCollection={requiredCollection} surface={surface} />
       ) : null}
     </Stack>
   );
