@@ -879,8 +879,9 @@ export const ClientProfilePage = () => {
                         : 'غير محددة',
                     valueFontSize:
                       summary.profitPercentage > 0
-                        ? { xs: '1.55rem', sm: '1.75rem' }
+                        ? { xs: '1.35rem', sm: '1.5rem' }
                         : undefined,
+                    valueWeight: summary.profitPercentage > 0 ? 700 : undefined,
                     valueColor: summary.profitPercentage > 0 ? '#FFFFFF' : undefined,
                     valueGlow: summary.profitPercentage > 0,
                     isWarning: summary.agreedPercentageDeficit > 0,
@@ -956,14 +957,15 @@ export const ClientProfilePage = () => {
                         </Stack>
                         <Typography
                           variant="body2"
-                          fontWeight={c.valueFontSize ? 900 : 850}
+                          fontWeight={c.valueWeight || 850}
                           sx={{
                             color: c.isNegative ? '#fda4a4' : c.valueColor || '#fff',
                             fontSize: c.valueFontSize || { xs: '0.92rem', sm: '1.05rem' },
                             fontFamily: 'Outfit, sans-serif',
                             lineHeight: 1.15,
+                            letterSpacing: c.valueFontSize ? '0.01em' : undefined,
                             textShadow: c.valueGlow
-                              ? '0 0 14px rgba(255,255,255,0.55), 0 0 4px rgba(255,255,255,0.35)'
+                              ? '0 1px 10px rgba(255,255,255,0.25)'
                               : undefined,
                           }}
                         >
