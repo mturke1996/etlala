@@ -872,18 +872,21 @@ export const ClientProfilePage = () => {
                   },
                   {
                     label: 'النسبة المتفق عليها',
-                    badge: summary.profitPercentage > 0 ? `${summary.profitPercentage}%` : 'غير محددة',
+                    // النسبة رقم كبير بارز، والمبلغ يظهر صغيراً في السطر السفلي
                     value:
                       summary.profitPercentage > 0
-                        ? formatCurrency(summary.profit)
-                        : '—',
+                        ? `${summary.profitPercentage}%`
+                        : 'غير محددة',
+                    valueFontSize:
+                      summary.profitPercentage > 0
+                        ? { xs: '1.55rem', sm: '1.75rem' }
+                        : undefined,
+                    valueColor: summary.profitPercentage > 0 ? '#E8DBB8' : undefined,
                     isWarning: summary.agreedPercentageDeficit > 0,
                     sub:
                       summary.profitPercentage <= 0
                         ? 'حدّد النسبة من الإجراءات'
-                        : summary.agreedPercentageDeficit > 0
-                        ? `عجز النسبة: −${formatCurrency(summary.agreedPercentageDeficit)}`
-                        : 'صافي النسبة من المدفوعات',
+                        : `صافي النسبة ${formatCurrency(summary.profit)}`,
                   },
                 ].map((c, i) => (
                   <Grid
@@ -952,12 +955,12 @@ export const ClientProfilePage = () => {
                         </Stack>
                         <Typography
                           variant="body2"
-                          fontWeight={850}
+                          fontWeight={c.valueFontSize ? 900 : 850}
                           sx={{
-                            color: c.isNegative ? '#fda4a4' : '#fff',
-                            fontSize: { xs: '0.92rem', sm: '1.05rem' },
+                            color: c.isNegative ? '#fda4a4' : c.valueColor || '#fff',
+                            fontSize: c.valueFontSize || { xs: '0.92rem', sm: '1.05rem' },
                             fontFamily: 'Outfit, sans-serif',
-                            lineHeight: 1.25,
+                            lineHeight: 1.15,
                           }}
                         >
                           {c.value}

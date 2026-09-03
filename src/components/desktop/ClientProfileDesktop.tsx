@@ -295,22 +295,17 @@ export function ClientProfileDesktop({
                 {
                   key: "profit",
                   label: "النسبة المتفق عليها",
-                  badge:
+                  // النسبة رقم بارز، والمبلغ يظهر صغيراً في السطر السفلي
+                  value:
                     summary.profitPercentage > 0
                       ? `${summary.profitPercentage}%`
                       : "غير محددة",
-                  value:
-                    summary.profitPercentage > 0
-                      ? formatCurrency(summary.profit)
-                      : "—",
                   tone: "default",
                   hintTone: summary.agreedPercentageDeficit > 0 ? "warn" : "default",
                   hint:
                     summary.profitPercentage <= 0
                       ? "حدّد النسبة من الإجراءات"
-                      : summary.agreedPercentageDeficit > 0
-                      ? `عجز النسبة: −${formatCurrency(summary.agreedPercentageDeficit)}`
-                      : "صافي النسبة من المدفوعات",
+                      : `صافي النسبة ${formatCurrency(summary.profit)}`,
                   icon: <FileText size={16} />,
                 },
               ]}
