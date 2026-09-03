@@ -36,6 +36,7 @@ import { profileListDialogProps, profileFormDialogProps } from '../components/de
 import { ProfileWorkspaceFrame, ProfileFormDialogHeader } from '../components/desktop/ProfileWorkspaceChrome';
 import { EtlalaSectionTitle, EtlalaAccentSurface, EtlalaEmptyState } from '../components/etlala/EtlalaMobileUi';
 import { ClientProfileHero } from '../components/client/ClientProfileHero';
+import { ClientDeficitAlerts } from '../components/client/ClientDeficitAlerts';
 import {
   ProfileListSessionHeader,
   profileListSessionHeroIconAccentSx,
@@ -749,56 +750,17 @@ export const ClientProfilePage = () => {
             totalExpensesCount={clientExpenses.length}
             expenses={clientExpenses}
           />
-          {/* Financial Alerts */}
-          {canAccess('stats') && (summary.totalExpenses > summary.totalPaid || summary.clientDeficit > 0) && (
-            <Stack spacing={1.5} sx={{ mt: 3, mb: 1 }}>
-              {summary.totalExpenses > summary.totalPaid && (
-                <Alert 
-                  severity="error" 
-                  variant="filled"
-                  icon={<TrendingDown fontSize="inherit" />}
-                  sx={{ 
-                    borderRadius: 2.5, 
-                    fontWeight: 800, 
-                    boxShadow: '0 4px 12px rgba(214, 69, 69, 0.25)',
-                    bgcolor: '#d64545',
-                    alignItems: 'center'
-                  }}
-                >
-                  تنبيه دقيق: إجمالي المصروفات تجاوز قيمة المدفوعات!
-                </Alert>
-              )}
-              
-              {summary.remaining < 0 && (
-                <Alert 
-                  severity="warning" 
-                  variant="filled"
-                  sx={{ 
-                    borderRadius: 2.5, 
-                    fontWeight: 700, 
-                    boxShadow: '0 4px 12px rgba(230, 168, 23, 0.25)',
-                    bgcolor: '#e6a817',
-                    color: '#2a3a2a',
-                    alignItems: 'center',
-                    '& .MuiAlert-icon': { color: '#2a3a2a' }
-                  }}
-                >
-                  <Stack spacing={0.35}>
-                    <Typography component="span" fontWeight={900}>
-                      عجز في الرصيد المتبقي: −{formatCurrency(Math.abs(summary.remaining))}
-                    </Typography>
-                    {summary.agreedPercentageDeficit > 0 && (
-                      <Typography component="span" variant="body2">
-                        عجز النسبة ({summary.profitPercentage}%): −{formatCurrency(summary.agreedPercentageDeficit)}
-                      </Typography>
-                    )}
-                    <Typography component="span" variant="body2">
-                      إجمالي التحصيل المطلوب لإغلاق العجز: {formatCurrency(summary.requiredCollection)}
-                    </Typography>
-                  </Stack>
-                </Alert>
-              )}
-            </Stack>
+          {/* تنبيهات العجز المالي: أحمر للعجز العام، أصفر لعجز النسبة، وبطاقة بمجموع العجز */}
+          {canAccess('stats') && (
+            <ClientDeficitAlerts
+              clientDeficit={summary.clientDeficit}
+              agreedPercentageDeficit={summary.agreedPercentageDeficit}
+              requiredCollection={summary.requiredCollection}
+              profitPercentage={summary.profitPercentage}
+              overspent={summary.totalExpenses > summary.totalPaid}
+              surface="dark"
+              sx={{ mt: 3, mb: 1 }}
+            />
           )}
 
           {depletedBalances.map(([userId, data]) => (
@@ -900,6 +862,7 @@ export const ClientProfilePage = () => {
                   },
                   {
                     label: 'المتبقي',
+                    badge: summary.remaining < 0 ? 'عجز' : undefined,
                     value:
                       summary.remaining < 0
                         ? `−${formatCurrency(Math.abs(summary.remaining))}`
@@ -908,25 +871,19 @@ export const ClientProfilePage = () => {
                     sub: summary.remaining < 0 ? 'عجز مالي بعد الالتزامات' : 'رصيد متاح',
                   },
                   {
-                    label:
-                      summary.profitPercentage > 0
-                        ? `النسبة (${summary.profitPercentage}%)`
-                        : 'النسبة المتفق عليها',
+                    label: 'النسبة المتفق عليها',
+                    badge: summary.profitPercentage > 0 ? `${summary.profitPercentage}%` : 'غير محددة',
                     value:
-                      summary.agreedPercentageDeficit > 0
-                        ? `−${formatCurrency(summary.agreedPercentageDeficit)}`
-                        : summary.profit > 0
+                      summary.profitPercentage > 0
                         ? formatCurrency(summary.profit)
-                        : summary.profitPercentage > 0
-                        ? `${summary.profitPercentage}%`
                         : '—',
-                    isNegative: summary.agreedPercentageDeficit > 0,
+                    isWarning: summary.agreedPercentageDeficit > 0,
                     sub:
-                      summary.agreedPercentageDeficit > 0
-                        ? `المطلوب: ${formatCurrency(summary.requiredCollection)}`
-                        : summary.profit > 0
-                        ? 'صافي النسبة'
-                        : 'حدّد النسبة من الإجراءات',
+                      summary.profitPercentage <= 0
+                        ? 'حدّد النسبة من الإجراءات'
+                        : summary.agreedPercentageDeficit > 0
+                        ? `عجز النسبة: −${formatCurrency(summary.agreedPercentageDeficit)}`
+                        : 'صافي النسبة من المدفوعات',
                   },
                 ].map((c, i) => (
                   <Grid
@@ -948,19 +905,51 @@ export const ClientProfilePage = () => {
                       }}
                     >
                       <Box>
-                        <Typography
-                          variant="caption"
-                          sx={{
-                            color: c.isNegative ? '#fda4a4' : 'rgba(255,255,255,0.55)',
-                            fontWeight: 700,
-                            fontSize: '0.62rem',
-                            letterSpacing: 0.6,
-                            display: 'block',
-                            mb: 0.35,
-                          }}
-                        >
-                          {c.label}
-                        </Typography>
+                        <Stack direction="row" alignItems="center" gap={0.6} sx={{ mb: 0.35 }}>
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              color: c.isNegative ? '#fda4a4' : 'rgba(255,255,255,0.55)',
+                              fontWeight: 700,
+                              fontSize: '0.62rem',
+                              letterSpacing: 0.6,
+                              minWidth: 0,
+                            }}
+                            noWrap
+                          >
+                            {c.label}
+                          </Typography>
+                          {c.badge ? (
+                            <Box
+                              component="span"
+                              sx={{
+                                flexShrink: 0,
+                                px: 0.7,
+                                py: 0.15,
+                                borderRadius: 1,
+                                fontSize: '0.58rem',
+                                fontWeight: 900,
+                                fontFamily: 'Outfit, sans-serif',
+                                lineHeight: 1.6,
+                                color: c.isNegative ? '#fda4a4' : c.isWarning ? '#F7D08A' : '#E8DBB8',
+                                bgcolor: c.isNegative
+                                  ? 'rgba(253,164,164,0.14)'
+                                  : c.isWarning
+                                  ? 'rgba(247,208,138,0.16)'
+                                  : 'rgba(232,219,184,0.14)',
+                                border: `1px solid ${
+                                  c.isNegative
+                                    ? 'rgba(253,164,164,0.32)'
+                                    : c.isWarning
+                                    ? 'rgba(247,208,138,0.34)'
+                                    : 'rgba(232,219,184,0.28)'
+                                }`,
+                              }}
+                            >
+                              {c.badge}
+                            </Box>
+                          ) : null}
+                        </Stack>
                         <Typography
                           variant="body2"
                           fontWeight={850}
@@ -977,8 +966,12 @@ export const ClientProfilePage = () => {
                       <Typography
                         variant="caption"
                         sx={{
-                          color: c.isNegative ? 'rgba(253, 164, 164, 0.85)' : 'rgba(255,255,255,0.45)',
-                          fontWeight: c.isNegative ? 700 : 500,
+                          color: c.isNegative
+                            ? 'rgba(253, 164, 164, 0.85)'
+                            : c.isWarning
+                            ? 'rgba(247, 208, 138, 0.92)'
+                            : 'rgba(255,255,255,0.45)',
+                          fontWeight: c.isNegative || c.isWarning ? 700 : 500,
                           fontSize: '0.6rem',
                           mt: 0.5,
                           display: 'block',

@@ -14,6 +14,7 @@ export type DesktopKpi = {
   label: string;
   value: string;
   hint?: string;
+  hintTone?: "default" | "ok" | "warn" | "danger";
   tone?: "default" | "ok" | "warn" | "danger";
   icon?: ReactNode;
   featured?: boolean;
@@ -157,7 +158,14 @@ function KpiTile({
           {item.value}
         </Typography>
         {item.hint ? (
-          <Typography sx={{ fontSize: "0.72rem", color: "text.secondary", mt: 0.5 }}>
+          <Typography
+            sx={{
+              fontSize: "0.72rem",
+              color: toneColor(item.hintTone, isDark) || "text.secondary",
+              fontWeight: item.hintTone && item.hintTone !== "default" ? 700 : 400,
+              mt: 0.5,
+            }}
+          >
             {item.hint}
           </Typography>
         ) : null}

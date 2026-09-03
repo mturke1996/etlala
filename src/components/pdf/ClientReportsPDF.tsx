@@ -347,12 +347,13 @@ export const FullReportPDF: React.FC<FullReportPDFProps> = ({
               accent: true,
             },
             {
+              // النسبة المتفق عليها = صافي النسبة، مع الإشارة إلى عجز النسبة إن وُجد
               label:
                 summary.agreedPercentageDeficit > 0
-                  ? `النسبة (${summary.profitPercentage}%) - المطلوب: ${Math.round(summary.requiredCollection).toLocaleString('en-US')}`
+                  ? `النسبة (${summary.profitPercentage}%) - عجز النسبة: ${Math.round(summary.agreedPercentageDeficit).toLocaleString('en-US')}`
                   : `النسبة المتفق عليها (${summary.profitPercentage}%)`,
-              value: summary.agreedPercentageDeficit > 0 ? -summary.agreedPercentageDeficit : summary.profit,
-              color: summary.agreedPercentageDeficit > 0 ? INK.danger : INK.warning,
+              value: summary.profit,
+              color: INK.warning,
               accent: summary.agreedPercentageDeficit > 0,
             },
           ]}

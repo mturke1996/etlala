@@ -21,7 +21,6 @@ import {
   Pencil,
   Phone,
   Receipt,
-  TrendingDown,
   User,
   Wallet,
 } from "lucide-react";
@@ -29,6 +28,7 @@ import { formatCurrency, formatDate } from "../../utils/formatters";
 import { buildMonthlyTrend } from "../../utils/desktopAnalytics";
 import { premiumTokens } from "../../theme/tokens";
 import { DesktopKpiBento } from "./DesktopKpiBento";
+import { ClientDeficitAlerts } from "../client/ClientDeficitAlerts";
 import {
   DESKTOP_NUM_FONT,
   desktopHairline,
@@ -237,27 +237,15 @@ export function ClientProfileDesktop({
         ) : null}
 
         <Stack spacing={1.25} sx={{ mb: 2.5 }}>
-          {canSeeStats && overspent ? (
-            <Alert severity="error" sx={{ borderRadius: "12px", fontWeight: 700 }}>
-              المصروفات تجاوزت قيمة المدفوعات
-            </Alert>
-          ) : null}
-          {canSeeStats && negativeRemaining ? (
-            <Alert severity="warning" sx={{ borderRadius: "12px", fontWeight: 700 }}>
-              <Stack spacing={0.25}>
-                <Typography component="span" fontWeight={900}>
-                  عجز في الرصيد المتبقي: −{formatCurrency(Math.abs(summary.remaining))}
-                </Typography>
-                {summary.agreedPercentageDeficit > 0 ? (
-                  <Typography component="span" variant="body2">
-                    عجز النسبة المتفق عليها ({summary.profitPercentage}%): −{formatCurrency(summary.agreedPercentageDeficit)}
-                  </Typography>
-                ) : null}
-                <Typography component="span" variant="body2">
-                  إجمالي التحصيل المطلوب لإغلاق العجز: {formatCurrency(summary.requiredCollection)}
-                </Typography>
-              </Stack>
-            </Alert>
+          {canSeeStats && (negativeRemaining || overspent) ? (
+            <ClientDeficitAlerts
+              clientDeficit={summary.clientDeficit}
+              agreedPercentageDeficit={summary.agreedPercentageDeficit}
+              requiredCollection={summary.requiredCollection}
+              profitPercentage={summary.profitPercentage}
+              overspent={overspent}
+              surface="light"
+            />
           ) : null}
           {depletedNames.map((name) => (
             <Alert key={name} severity="warning" sx={{ borderRadius: "12px", fontWeight: 700 }}>
@@ -306,25 +294,23 @@ export function ClientProfileDesktop({
                 },
                 {
                   key: "profit",
-                  label:
+                  label: "النسبة المتفق عليها",
+                  badge:
                     summary.profitPercentage > 0
-                      ? `النسبة المتفق عليها (${summary.profitPercentage}%)`
-                      : "النسبة المتفق عليها",
-                  value:
-                    summary.agreedPercentageDeficit > 0
-                      ? `−${formatCurrency(summary.agreedPercentageDeficit)}`
-                      : summary.profit > 0
-                      ? formatCurrency(summary.profit)
-                      : summary.profitPercentage > 0
                       ? `${summary.profitPercentage}%`
                       : "غير محددة",
-                  tone: summary.agreedPercentageDeficit > 0 ? "danger" : "default",
+                  value:
+                    summary.profitPercentage > 0
+                      ? formatCurrency(summary.profit)
+                      : "—",
+                  tone: "default",
+                  hintTone: summary.agreedPercentageDeficit > 0 ? "warn" : "default",
                   hint:
-                    summary.agreedPercentageDeficit > 0
-                      ? `المطلوب تحصيله: ${formatCurrency(summary.requiredCollection)}`
-                      : summary.profit > 0
-                      ? `النسبة المعتمدة ${summary.profitPercentage}%`
-                      : "حدّد النسبة من الإجراءات",
+                    summary.profitPercentage <= 0
+                      ? "حدّد النسبة من الإجراءات"
+                      : summary.agreedPercentageDeficit > 0
+                      ? `عجز النسبة: −${formatCurrency(summary.agreedPercentageDeficit)}`
+                      : "صافي النسبة من المدفوعات",
                   icon: <FileText size={16} />,
                 },
               ]}
