@@ -881,7 +881,8 @@ export const ClientProfilePage = () => {
                       summary.profitPercentage > 0
                         ? { xs: '1.55rem', sm: '1.75rem' }
                         : undefined,
-                    valueColor: summary.profitPercentage > 0 ? '#E8DBB8' : undefined,
+                    valueColor: summary.profitPercentage > 0 ? '#FFFFFF' : undefined,
+                    valueGlow: summary.profitPercentage > 0,
                     isWarning: summary.agreedPercentageDeficit > 0,
                     sub:
                       summary.profitPercentage <= 0
@@ -961,6 +962,9 @@ export const ClientProfilePage = () => {
                             fontSize: c.valueFontSize || { xs: '0.92rem', sm: '1.05rem' },
                             fontFamily: 'Outfit, sans-serif',
                             lineHeight: 1.15,
+                            textShadow: c.valueGlow
+                              ? '0 0 14px rgba(255,255,255,0.55), 0 0 4px rgba(255,255,255,0.35)'
+                              : undefined,
                           }}
                         >
                           {c.value}
