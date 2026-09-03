@@ -59,11 +59,11 @@ function DeficitAlertCard({
       sx={{
         position: 'relative',
         overflow: 'hidden',
-        borderRadius: 2.25,
-        px: 1.5,
-        py: 1.15,
+        borderRadius: 0,
+        px: 1.2,
+        py: 0.85,
         background: t.gradient,
-        border: `1px solid ${alpha('#fff', 0.18)}`,
+        borderInlineStart: `3px solid ${alpha('#fff', 0.55)}`,
         boxShadow: t.glow,
         color: t.ink,
         '&::after': {
@@ -73,43 +73,43 @@ function DeficitAlertCard({
           insetInlineEnd: 0,
           width: '46%',
           height: '100%',
-          background: `radial-gradient(ellipse 90% 120% at 100% 0%, ${alpha('#fff', 0.2)} 0%, transparent 60%)`,
+          background: `radial-gradient(ellipse 90% 120% at 100% 0%, ${alpha('#fff', 0.18)} 0%, transparent 60%)`,
           pointerEvents: 'none',
         },
       }}
     >
-      <Stack direction="row" spacing={1.25} alignItems="center" sx={{ position: 'relative', zIndex: 1 }}>
+      <Stack direction="row" spacing={1} alignItems="center" sx={{ position: 'relative', zIndex: 1 }}>
         <Box
           sx={{
-            width: 36,
-            height: 36,
+            width: 28,
+            height: 28,
             flexShrink: 0,
-            borderRadius: 1.75,
+            borderRadius: 1,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             bgcolor: t.chipBg,
-            border: `1px solid ${alpha('#fff', 0.26)}`,
+            border: `1px solid ${alpha('#fff', 0.24)}`,
             color: 'inherit',
           }}
         >
           {icon}
         </Box>
         <Box sx={{ minWidth: 0, flex: 1 }}>
-          <Typography sx={{ fontWeight: 900, fontSize: '0.72rem', lineHeight: 1.35 }}>{title}</Typography>
+          <Typography sx={{ fontWeight: 900, fontSize: '0.58rem', lineHeight: 1.3 }}>{title}</Typography>
           <Typography
             sx={{
               fontWeight: 900,
-              fontSize: '0.88rem',
-              lineHeight: 1.3,
-              mt: 0.15,
+              fontSize: '0.72rem',
+              lineHeight: 1.25,
+              mt: 0.1,
               fontFamily: 'Outfit, sans-serif',
             }}
           >
             {value}
           </Typography>
           {note ? (
-            <Typography sx={{ fontWeight: 700, fontSize: '0.58rem', color: t.softInk, mt: 0.3 }}>
+            <Typography sx={{ fontWeight: 700, fontSize: '0.5rem', color: t.softInk, mt: 0.2 }}>
               {note}
             </Typography>
           ) : null}
@@ -151,11 +151,12 @@ function TotalDeficitCard({
       sx={{
         position: 'relative',
         overflow: 'hidden',
-        borderRadius: 2,
-        px: 1.5,
-        py: 1.1,
+        borderRadius: 0,
+        px: 1.35,
+        py: 0.95,
         color: ink,
         border: `1px solid ${alpha(isDark ? '#FFB4B4' : '#B54747', isDark ? 0.24 : 0.2)}`,
+        borderInlineStart: `3px solid ${alpha(isDark ? '#FFB4B4' : '#B54747', 0.5)}`,
         // خلفية زجاجية بدون blur لتخفيف الحِمل على الأداء
         background: isDark
           ? `linear-gradient(140deg, ${alpha('#FFFFFF', 0.08)} 0%, ${alpha('#E14B4B', 0.12)} 100%)`
@@ -258,7 +259,7 @@ export function ClientDeficitAlerts({
       {hasGeneral ? (
         <DeficitAlertCard
           tone="danger"
-          icon={<TrendingDown sx={{ fontSize: 19 }} />}
+          icon={<TrendingDown sx={{ fontSize: 16 }} />}
           title="تنبيه: الرصيد الحالي بالسالب"
           value={`يوجد عجز مالي بقيمة ${formatCurrency(clientDeficit)}`}
           note={overspent ? 'إجمالي المصروفات تجاوز قيمة المدفوعات' : undefined}
@@ -266,7 +267,7 @@ export function ClientDeficitAlerts({
       ) : overspent ? (
         <DeficitAlertCard
           tone="danger"
-          icon={<TrendingDown sx={{ fontSize: 19 }} />}
+          icon={<TrendingDown sx={{ fontSize: 16 }} />}
           title="تنبيه: تجاوز في المصروفات"
           value="إجمالي المصروفات تجاوز قيمة المدفوعات"
         />
@@ -275,7 +276,7 @@ export function ClientDeficitAlerts({
       {hasPercentage ? (
         <DeficitAlertCard
           tone="warning"
-          icon={<PercentRounded sx={{ fontSize: 19 }} />}
+          icon={<PercentRounded sx={{ fontSize: 16 }} />}
           title={`تنبيه: عجز في النسبة المتفق عليها${profitPercentage > 0 ? ` (${profitPercentage}%)` : ''}`}
           value={`قيمة العجز ${formatCurrency(agreedPercentageDeficit)}`}
           note="النسبة المستحقة على مبلغ العجز عند تحصيله"
