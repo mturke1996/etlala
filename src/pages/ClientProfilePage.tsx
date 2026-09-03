@@ -965,7 +965,7 @@ export const ClientProfilePage = () => {
                             lineHeight: 1.15,
                             letterSpacing: c.valueFontSize ? '0.01em' : undefined,
                             textShadow: c.valueGlow
-                              ? '0 1px 10px rgba(255,255,255,0.25)'
+                              ? '0 0 30px rgba(255,255,255,1), 0 0 16px rgba(255,255,255,0.8), 0 0 6px rgba(255,255,255,0.6)'
                               : undefined,
                           }}
                         >
