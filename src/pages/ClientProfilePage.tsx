@@ -884,8 +884,9 @@ export const ClientProfilePage = () => {
                     valueWeight: summary.profitPercentage > 0 ? 600 : undefined,
                     valueColor: summary.profitPercentage > 0 ? '#FFFFFF' : undefined,
                     valueGlow: summary.profitPercentage > 0,
-                    isWarning: summary.agreedPercentageDeficit > 0,
-                    subColor: summary.profitPercentage > 0 ? 'rgba(255,255,255,0.85)' : undefined,
+                    // نفس لون ووزن نص "314 سجل" / "0 بند" في البطاقات الأخرى
+                    subColor: 'rgba(255,255,255,0.45)',
+                    subWeight: 500,
                     sub:
                       summary.profitPercentage <= 0
                         ? 'حدّد النسبة من الإجراءات'
@@ -983,7 +984,7 @@ export const ClientProfilePage = () => {
                             : c.isWarning
                             ? 'rgba(247, 208, 138, 0.92)'
                             : 'rgba(255,255,255,0.45)',
-                          fontWeight: c.isNegative || c.isWarning ? 700 : 500,
+                          fontWeight: c.subWeight ?? (c.isNegative || c.isWarning ? 700 : 500),
                           fontSize: '0.6rem',
                           mt: 0.5,
                           display: 'block',
