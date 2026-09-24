@@ -913,7 +913,7 @@ export const ClientProfilePage = () => {
                     sub: summary.remaining < 0 ? 'عجز مالي بعد الالتزامات' : 'رصيد متاح',
                   },
                   {
-                    label: 'النسبة المتفق عليها',
+                    label: summary.profitBase === 'payments' ? 'النسبة (من المدفوعات)' : 'النسبة (من المصروفات)',
                     // النسبة رقم كبير بارز، والمبلغ يظهر صغيراً في السطر السفلي
                     value:
                       summary.profitPercentage > 0
