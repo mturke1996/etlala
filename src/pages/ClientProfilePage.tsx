@@ -447,7 +447,11 @@ export const ClientProfilePage = () => {
     const pct = client?.profitPercentage || 0;
     const pBase = client?.profitBase || 'expenses';
 
-    // النسبة تؤخذ إما من مجموع المصروفات (افتراضي) أو من إجمالي المدفوعات
+    // النسبة تؤخذ إما من مجموع المصروفات (افتراضي) أو من إجمالي المدفوعات.
+    // عند الاحتساب من المصروفات: المبلغ معروف وثابت بمجرد صرف المصروفات،
+    // بصرف النظر عن حالة سداد العميل — فتظهر قيمتها الصحيحة حتى مع عجز
+    // كامل وصفر مدفوعات (هذا هو الوضع الافتراضي وهو ما يُصلح مشكلة
+    // اختفاء قيمة النسبة عند وجود عجز).
     const profit =
       pct > 0
         ? pBase === 'payments'
@@ -455,18 +459,37 @@ export const ClientProfilePage = () => {
           : (totalExpenses > 0 ? (totalExpenses * pct) / 100 : 0)
         : 0;
 
-    // المتبقي = المدفوعات - النسبة - المصروفات - الديون المتبقية
-    const totalObligations = totalExpenses + totalDebts;
-    const remaining = totalPaid - profit - totalObligations;
+    const baseObligations = totalExpenses + totalDebts;
+    let clientDeficit: number;
+    let agreedPercentageDeficit: number;
+    let totalObligations: number;
+    let remaining: number;
 
-    // عند احتساب النسبة من المدفوعات، سداد العجز يتطلب تحصيل مبلغ إضافي لتغطية نسبة الدفعة الجديدة.
-    // أما عند احتساب النسبة من المصروفات، فالنسبة محتسبة مسبقاً على المصروفات ومخصومة داخل المتبقي والعجز.
-    const clientDeficit = Math.max(0, -remaining);
-    const percentageRate = pct / 100;
-    const agreedPercentageDeficit =
-      pBase === 'payments' && clientDeficit > 0 && percentageRate > 0 && percentageRate < 1
-        ? (clientDeficit * percentageRate) / (1 - percentageRate)
-        : 0;
+    if (pBase === 'payments') {
+      // النسبة تُقتطع من كل دفعة تُحصَّل، بما فيها الدفعة التي تُسدَّد
+      // لإغلاق العجز نفسه — لذلك سداد العجز وحده يستوجب تحصيل مبلغ إضافي
+      // يغطي نسبة تلك الدفعة الجديدة: العجز ÷ (1 - النسبة).
+      totalObligations = baseObligations;
+      remaining = totalPaid - profit - totalObligations;
+      clientDeficit = Math.max(0, -remaining);
+      const percentageRate = pct / 100;
+      agreedPercentageDeficit =
+        clientDeficit > 0 && percentageRate > 0 && percentageRate < 1
+          ? (clientDeficit * percentageRate) / (1 - percentageRate)
+          : 0;
+    } else {
+      // النسبة مبلغ ثابت معروف مسبقاً (نسبة من المصروفات)، فتُضاف كالتزام
+      // مستقل ولا تتولّد عنها أي دائرية حسابية. نقسّم العجز الإجمالي (إن
+      // وُجد) بدقة تامة إلى: عجز عام (نقص تغطية المصروفات والديون) وعجز
+      // النسبة (ما تبقّى من العمولة غير المغطى بعد استهلاك أي فائض من
+      // المدفوعات في تغطية التكاليف الأساسية أولاً). المجموع يطابق العجز
+      // الإجمالي (max(0, -remaining)) تماماً في كل الحالات.
+      totalObligations = baseObligations + profit;
+      remaining = totalPaid - totalObligations;
+      clientDeficit = Math.max(0, baseObligations - totalPaid);
+      const surplusAfterBaseCosts = Math.max(0, totalPaid - baseObligations);
+      agreedPercentageDeficit = Math.max(0, profit - surplusAfterBaseCosts);
+    }
     const requiredCollection = clientDeficit + agreedPercentageDeficit;
 
     return {
