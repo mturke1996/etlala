@@ -16,7 +16,8 @@ export interface Client {
   phone: string;
   address: string;
   type: 'company' | 'individual';
-  profitPercentage?: number; // نسبة صافي النسبة من المدفوعات (متفق عليها)
+  profitPercentage?: number; // نسبة صافي النسبة المتفق عليها (%)
+  profitBase?: 'expenses' | 'payments'; // أساس احتساب النسبة: من المصروفات (افتراضي) أو من المدفوعات
   createdAt: string;
   updatedAt: string;
   createdBy?: string; // اسم المستخدم الذي أضاف العميل

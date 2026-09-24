@@ -167,6 +167,7 @@ export const ClientProfilePage = () => {
   const [workerDialogOpen, setWorkerDialogOpen] = useState(false);
   const [workersListOpen, setWorkersListOpen] = useState(false);
   const [profitPercentage, setProfitPercentage] = useState('');
+  const [profitBase, setProfitBase] = useState<'expenses' | 'payments'>('expenses');
   const [snackbar, setSnackbar] = useState({ open: false, message: '' });
   const [expSearch, setExpSearch] = useState('');
   const [paySearch, setPaySearch] = useState('');
@@ -236,8 +237,11 @@ export const ClientProfilePage = () => {
   }, [client, editClientOpen, resetClient]);
 
   useEffect(() => {
-    if (client) setProfitPercentage(client.profitPercentage?.toString() || '');
-  }, [client?.id, client?.profitPercentage]);
+    if (client) {
+      setProfitPercentage(client.profitPercentage?.toString() || '');
+      setProfitBase(client.profitBase || 'expenses');
+    }
+  }, [client?.id, client?.profitPercentage, client?.profitBase]);
 
   const clientExpenses = useMemo(() => expenses.filter((e) => e.clientId === clientId).sort((a, b) => dayjs(b.createdAt).diff(dayjs(a.createdAt))), [expenses, clientId]);
   const clientPayments = useMemo(() => payments.filter((p) => p.clientId === clientId).sort((a, b) => dayjs(b.paymentDate).diff(dayjs(a.paymentDate))), [payments, clientId]);
@@ -441,19 +445,26 @@ export const ClientProfilePage = () => {
     const totalWorkersAgreed = clientWorkers.reduce((s, w) => s + w.totalAmount, 0);
     const totalWorkersPaid = clientWorkers.reduce((s, w) => s + w.paidAmount, 0);
     const pct = client?.profitPercentage || 0;
-    // النسبة تؤخذ من إجمالي المدفوعات
-    const profit = totalPaid > 0 && pct > 0 ? (totalPaid * pct) / 100 : 0;
+    const pBase = client?.profitBase || 'expenses';
+
+    // النسبة تؤخذ إما من مجموع المصروفات (افتراضي) أو من إجمالي المدفوعات
+    const profit =
+      pct > 0
+        ? pBase === 'payments'
+          ? (totalPaid > 0 ? (totalPaid * pct) / 100 : 0)
+          : (totalExpenses > 0 ? (totalExpenses * pct) / 100 : 0)
+        : 0;
+
     // المتبقي = المدفوعات - النسبة - المصروفات - الديون المتبقية
     const totalObligations = totalExpenses + totalDebts;
     const remaining = totalPaid - profit - totalObligations;
 
-    // عند وجود عجز، سداد قيمة العجز وحدها يترتب عليه خصم نسبة جديدة منها.
-    // لذلك نحسب قيمة النسبة الإضافية اللازمة لإغلاق العجز فعلياً:
-    // العجز ÷ (1 - النسبة) = إجمالي التحصيل المطلوب.
+    // عند احتساب النسبة من المدفوعات، سداد العجز يتطلب تحصيل مبلغ إضافي لتغطية نسبة الدفعة الجديدة.
+    // أما عند احتساب النسبة من المصروفات، فالنسبة محتسبة مسبقاً على المصروفات ومخصومة داخل المتبقي والعجز.
     const clientDeficit = Math.max(0, -remaining);
     const percentageRate = pct / 100;
     const agreedPercentageDeficit =
-      clientDeficit > 0 && percentageRate > 0 && percentageRate < 1
+      pBase === 'payments' && clientDeficit > 0 && percentageRate > 0 && percentageRate < 1
         ? (clientDeficit * percentageRate) / (1 - percentageRate)
         : 0;
     const requiredCollection = clientDeficit + agreedPercentageDeficit;
@@ -468,6 +479,7 @@ export const ClientProfilePage = () => {
       remaining,
       profit,
       profitPercentage: pct,
+      profitBase: pBase,
       totalObligations,
       clientDeficit,
       agreedPercentageDeficit,
@@ -585,7 +597,14 @@ export const ClientProfilePage = () => {
     if (!clientId) return;
     const pct = parseFloat(profitPercentage);
     if (isNaN(pct) || pct < 0 || pct >= 100) { msg('النسبة يجب أن تكون بين 0 وأقل من 100'); return; }
-    try { await updateClient(clientId, { profitPercentage: pct }); window.dispatchEvent(new Event('profitPercentageUpdated')); msg('تم حفظ النسبة'); setProfitDialogOpen(false); } catch { msg('خطأ'); }
+    try {
+      await updateClient(clientId, { profitPercentage: pct, profitBase });
+      window.dispatchEvent(new Event('profitPercentageUpdated'));
+      msg('تم حفظ النسبة بنجاح');
+      setProfitDialogOpen(false);
+    } catch {
+      msg('حدث خطأ أثناء حفظ النسبة');
+    }
   };
 
   const onSubmitPayment = async (data: any) => {
@@ -1954,15 +1973,245 @@ export const ClientProfilePage = () => {
       </Dialog>
 
       {/* ===== PROFIT DIALOG ===== */}
-      <Dialog open={profitDialogOpen} onClose={() => setProfitDialogOpen(false)} maxWidth="sm" fullWidth>
-        <Typography variant="h6" fontWeight={800} mb={2}>حساب صافي النسبة</Typography>
-        <Stack spacing={2}>
-          <TextField fullWidth label="نسبة صافي النسبة (%)" type="number" value={profitPercentage} onChange={(e) => setProfitPercentage(e.target.value)} InputProps={{ endAdornment: <InputAdornment position="end">%</InputAdornment> }} />
-          {summary.profit > 0 && <Alert severity="info" sx={{ borderRadius: 2 }}>صافي النسبة الحالية (المحسوبة): {formatCurrency(summary.profit)}</Alert>}
+      <Dialog
+        open={profitDialogOpen}
+        onClose={() => setProfitDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3.5,
+            p: { xs: 2.5, sm: 3.5 },
+            bgcolor: 'background.paper',
+            boxShadow: '0 24px 48px -12px rgba(0, 0, 0, 0.25)',
+          },
+        }}
+      >
+        <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2.5 }}>
+          <Stack direction="row" alignItems="center" spacing={1.5}>
+            <Box
+              sx={{
+                width: 44,
+                height: 44,
+                borderRadius: 2.5,
+                bgcolor: alpha(premiumTokens.primary, 0.1),
+                color: premiumTokens.primary,
+                display: 'grid',
+                placeItems: 'center',
+              }}
+            >
+              <TrendingUp sx={{ fontSize: 24 }} />
+            </Box>
+            <Box>
+              <Typography variant="h6" fontWeight={800} sx={{ lineHeight: 1.2 }}>
+                تحديد النسبة المتفق عليها
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                اختر أساس الاحتساب وحدد النسبة المئوية للمشروع
+              </Typography>
+            </Box>
+          </Stack>
+          <IconButton size="small" onClick={() => setProfitDialogOpen(false)} sx={{ color: 'text.secondary' }}>
+            <Close fontSize="small" />
+          </IconButton>
         </Stack>
-        <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
-          <Button fullWidth onClick={() => setProfitDialogOpen(false)} sx={{ borderRadius: 1.5, fontWeight: 700 }}>إلغاء</Button>
-          <Button fullWidth variant="contained" onClick={handleSaveProfit} sx={{ borderRadius: 1.5, fontWeight: 800 }}>حفظ النسبة</Button>
+
+        <Stack spacing={2.5}>
+          {/* اختيار أساس الاحتساب */}
+          <Box>
+            <Typography variant="subtitle2" fontWeight={750} sx={{ mb: 1.25, color: 'text.primary' }}>
+              احتساب النسبة من:
+            </Typography>
+            <MuiGrid container spacing={1.5}>
+              <MuiGrid size={{ xs: 12, sm: 6 }}>
+                <Box
+                  component="button"
+                  type="button"
+                  onClick={() => setProfitBase('expenses')}
+                  sx={{
+                    width: '100%',
+                    p: 2,
+                    borderRadius: 2.5,
+                    border: '2px solid',
+                    borderColor: profitBase === 'expenses' ? premiumTokens.primary : 'divider',
+                    bgcolor: profitBase === 'expenses' ? alpha(premiumTokens.primary, 0.06) : 'transparent',
+                    cursor: 'pointer',
+                    textAlign: 'right',
+                    transition: 'all 160ms ease',
+                    position: 'relative',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 0.75,
+                    '&:hover': {
+                      borderColor: premiumTokens.primary,
+                      bgcolor: alpha(premiumTokens.primary, 0.04),
+                    },
+                  }}
+                >
+                  <Stack direction="row" alignItems="center" justifyContent="space-between">
+                    <Stack direction="row" alignItems="center" spacing={1}>
+                      <ReceiptLong sx={{ fontSize: 20, color: profitBase === 'expenses' ? premiumTokens.primary : 'text.secondary' }} />
+                      <Typography variant="subtitle2" fontWeight={800} color={profitBase === 'expenses' ? premiumTokens.primary : 'text.primary'}>
+                        مجموع المصروفات
+                      </Typography>
+                    </Stack>
+                    <Chip
+                      label="افتراضي"
+                      size="small"
+                      sx={{
+                        height: 20,
+                        fontSize: '0.65rem',
+                        fontWeight: 750,
+                        bgcolor: profitBase === 'expenses' ? premiumTokens.primary : alpha('#000', 0.06),
+                        color: profitBase === 'expenses' ? '#fff' : 'text.secondary',
+                      }}
+                    />
+                  </Stack>
+                  <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.4 }}>
+                    تحتسب كنسبة مئوية من إجمالي مصروفات المشروع الفعلية
+                  </Typography>
+                </Box>
+              </MuiGrid>
+
+              <MuiGrid size={{ xs: 12, sm: 6 }}>
+                <Box
+                  component="button"
+                  type="button"
+                  onClick={() => setProfitBase('payments')}
+                  sx={{
+                    width: '100%',
+                    p: 2,
+                    borderRadius: 2.5,
+                    border: '2px solid',
+                    borderColor: profitBase === 'payments' ? premiumTokens.primary : 'divider',
+                    bgcolor: profitBase === 'payments' ? alpha(premiumTokens.primary, 0.06) : 'transparent',
+                    cursor: 'pointer',
+                    textAlign: 'right',
+                    transition: 'all 160ms ease',
+                    position: 'relative',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 0.75,
+                    '&:hover': {
+                      borderColor: premiumTokens.primary,
+                      bgcolor: alpha(premiumTokens.primary, 0.04),
+                    },
+                  }}
+                >
+                  <Stack direction="row" alignItems="center" justifyContent="space-between">
+                    <Stack direction="row" alignItems="center" spacing={1}>
+                      <Payment sx={{ fontSize: 20, color: profitBase === 'payments' ? premiumTokens.primary : 'text.secondary' }} />
+                      <Typography variant="subtitle2" fontWeight={800} color={profitBase === 'payments' ? premiumTokens.primary : 'text.primary'}>
+                        إجمالي المدفوعات
+                      </Typography>
+                    </Stack>
+                  </Stack>
+                  <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.4 }}>
+                    تحتسب كنسبة مئوية من إجمالي التحصيلات والمبالغ المدفوعة
+                  </Typography>
+                </Box>
+              </MuiGrid>
+            </MuiGrid>
+          </Box>
+
+          {/* حقل النسبة */}
+          <TextField
+            fullWidth
+            label="النسبة المتفق عليها (%)"
+            type="number"
+            value={profitPercentage}
+            onChange={(e) => setProfitPercentage(e.target.value)}
+            placeholder="مثال: 10"
+            helperText="أدخل قيمة النسبة المئوية بين 0 وأقل من 100"
+            InputProps={{
+              endAdornment: <InputAdornment position="end" sx={{ fontWeight: 800 }}>%</InputAdornment>,
+            }}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: 2.5,
+                fontSize: '1.05rem',
+                fontWeight: 700,
+              },
+            }}
+          />
+
+          {/* محاكاة حية فورية للحساب */}
+          {(() => {
+            const enteredPct = parseFloat(profitPercentage) || 0;
+            const baseAmount = profitBase === 'payments' ? summary.totalPaid : summary.totalExpenses;
+            const previewProfit = (baseAmount * enteredPct) / 100;
+            return (
+              <Box
+                sx={{
+                  p: 2,
+                  borderRadius: 2.5,
+                  bgcolor: (theme) => alpha(theme.palette.primary.main, 0.04),
+                  border: '1px dashed',
+                  borderColor: (theme) => alpha(theme.palette.primary.main, 0.25),
+                }}
+              >
+                <Typography variant="caption" fontWeight={750} color="text.secondary" display="block" sx={{ mb: 1 }}>
+                  معاينة الاحتساب الفعلي:
+                </Typography>
+                <Stack spacing={0.75}>
+                  <Stack direction="row" justifyContent="space-between" alignItems="center">
+                    <Typography variant="body2" color="text.secondary">
+                      {profitBase === 'payments' ? 'إجمالي المدفوعات الحالية' : 'مجموع المصروفات الحالية'}:
+                    </Typography>
+                    <Typography variant="body2" fontWeight={800} sx={{ fontFamily: 'Outfit, sans-serif' }}>
+                      {formatCurrency(baseAmount)}
+                    </Typography>
+                  </Stack>
+                  <Stack direction="row" justifyContent="space-between" alignItems="center">
+                    <Typography variant="body2" color="text.secondary">
+                      النسبة المدخلة:
+                    </Typography>
+                    <Typography variant="body2" fontWeight={800} sx={{ fontFamily: 'Outfit, sans-serif' }}>
+                      {enteredPct}%
+                    </Typography>
+                  </Stack>
+                  <Divider sx={{ my: 0.5 }} />
+                  <Stack direction="row" justifyContent="space-between" alignItems="center">
+                    <Typography variant="subtitle2" fontWeight={850} color="primary">
+                      صافي النسبة المتوقعة:
+                    </Typography>
+                    <Typography
+                      variant="h6"
+                      fontWeight={900}
+                      color="primary"
+                      sx={{ fontFamily: 'Outfit, sans-serif' }}
+                    >
+                      {formatCurrency(previewProfit)}
+                    </Typography>
+                  </Stack>
+                </Stack>
+              </Box>
+            );
+          })()}
+        </Stack>
+
+        <Stack direction="row" spacing={1.5} sx={{ mt: 3.5 }}>
+          <Button
+            fullWidth
+            size="large"
+            onClick={() => setProfitDialogOpen(false)}
+            sx={{ borderRadius: 2, fontWeight: 750 }}
+          >
+            إلغاء
+          </Button>
+          <Button
+            fullWidth
+            size="large"
+            variant="contained"
+            onClick={handleSaveProfit}
+            sx={{
+              borderRadius: 2,
+              fontWeight: 800,
+              boxShadow: '0 4px 14px rgba(61, 79, 61, 0.35)',
+            }}
+          >
+            حفظ النسبة
+          </Button>
         </Stack>
       </Dialog>
 

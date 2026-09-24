@@ -210,7 +210,7 @@ interface FullReportPDFProps {
   debts: StandaloneDebt[];
   workers: Worker[];
   summary: {
-    totalPaid: number; profit: number; profitPercentage: number;
+    totalPaid: number; profit: number; profitPercentage: number; profitBase?: 'expenses' | 'payments';
     totalExpenses: number; totalDebts: number; totalObligations: number;
     remaining: number; totalWorkersAgreed: number; totalWorkersPaid: number; totalWorkersDue: number;
     clientDeficit: number; agreedPercentageDeficit: number; requiredCollection: number;

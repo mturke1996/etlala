@@ -58,6 +58,7 @@ type SummaryLike = {
   remaining: number;
   profit: number;
   profitPercentage: number;
+  profitBase?: 'expenses' | 'payments';
   clientDeficit: number;
   agreedPercentageDeficit: number;
   requiredCollection: number;
@@ -294,7 +295,10 @@ export function ClientProfileDesktop({
                 },
                 {
                   key: "profit",
-                  label: "النسبة المتفق عليها",
+                  label:
+                    summary.profitBase === 'payments'
+                      ? "النسبة (من المدفوعات)"
+                      : "النسبة (من المصروفات)",
                   // النسبة رقم بارز، والمبلغ يظهر صغيراً في السطر السفلي
                   value:
                     summary.profitPercentage > 0
